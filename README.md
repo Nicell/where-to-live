@@ -1,6 +1,6 @@
 # 🌎 Where to Live
-[![https://goreportcard.com/badge/github.com/Nicell/where-to-live?style=flat-square](https://goreportcard.com/report/github.com/Nicell/where-to-live)]
-[![https://img.shields.io/github/license/Nicell/where-to-live.svg?style=flat-square](LICENSE)]
+[![Go Report Card](https://goreportcard.com/badge/github.com/Nicell/where-to-live?style=flat-square)](https://goreportcard.com/report/github.com/Nicell/where-to-live)
+[![License](https://img.shields.io/github/license/Nicell/where-to-live.svg?style=flat-square)](LICENSE)
 
 A website to show the best places to live based on weather in the US
 
