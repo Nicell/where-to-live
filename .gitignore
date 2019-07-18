@@ -2,8 +2,9 @@
 .idea
 
 # Weather data
-data/*
-!data/.gitkeep
+data/*.tar
+data/isd-history.csv
+data/isd-history.csv.z
 
 # Binaries for programs and plugins
 *.exe
