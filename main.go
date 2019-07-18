@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/nicell/where-to-live/cmd"
+
+	"github.com/Nicell/where-to-live/cmd"
 )
 
 func main() {
