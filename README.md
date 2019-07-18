@@ -13,8 +13,8 @@ A pleasant day is counted when all of the following are met:
  - Average perceived temperature between 65°F and 75°F
  - Maximum perceived temperature below 85°F
  - Minimum perceived temperature above 55°F
- - Clear or partly cloudy day
- - No precipitation
+ - [Visibility](https://en.wikipedia.org/wiki/Visibility) of more than 5
+ - Less than .05" of precipitation
 
 An unpleasant day is counted when any of the following are met:
  - Average perceived temperature below 40°F
