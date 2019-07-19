@@ -1,4 +1,4 @@
-package cmd
+package parse
 
 type node struct {
 	zipcodes []string
@@ -9,7 +9,7 @@ type node struct {
 
 func BuildMap() [50][116][]node {
 	fullMap := [50][116][]node{}
-	//	zips, err := makeMap()
+	//zips, err := makeMap()
 	//	if err != nil {
 	//		panic(err)
 	//	}

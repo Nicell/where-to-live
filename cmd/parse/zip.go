@@ -1,4 +1,4 @@
-package cmd
+package parse
 
 import (
 	"encoding/csv"
@@ -64,9 +64,7 @@ func parseZip() ([]zip, error) {
 
 		long, _ := strconv.ParseFloat(data.long, 64)
 		lat, _ := strconv.ParseFloat(data.lat, 64)
-		if long < -125.0 || long > -67 || lat > 50 || lat < 24 {
-
-		} else {
+		if !(long < -125.0 || long > -67 || lat > 50 || lat < 24) {
 			zips = append(zips, data)
 		}
 	}
