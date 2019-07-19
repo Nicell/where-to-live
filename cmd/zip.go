@@ -35,7 +35,7 @@ func parseState() (map[string]string, error) {
 }
 
 //parses the zips.tsv file
-func ParseZip() ([]zip, error) {
+func parseZip() ([]zip, error) {
 	file, err := os.Open("data/zips.tsv")
 	if err != nil {
 		return nil, err
@@ -98,9 +98,9 @@ func parsePopulation() (map[string]int, error) {
 }
 
 //Maps all zip codes to a grid stacking overlapping counties
-func MakeMap() ([50][116]string, error) {
-	mapUS := [50][116]string{}
-	zips, err := ParseZip()
+func MakeMap() ([50][116][]string, error) {
+	mapUS := [50][116][]string{}
+	zips, err := parseZip()
 	if err != nil {
 		return mapUS, err
 	}
@@ -117,12 +117,14 @@ func MakeMap() ([50][116]string, error) {
 		if err != nil {
 			return mapUS, err
 		}
-		if mapUS[latConvert(j)][longConvert(k)] != "" {
-			if pop[mapUS[latConvert(j)][longConvert(k)]] < pop[i.zipcode] {
-				mapUS[latConvert(j)][longConvert(k)] = i.zipcode
+		if len(mapUS[latConvert(j)][longConvert(k)]) != 0 {
+			if pop[mapUS[latConvert(j)][longConvert(k)][0]] < pop[i.zipcode] {
+				mapUS[latConvert(j)][longConvert(k)] = append([]string{i.zipcode}, mapUS[latConvert(j)][longConvert(k)]...)
+			} else {
+				mapUS[latConvert(j)][longConvert(k)] = append(mapUS[latConvert(j)][longConvert(k)], i.zipcode)
 			}
 		} else {
-			mapUS[latConvert(j)][longConvert(k)] = i.zipcode
+			mapUS[latConvert(j)][longConvert(k)] = append(mapUS[latConvert(j)][longConvert(k)], i.zipcode)
 		}
 	}
 	return mapUS, nil
