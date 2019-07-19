@@ -1,0 +1,20 @@
+.app-map {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: center;
+}
+
+.MapRow {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: center;
+}
+
+.MapRow > span {
+  margin: .5px;
+  box-sizing: border-box;
+}
+
+.MapRow > span.active {
+  background-color: var(--theme);
+}
