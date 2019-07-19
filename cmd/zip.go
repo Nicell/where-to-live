@@ -98,8 +98,8 @@ func parsePopulation() (map[string]int, error) {
 }
 
 //Maps all zip codes to a grid stacking overlapping counties
-func MakeMap() ([50][116][]string, error) {
-	mapUS := [50][116][]string{}
+func makeMap() ([50][116][]zip, error) {
+	mapUS := [50][116][]zip{}
 	zips, err := parseZip()
 	if err != nil {
 		return mapUS, err
@@ -118,13 +118,13 @@ func MakeMap() ([50][116][]string, error) {
 			return mapUS, err
 		}
 		if len(mapUS[latConvert(j)][longConvert(k)]) != 0 {
-			if pop[mapUS[latConvert(j)][longConvert(k)][0]] < pop[i.zipcode] {
-				mapUS[latConvert(j)][longConvert(k)] = append([]string{i.zipcode}, mapUS[latConvert(j)][longConvert(k)]...)
+			if pop[mapUS[latConvert(j)][longConvert(k)][0].zipcode] < pop[i.zipcode] {
+				mapUS[latConvert(j)][longConvert(k)] = append([]zip{i}, mapUS[latConvert(j)][longConvert(k)]...)
 			} else {
-				mapUS[latConvert(j)][longConvert(k)] = append(mapUS[latConvert(j)][longConvert(k)], i.zipcode)
+				mapUS[latConvert(j)][longConvert(k)] = append(mapUS[latConvert(j)][longConvert(k)], i)
 			}
 		} else {
-			mapUS[latConvert(j)][longConvert(k)] = append(mapUS[latConvert(j)][longConvert(k)], i.zipcode)
+			mapUS[latConvert(j)][longConvert(k)] = append(mapUS[latConvert(j)][longConvert(k)], i)
 		}
 	}
 	return mapUS, nil
