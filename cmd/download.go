@@ -6,33 +6,29 @@ import (
 	"os"
 	"time"
 
+	"github.com/cheggaaa/pb/v3"
+	"github.com/gookit/color"
 	"github.com/jlaffaye/ftp"
 )
 
 // Download retrieves all weather data
 func Download() error {
 	for i := 1990; i < time.Now().Year(); i++ {
-		fmt.Printf("Downloading weather data for %d... ", i)
 		err := DownloadYear(i)
 		if err != nil {
 			return err
 		}
-		fmt.Println("DONE")
 	}
 
-	fmt.Print("Downloading isd-history... ")
 	err := DownloadFile("/pub/data/noaa/isd-history.csv", "data/isd-history.csv")
 	if err != nil {
 		return err
 	}
-	fmt.Println("DONE")
 
-	fmt.Print("Downloading isd-inventory... ")
 	err = DownloadFile("/pub/data/noaa/isd-inventory.csv.z", "data/isd-history.csv.z")
 	if err != nil {
 		return err
 	}
-	fmt.Println("DONE")
 
 	return nil
 }
@@ -51,6 +47,8 @@ func DownloadYear(yr int) error {
 
 // DownloadFile from location to destination via ftp
 func DownloadFile(loc, dest string) error {
+	color.Style{color.FgCyan, color.OpBold}.Printf("\nDownloading %s:\n", dest)
+
 	if _, err := os.Stat(dest); os.IsNotExist(err) {
 		conn, err := ftp.Dial("ftp.ncdc.noaa.gov:21")
 		if err != nil {
@@ -63,11 +61,23 @@ func DownloadFile(loc, dest string) error {
 			return err
 		}
 
+		size, err := conn.FileSize(loc)
+		if err != nil {
+			return err
+		}
+
+		tmpl := `{{percent . }} ({{counters . }}) {{ bar . "[" "=" ">" " " "]" }} {{speed . }} {{rtime . "ETA %s" }}`
+		bar := pb.ProgressBarTemplate(tmpl).Start64(size)
+		defer bar.Finish()
+
 		resp, err := conn.Retr(loc)
 		if err != nil {
 			return err
 		}
 		defer resp.Close()
+
+		barReader := bar.NewProxyReader(resp)
+		defer barReader.Close()
 
 		out, err := os.Create(dest)
 		if err != nil {
@@ -75,8 +85,10 @@ func DownloadFile(loc, dest string) error {
 		}
 		defer out.Close()
 
-		_, err = io.Copy(out, resp)
+		_, err = io.Copy(out, barReader)
 		return err
+	} else {
+		color.Info.Println("Skipped: File already downloaded.")
 	}
 	return nil
 }
