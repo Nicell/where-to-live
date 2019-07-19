@@ -16,6 +16,11 @@ type zip struct {
 	name    string
 }
 
+type population struct {
+	population string
+	zipcode    string
+}
+
 //parses the zips.tsv file
 func parseZip() ([]zip, error) {
 	file, err := os.Open("data/zips.tsv")
@@ -49,15 +54,45 @@ func parseZip() ([]zip, error) {
 	return zips, err
 }
 
-//Maps all zip codes to a grid stacking overlapping counties\
-//TODO: take in population while going through zip codes
-func MakeMap() ([50][116][]string, error) {
-	mapUS := [50][116][]string{}
+//Parses population-by-zip.csv to put into a map with keys of zip codes
+func parsePopulation() (map[string]int, error) {
+	pop := make(map[string]int)
+	file, err := os.Open("data/population-by-zip.csv")
+	if err != nil {
+		return pop, err
+	}
+	defer file.Close()
+	reader := csv.NewReader(file)
+	reader.Read() //ignores column header
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return pop, err
+	}
+	for _, i := range lines {
+		data := population{
+			zipcode:    i[0],
+			population: i[1],
+		}
+		k, err := strconv.ParseInt(data.population, 10, 32)
+		if err != nil {
+			return pop, err
+		}
+		pop[data.zipcode] = int(k)
+	}
+	return pop, nil
+}
+
+//Maps all zip codes to a grid stacking overlapping counties
+func MakeMap() ([50][116]string, error) {
+	mapUS := [50][116]string{}
 	zips, err := parseZip()
 	if err != nil {
 		return mapUS, err
 	}
-
+	pop, err := parsePopulation()
+	if err != nil {
+		fmt.Print(err)
+	}
 	for _, i := range zips {
 		j, err := strconv.ParseFloat(i.lat, 64)
 		if err != nil {
@@ -67,9 +102,13 @@ func MakeMap() ([50][116][]string, error) {
 		if err != nil {
 			return mapUS, err
 		}
-
-		fmt.Printf("Lat: %d  Long: %d ZIP: "+i.zipcode+"\n", latConvert(j), longConvert(k))
-		mapUS[latConvert(j)][longConvert(k)] = append(mapUS[latConvert(j)][longConvert(k)], i.zipcode)
+		if mapUS[latConvert(j)][longConvert(k)] != "" {
+			if pop[mapUS[latConvert(j)][longConvert(k)]] < pop[i.zipcode] {
+				mapUS[latConvert(j)][longConvert(k)] = i.zipcode
+			}
+		} else {
+			mapUS[latConvert(j)][longConvert(k)] = i.zipcode
+		}
 	}
 	return mapUS, nil
 }

@@ -6,9 +6,8 @@ import (
 )
 
 func main() {
-	//err := cmd.Download()
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
-	fmt.Println(cmd.MakeMap())
+	err := cmd.Download()
+	if err != nil {
+		fmt.Println(err)
+	}
 }
