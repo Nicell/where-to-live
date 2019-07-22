@@ -8,13 +8,13 @@ import (
 	"strconv"
 )
 
-//a struct that stores the zipcode, lat, long, and name of a location
-type zip struct {
-	zipcode string
+//a struct that stores the Zipcode, lat, long, and Name of a Location
+type Zip struct {
+	Zipcode string
 	lat     string
 	long    string
-	name    string
-	state   string
+	Name    string
+	State   string
 }
 
 func parseState() (map[string]string, error) {
@@ -35,7 +35,7 @@ func parseState() (map[string]string, error) {
 }
 
 //parses the zips.tsv file
-func parseZip() ([]zip, error) {
+func parseZip() ([]Zip, error) {
 	file, err := os.Open("data/zips.tsv")
 	if err != nil {
 		return nil, err
@@ -48,18 +48,18 @@ func parseZip() ([]zip, error) {
 	if err != nil {
 		panic(err)
 	}
-	zips := []zip{}
+	zips := []Zip{}
 	states, err := parseState()
 	if err != nil {
 		return zips, err
 	}
 	for _, i := range lines {
-		data := zip{
-			zipcode: i[0],
+		data := Zip{
+			Zipcode: i[0],
 			lat:     i[1],
 			long:    i[2],
-			name:    i[4],
-			state:   states[i[5]],
+			Name:    i[4],
+			State:   states[i[5]],
 		}
 
 		long, _ := strconv.ParseFloat(data.long, 64)
@@ -71,10 +71,10 @@ func parseZip() ([]zip, error) {
 	return zips, err
 }
 
-//Parses population-by-zip.csv to put into a map with keys of zip codes
+//Parses population-by-Zip.csv to put into a map with keys of Zip codes
 func parsePopulation() (map[string]int, error) {
 	pop := make(map[string]int)
-	file, err := os.Open("data/population-by-zip.csv")
+	file, err := os.Open("data/population-by-Zip.csv")
 	if err != nil {
 		return pop, err
 	}
@@ -95,9 +95,9 @@ func parsePopulation() (map[string]int, error) {
 	return pop, nil
 }
 
-//Maps all zip codes to a grid stacking overlapping counties
-func makeMap() ([50][116][]zip, error) {
-	mapUS := [50][116][]zip{}
+//Maps all Zip codes to a grid stacking overlapping counties
+func makeMap() ([50][116][]Zip, error) {
+	mapUS := [50][116][]Zip{}
 	zips, err := parseZip()
 	if err != nil {
 		return mapUS, err
@@ -116,8 +116,8 @@ func makeMap() ([50][116][]zip, error) {
 			return mapUS, err
 		}
 		if len(mapUS[latConvert(j)][longConvert(k)]) != 0 {
-			if pop[mapUS[latConvert(j)][longConvert(k)][0].zipcode] < pop[i.zipcode] {
-				mapUS[latConvert(j)][longConvert(k)] = append([]zip{i}, mapUS[latConvert(j)][longConvert(k)]...)
+			if pop[mapUS[latConvert(j)][longConvert(k)][0].Zipcode] < pop[i.Zipcode] {
+				mapUS[latConvert(j)][longConvert(k)] = append([]Zip{i}, mapUS[latConvert(j)][longConvert(k)]...)
 			} else {
 				mapUS[latConvert(j)][longConvert(k)] = append(mapUS[latConvert(j)][longConvert(k)], i)
 			}

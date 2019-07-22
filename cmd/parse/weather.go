@@ -15,28 +15,28 @@ import (
 )
 
 type TotalWeather struct {
-	january   monthWeather
-	february  monthWeather
-	march     monthWeather
-	april     monthWeather
-	may       monthWeather
-	june      monthWeather
-	july      monthWeather
-	august    monthWeather
-	september monthWeather
-	october   monthWeather
-	november  monthWeather
-	december  monthWeather
+	January   MonthWeather
+	February  MonthWeather
+	March     MonthWeather
+	April     MonthWeather
+	May       MonthWeather
+	June      MonthWeather
+	July      MonthWeather
+	August    MonthWeather
+	September MonthWeather
+	October   MonthWeather
+	November  MonthWeather
+	December  MonthWeather
 }
-type monthWeather struct {
-	good int
-	bad  int
+type MonthWeather struct {
+	Good int
+	Bad  int
 }
 
-type location struct {
+type Location struct {
 	lat     int
 	long    int
-	weather TotalWeather
+	Weather TotalWeather
 }
 
 type weatherData struct {
@@ -45,8 +45,7 @@ type weatherData struct {
 	date                                                                  time.Time
 }
 
-func parseGSOD(year int) (map[string]location, error) {
-	count := 0
+func parseGSOD(year int) (map[string]Location, error) {
 	filepath := fmt.Sprintf("data/gsod_%d.tar", year)
 	stations, _ := parseISDHistory()
 	file, err := os.Open(filepath)
@@ -58,7 +57,9 @@ func parseGSOD(year int) (map[string]location, error) {
 	var buffer bytes.Buffer
 	for {
 		nextfile, err := tarReader.Next()
-		if err != nil {
+		if err == io.EOF {
+			return stations, nil
+		} else if err != nil {
 			return stations, err
 		}
 		if nextfile.FileInfo().IsDir() {
@@ -89,7 +90,7 @@ func parseGSOD(year int) (map[string]location, error) {
 			}
 
 			station := stations[toStationId(line)]
-			if station == (location{}) {
+			if station == (Location{}) {
 				continue
 			}
 			data, err := processLine(line)
@@ -97,71 +98,69 @@ func parseGSOD(year int) (map[string]location, error) {
 				return stations, err
 			}
 			j := &station
-			count++
-			fmt.Print(count)
-			fmt.Println(station.weather)
 			processDay(j, data)
-			fmt.Println(station.weather)
 			stations[toStationId(line)] = station
 		}
 	}
 }
 
-func processDay(station *location, day weatherData) {
+func processDay(station *Location, day weatherData) {
 	if day.precip > 0.1 || day.minTemp < 40 || day.maxTemp > 85 || day.visib < 5 || day.harshWeather > 0 {
 		switch day.date.Month() {
 		case time.January:
-			station.weather.january.bad++
+			station.Weather.January.Bad++
 		case time.February:
-			station.weather.february.bad++
+			station.Weather.February.Bad++
 		case time.March:
-			station.weather.march.bad++
+			station.Weather.March.Bad++
 		case time.April:
-			station.weather.april.bad++
+			station.Weather.April.Bad++
 		case time.May:
-			station.weather.may.bad++
+			station.Weather.May.Bad++
 		case time.June:
-			station.weather.june.bad++
+			station.Weather.June.Bad++
 		case time.July:
-			station.weather.july.bad++
+			station.Weather.July.Bad++
 		case time.August:
-			station.weather.august.bad++
+			station.Weather.August.Bad++
 		case time.September:
-			station.weather.september.bad++
+			station.Weather.September.Bad++
 		case time.October:
-			station.weather.october.bad++
+			station.Weather.October.Bad++
 		case time.November:
-			station.weather.november.bad++
+			station.Weather.November.Bad++
 		case time.December:
-			station.weather.december.bad++
+			station.Weather.December.Bad++
 		}
-	} else {
+	} else if day.avgTemp > 65 && day.avgTemp < 75 && day.visib > 5 && day.maxTemp < 85 && day.minTemp > 55 && day.precip < .05 && day.harshWeather == 0 {
 		switch day.date.Month() {
 		case time.January:
-			station.weather.january.good++
+			station.Weather.January.Good++
 		case time.February:
-			station.weather.february.good++
+			station.Weather.February.Good++
 		case time.March:
-			station.weather.march.good++
+			station.Weather.March.Good++
 		case time.April:
-			station.weather.april.good++
+			station.Weather.April.Good++
 		case time.May:
-			station.weather.may.good++
+			station.Weather.May.Good++
 		case time.June:
-			station.weather.june.good++
+			station.Weather.June.Good++
 		case time.July:
-			station.weather.july.good++
+			station.Weather.July.Good++
 		case time.August:
-			station.weather.august.good++
+			station.Weather.August.Good++
 		case time.September:
-			station.weather.september.good++
+			station.Weather.September.Good++
 		case time.October:
-			station.weather.october.good++
+			station.Weather.October.Good++
 		case time.November:
-			station.weather.november.good++
+			station.Weather.November.Good++
 		case time.December:
-			station.weather.december.good++
+			station.Weather.December.Good++
 		}
+	} else {
+
 	}
 }
 
@@ -237,8 +236,8 @@ func toStationId(l string) string {
 	return fmt.Sprintf("%s", l[0:6])
 }
 
-func parseISDHistory() (map[string]location, error) {
-	stations := make(map[string]location)
+func parseISDHistory() (map[string]Location, error) {
+	stations := make(map[string]Location)
 	file, err := os.Open("data/isd-history.csv")
 	if err != nil {
 		return stations, err
@@ -251,7 +250,7 @@ func parseISDHistory() (map[string]location, error) {
 			lat, _ := strconv.ParseFloat(i[6], 64)
 			long, _ := strconv.ParseFloat(i[7], 64)
 			if !(long < -125.0 || long > -67 || lat > 50 || lat < 24) {
-				stations[i[0]] = location{lat: latConvert(lat), long: longConvert(long)}
+				stations[i[0]] = Location{lat: latConvert(lat), long: longConvert(long)}
 			}
 		}
 	}
