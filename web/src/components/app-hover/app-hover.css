@@ -1,0 +1,25 @@
+.app-hover {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 10px));
+  box-sizing: border-box;
+  padding: 10px 15px;
+  border-radius: 4px;
+  background: var(--background-light);
+  border: solid 1px var(--background-dark);
+  box-shadow: var(--shadow-2);
+}
+
+.app-hover:before {
+  content: '';
+  display: block;
+  width: 10px;
+  height: 10px;
+  background: var(--background-light);
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 6px) rotate(45deg);
+  border: 1px solid transparent;
+  border-bottom-color: var(--background-dark);
+  border-right-color: var(--background-dark);
+}

@@ -10,7 +10,12 @@ import { HTMLStencilElement, JSXBase } from '@stencil/core/internal';
 
 export namespace Components {
   interface AppHome {}
-  interface AppMap {}
+  interface AppHover {
+    'state': hover;
+  }
+  interface AppMap {
+    'handleHover': Function;
+  }
 }
 
 declare global {
@@ -22,6 +27,12 @@ declare global {
     new (): HTMLAppHomeElement;
   };
 
+  interface HTMLAppHoverElement extends Components.AppHover, HTMLStencilElement {}
+  var HTMLAppHoverElement: {
+    prototype: HTMLAppHoverElement;
+    new (): HTMLAppHoverElement;
+  };
+
   interface HTMLAppMapElement extends Components.AppMap, HTMLStencilElement {}
   var HTMLAppMapElement: {
     prototype: HTMLAppMapElement;
@@ -29,16 +40,23 @@ declare global {
   };
   interface HTMLElementTagNameMap {
     'app-home': HTMLAppHomeElement;
+    'app-hover': HTMLAppHoverElement;
     'app-map': HTMLAppMapElement;
   }
 }
 
 declare namespace LocalJSX {
   interface AppHome extends JSXBase.HTMLAttributes<HTMLAppHomeElement> {}
-  interface AppMap extends JSXBase.HTMLAttributes<HTMLAppMapElement> {}
+  interface AppHover extends JSXBase.HTMLAttributes<HTMLAppHoverElement> {
+    'state'?: hover;
+  }
+  interface AppMap extends JSXBase.HTMLAttributes<HTMLAppMapElement> {
+    'handleHover'?: Function;
+  }
 
   interface IntrinsicElements {
     'app-home': AppHome;
+    'app-hover': AppHover;
     'app-map': AppMap;
   }
 }

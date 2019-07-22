@@ -1,20 +1,28 @@
 .app-map {
+  position: relative;
+}
+
+.map-zoom {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: var(--background-light);
+  border-radius: 4px;
+  box-shadow: var(--shadow-1);
+}
+
+.map-zoom > div {
+  padding: 10px;
+  width: 15px;
+  font-size: 24px;
+  height: 18px;
   display: flex;
-  flex-direction: column-reverse;
   justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
 }
 
-.MapRow {
-  display: flex;
-  flex-direction: row-reverse;
-  justify-content: center;
-}
-
-.MapRow > span {
-  margin: .5px;
-  box-sizing: border-box;
-}
-
-.MapRow > span.active {
-  background-color: var(--theme);
+.map-zoom > div:first-child {
+  border-bottom: 1px solid rgba(0,0,0,0.2);
 }

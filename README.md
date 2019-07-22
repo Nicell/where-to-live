@@ -30,4 +30,5 @@ All other days are not counted and are instead considered normal days.
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 # 🤝 Acknowledgments
-Thanks to [Kelly Norton](https://github.com/kellegous) for the [pleasant-places](https://github.com/kellegous/pleasant-places) repository, which we used as reference and inspiration.
+ - [Kelly Norton](https://github.com/kellegous) for the [pleasant-places](https://github.com/kellegous/pleasant-places) repository, which we used as reference and inspiration.
+ - [Spencer Mortensen](http://spencermortensen.com) for his [article](http://spencermortensen.com/articles/bezier-circle/) explaining how to create very accurate circle approximations using bezier curves, which we used for creating circles and curves in HTML canvas.
