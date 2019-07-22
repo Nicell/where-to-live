@@ -34,24 +34,24 @@ type monthWeather struct {
 }
 
 type location struct {
-	lat  int
-	long int
+	lat     int
+	long    int
+	weather TotalWeather
 }
 
 type weatherData struct {
-	station                                                 location
-	visib, minTemp, maxTemp, precip, avgTemp, wind, maxWind float64
-	harshWeather                                            string
-	date                                                    time.Time
+	station                                                               string
+	visib, minTemp, maxTemp, precip, avgTemp, wind, maxWind, harshWeather float64
+	date                                                                  time.Time
 }
 
-func ParseGSOD(year int) ([]weatherData, error) {
+func parseGSOD(year int) (map[string]location, error) {
+	count := 0
 	filepath := fmt.Sprintf("data/gsod_%d.tar", year)
-	s := []weatherData{}
 	stations, _ := parseISDHistory()
 	file, err := os.Open(filepath)
 	if err != nil {
-		return s, err
+		return stations, err
 	}
 	defer file.Close()
 	tarReader := tar.NewReader(file)
@@ -59,7 +59,7 @@ func ParseGSOD(year int) ([]weatherData, error) {
 	for {
 		nextfile, err := tarReader.Next()
 		if err != nil {
-			return s, err
+			return stations, err
 		}
 		if nextfile.FileInfo().IsDir() {
 			continue
@@ -67,7 +67,7 @@ func ParseGSOD(year int) ([]weatherData, error) {
 
 		gzipF, err := gzip.NewReader(tarReader)
 		if err != nil {
-			return s, err
+			return stations, err
 		}
 		opReader := bufio.NewReader(gzipF)
 		for {
@@ -75,7 +75,7 @@ func ParseGSOD(year int) ([]weatherData, error) {
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				return s, err
+				return stations, err
 			}
 			buffer.Write(in)
 			if prefix {
@@ -92,18 +92,81 @@ func ParseGSOD(year int) ([]weatherData, error) {
 			if station == (location{}) {
 				continue
 			}
-			tmp, err := processLine(line, station)
+			data, err := processLine(line)
 			if err != nil {
-				return s, err
+				return stations, err
 			}
-			s = append(s, tmp)
+			j := &station
+			count++
+			fmt.Print(count)
+			fmt.Println(station.weather)
+			processDay(j, data)
+			fmt.Println(station.weather)
+			stations[toStationId(line)] = station
 		}
 	}
 }
 
-func processLine(line string, station location) (weatherData, error) {
+func processDay(station *location, day weatherData) {
+	if day.precip > 0.1 || day.minTemp < 40 || day.maxTemp > 85 || day.visib < 5 || day.harshWeather > 0 {
+		switch day.date.Month() {
+		case time.January:
+			station.weather.january.bad++
+		case time.February:
+			station.weather.february.bad++
+		case time.March:
+			station.weather.march.bad++
+		case time.April:
+			station.weather.april.bad++
+		case time.May:
+			station.weather.may.bad++
+		case time.June:
+			station.weather.june.bad++
+		case time.July:
+			station.weather.july.bad++
+		case time.August:
+			station.weather.august.bad++
+		case time.September:
+			station.weather.september.bad++
+		case time.October:
+			station.weather.october.bad++
+		case time.November:
+			station.weather.november.bad++
+		case time.December:
+			station.weather.december.bad++
+		}
+	} else {
+		switch day.date.Month() {
+		case time.January:
+			station.weather.january.good++
+		case time.February:
+			station.weather.february.good++
+		case time.March:
+			station.weather.march.good++
+		case time.April:
+			station.weather.april.good++
+		case time.May:
+			station.weather.may.good++
+		case time.June:
+			station.weather.june.good++
+		case time.July:
+			station.weather.july.good++
+		case time.August:
+			station.weather.august.good++
+		case time.September:
+			station.weather.september.good++
+		case time.October:
+			station.weather.october.good++
+		case time.November:
+			station.weather.november.good++
+		case time.December:
+			station.weather.december.good++
+		}
+	}
+}
+
+func processLine(line string) (weatherData, error) {
 	data := weatherData{}
-	data.station = station
 	year, err := strconv.ParseInt(line[14:18], 10, 32)
 	if err != nil {
 		return weatherData{}, err
@@ -155,7 +218,16 @@ func processLine(line string, station location) (weatherData, error) {
 	}
 	data.precip = tmp
 
-	l := strings.TrimSpace(line[132:])
+	tmp, err = strconv.ParseFloat(strings.TrimSpace(line[68:72]), 64)
+	if err != nil {
+		return weatherData{}, err
+	}
+	data.visib = tmp
+
+	l, err := strconv.ParseFloat(strings.TrimSpace(line[134:]), 64)
+	if err != nil {
+		return weatherData{}, err
+	}
 	data.harshWeather = l
 
 	return data, nil
