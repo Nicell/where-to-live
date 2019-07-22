@@ -1,10 +1,12 @@
-package parse
+package cmd
+
+import "github.com/Nicell/where-to-live/cmd/parse"
 
 type node struct {
 	zipcodes []string
 	city     string
 	state    string
-	weather  totalWeather
+	weather  parse.TotalWeather
 }
 
 func BuildMap() [50][116][]node {
