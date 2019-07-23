@@ -30,7 +30,7 @@ func parseState() (map[string]string, error) {
 		return states, err
 	}
 	for _, i := range lines {
-		states[i[2]] = strings.TrimPrefix(i[1], "0")
+		states[i[2]] = i[1]
 	}
 	return states, nil
 }
@@ -60,9 +60,8 @@ func parseZip() ([]Zip, error) {
 			lat:     i[1],
 			long:    i[2],
 			Name:    i[4],
-			State:   states[i[5]],
+			State:   states[strings.TrimPrefix(i[5], "0")],
 		}
-
 		long, _ := strconv.ParseFloat(data.long, 64)
 		lat, _ := strconv.ParseFloat(data.lat, 64)
 		if !(long < -125.0 || long > -67 || lat > 50 || lat < 24) {
