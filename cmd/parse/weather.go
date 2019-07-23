@@ -46,8 +46,106 @@ type weatherData struct {
 	date                                                                  time.Time
 }
 
-func ParseGSOD(year int) ([52][116][]Station, error) {
+func BuildWeatherMap() ([52][116]Station, error) {
+	allYears := [][52][116]Station{}
+	for i := 1990; i < time.Now().Year(); i++ {
+		fmt.Println(i)
+		tmp, err := parseGSOD(i)
+		if err != nil {
+			return [52][116]Station{}, err
+		}
+		allYears = append(allYears, averageStations(tmp))
+	}
+	return averageYears(allYears), nil
+}
 
+func averageYears(years [][52][116]Station) [52][116]Station {
+	avg := [52][116]Station{}
+	for x, a := range years {
+		for y, b := range a {
+			for z := range b {
+				avg[y][z].Weather.January.Good += years[x][y][z].Weather.January.Good
+				avg[y][z].Weather.January.Bad += years[x][y][z].Weather.January.Bad
+
+				avg[y][z].Weather.February.Good += years[x][y][z].Weather.February.Good
+				avg[y][z].Weather.February.Bad += years[x][y][z].Weather.February.Bad
+
+				avg[y][z].Weather.March.Good += years[x][y][z].Weather.March.Good
+				avg[y][z].Weather.March.Bad += years[x][y][z].Weather.March.Bad
+
+				avg[y][z].Weather.April.Good += years[x][y][z].Weather.April.Good
+				avg[y][z].Weather.April.Bad += years[x][y][z].Weather.April.Bad
+
+				avg[y][z].Weather.May.Good += years[x][y][z].Weather.May.Good
+				avg[y][z].Weather.May.Bad += years[x][y][z].Weather.May.Bad
+
+				avg[y][z].Weather.June.Good += years[x][y][z].Weather.June.Good
+				avg[y][z].Weather.June.Bad += years[x][y][z].Weather.June.Bad
+
+				avg[y][z].Weather.July.Good += years[x][y][z].Weather.July.Good
+				avg[y][z].Weather.July.Bad += years[x][y][z].Weather.July.Bad
+
+				avg[y][z].Weather.August.Good += years[x][y][z].Weather.August.Good
+				avg[y][z].Weather.August.Bad += years[x][y][z].Weather.August.Bad
+
+				avg[y][z].Weather.September.Good += years[x][y][z].Weather.September.Good
+				avg[y][z].Weather.September.Bad += years[x][y][z].Weather.September.Bad
+
+				avg[y][z].Weather.October.Good += years[x][y][z].Weather.October.Good
+				avg[y][z].Weather.October.Bad += years[x][y][z].Weather.October.Bad
+
+				avg[y][z].Weather.November.Good += years[x][y][z].Weather.November.Good
+				avg[y][z].Weather.November.Bad += years[x][y][z].Weather.November.Bad
+
+				avg[y][z].Weather.December.Good += years[x][y][z].Weather.December.Good
+				avg[y][z].Weather.December.Bad += years[x][y][z].Weather.December.Bad
+			}
+		}
+	}
+	for x, a := range avg {
+		for y, b := range a {
+			avg[x][y].Weather.January.Good = b.Weather.January.Good / float64(len(years))
+			avg[x][y].Weather.January.Bad = b.Weather.January.Bad / float64(len(years))
+
+			avg[x][y].Weather.February.Good = b.Weather.February.Good / float64(len(years))
+			avg[x][y].Weather.February.Bad = b.Weather.February.Bad / float64(len(years))
+
+			avg[x][y].Weather.March.Good = b.Weather.March.Good / float64(len(years))
+			avg[x][y].Weather.March.Bad = b.Weather.March.Bad / float64(len(years))
+
+			avg[x][y].Weather.April.Good = b.Weather.April.Good / float64(len(years))
+			avg[x][y].Weather.April.Bad = b.Weather.April.Bad / float64(len(years))
+
+			avg[x][y].Weather.May.Good = b.Weather.May.Good / float64(len(years))
+			avg[x][y].Weather.May.Bad = b.Weather.May.Bad / float64(len(years))
+
+			avg[x][y].Weather.June.Good = b.Weather.June.Good / float64(len(years))
+			avg[x][y].Weather.June.Bad = b.Weather.June.Bad / float64(len(years))
+
+			avg[x][y].Weather.July.Good = b.Weather.July.Good / float64(len(years))
+			avg[x][y].Weather.July.Bad = b.Weather.July.Bad / float64(len(years))
+
+			avg[x][y].Weather.August.Good = b.Weather.August.Good / float64(len(years))
+			avg[x][y].Weather.August.Bad = b.Weather.August.Bad / float64(len(years))
+
+			avg[x][y].Weather.September.Good = b.Weather.September.Good / float64(len(years))
+			avg[x][y].Weather.September.Bad = b.Weather.September.Bad / float64(len(years))
+
+			avg[x][y].Weather.October.Good = b.Weather.October.Good / float64(len(years))
+			avg[x][y].Weather.October.Bad = b.Weather.October.Bad / float64(len(years))
+
+			avg[x][y].Weather.November.Good = b.Weather.November.Good / float64(len(years))
+			avg[x][y].Weather.November.Bad = b.Weather.November.Bad / float64(len(years))
+
+			avg[x][y].Weather.December.Good = b.Weather.December.Good / float64(len(years))
+			avg[x][y].Weather.December.Bad = b.Weather.December.Bad / float64(len(years))
+
+		}
+	}
+	return avg
+}
+
+func parseGSOD(year int) ([52][116][]Station, error) {
 	filepath := fmt.Sprintf("data/gsod_%d.tar", year)
 	stations, _ := parseISDHistory()
 	weatherMap := [52][116][]Station{}
@@ -113,14 +211,14 @@ func ParseGSOD(year int) ([52][116][]Station, error) {
 	}
 }
 
-func AverageStations(in [52][116][]Station) [52][116]Station {
+func averageStations(in [52][116][]Station) [52][116]Station {
 	out := [52][116]Station{}
 	t := TotalWeather{}
 	for x, a := range in {
 		for y, b := range a {
+			t = TotalWeather{}
 			for _, c := range b {
 				if c != (Station{}) {
-					t = TotalWeather{}
 					t.totalDays += c.Weather.totalDays
 					t.January.total += c.Weather.January.total
 					t.January.Good += c.Weather.January.Good
@@ -171,7 +269,6 @@ func AverageStations(in [52][116][]Station) [52][116]Station {
 					t.December.Bad += c.Weather.December.Bad
 				}
 			}
-
 			if t != (TotalWeather{}) {
 				if t.January.total != 0 {
 					t.January.Good = (t.January.Good / float64(t.January.total)) * 31

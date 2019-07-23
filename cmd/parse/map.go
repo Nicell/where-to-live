@@ -31,8 +31,7 @@ func WriteJSON() {
 
 func BuildMap() ([52][116]Node, error) {
 	fullMap := [52][116]Node{}
-	t, err := ParseGSOD(2018)
-	data := AverageStations(t)
+	data, err := BuildWeatherMap()
 	if err != nil {
 		return fullMap, err
 	}

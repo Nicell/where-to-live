@@ -6,6 +6,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"strings"
 )
 
 //a struct that stores the Zipcode, lat, long, and Name of a Station
@@ -29,7 +30,7 @@ func parseState() (map[string]string, error) {
 		return states, err
 	}
 	for _, i := range lines {
-		states[i[2]] = i[1]
+		states[i[2]] = strings.TrimPrefix(i[1], "0")
 	}
 	return states, nil
 }
@@ -138,6 +139,6 @@ func latConvert(lat float64) int {
 func longConvert(long float64) int {
 	long = math.Abs(long)
 	long -= 9
-	t := ((math.Round(long/.5) * .5) * 2) - 116
+	t := math.Floor(long/.5) - 116
 	return int(t)
 }
