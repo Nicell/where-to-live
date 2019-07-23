@@ -6,12 +6,14 @@
 
 
 import { HTMLStencilElement, JSXBase } from '@stencil/core/internal';
-
+import {
+  Hover,
+} from './components/app-home/app-home';
 
 export namespace Components {
   interface AppHome {}
   interface AppHover {
-    'state': hover;
+    'state': Hover;
   }
   interface AppMap {
     'handleHover': Function;
@@ -48,7 +50,7 @@ declare global {
 declare namespace LocalJSX {
   interface AppHome extends JSXBase.HTMLAttributes<HTMLAppHomeElement> {}
   interface AppHover extends JSXBase.HTMLAttributes<HTMLAppHoverElement> {
-    'state'?: hover;
+    'state'?: Hover;
   }
   interface AppMap extends JSXBase.HTMLAttributes<HTMLAppMapElement> {
     'handleHover'?: Function;

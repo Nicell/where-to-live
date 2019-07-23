@@ -1,11 +1,6 @@
 import { Component, Element, Prop, h } from '@stencil/core';
 
-interface hover {
-  x: number;
-  y: number;
-  data: string;
-  visible: boolean;
-}
+import { Hover } from '../app-home/app-home';
 
 @Component({
   tag: 'app-hover',
@@ -14,7 +9,7 @@ interface hover {
 })
 export class AppHover {
   @Element() el: HTMLElement;
-  @Prop() state: hover;
+  @Prop() state: Hover;
 
   render() {
     return this.state.visible ? (

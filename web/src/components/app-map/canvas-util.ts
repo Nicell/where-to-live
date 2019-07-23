@@ -53,7 +53,7 @@ export function drawCanvas(ctx: CanvasRenderingContext2D, data, cell: number) {
         radius.bl = half;
 
       ctx.fillStyle = `hsla(203, 100%, 46%, ${Math.random() * .8 + .2})`;
-      roundRect(ctx, j * cell, i * cell, size, size, radius);
+      roundRect(ctx, j * cell + (cell - size) / 2, i * cell + (cell - size) / 2, size, size, radius);
     }
   }));
 }

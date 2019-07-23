@@ -1,6 +1,6 @@
 import { Component, State, h } from '@stencil/core';
 
-interface hover {
+export interface Hover {
   x: number;
   y: number;
   data: string;
@@ -13,7 +13,7 @@ interface hover {
   shadow: false
 })
 export class AppHome {
-  @State() hover: hover;
+  @State() hover: Hover;
 
   constructor() {
     this.hover = {
@@ -24,7 +24,7 @@ export class AppHome {
     }
   }
 
-  updateHover = (hover: hover) => {
+  updateHover = (hover: Hover) => {
     this.hover = hover;
   }
 
