@@ -2,7 +2,6 @@ package parse
 
 import (
 	"encoding/csv"
-	"fmt"
 	"math"
 	"os"
 	"strconv"
@@ -80,7 +79,10 @@ func parsePopulation() (map[string]int, error) {
 	}
 	defer file.Close()
 	reader := csv.NewReader(file)
-	reader.Read() //ignores column header
+	_, err = reader.Read() //ignores column header
+	if err != nil {
+		return pop, err
+	}
 	lines, err := reader.ReadAll()
 	if err != nil {
 		return pop, err
@@ -102,9 +104,9 @@ func makeMap() ([52][116][]Zip, error) {
 	if err != nil {
 		return mapUS, err
 	}
-	pop, err := parsePopulation()
+	namePop, err := nameToPop()
 	if err != nil {
-		fmt.Print(err)
+		return mapUS, err
 	}
 	for _, i := range zips {
 		j, err := strconv.ParseFloat(i.lat, 64)
@@ -116,7 +118,7 @@ func makeMap() ([52][116][]Zip, error) {
 			return mapUS, err
 		}
 		if len(mapUS[latConvert(j)][longConvert(k)]) != 0 {
-			if pop[mapUS[latConvert(j)][longConvert(k)][0].Zipcode] < pop[i.Zipcode] {
+			if namePop[mapUS[latConvert(j)][longConvert(k)][0].State+"."+mapUS[latConvert(j)][longConvert(k)][0].Name] < namePop[i.State+"."+i.Name] {
 				mapUS[latConvert(j)][longConvert(k)] = append([]Zip{i}, mapUS[latConvert(j)][longConvert(k)]...)
 			} else {
 				mapUS[latConvert(j)][longConvert(k)] = append(mapUS[latConvert(j)][longConvert(k)], i)
@@ -126,6 +128,22 @@ func makeMap() ([52][116][]Zip, error) {
 		}
 	}
 	return mapUS, nil
+}
+
+func nameToPop() (map[string]int, error) {
+	names := make(map[string]int)
+	zipPop, err := parsePopulation()
+	if err != nil {
+		return names, err
+	}
+	zips, err := parseZip()
+	if err != nil {
+		return names, err
+	}
+	for _, a := range zips {
+		names[a.State+"."+a.Name] += zipPop[a.Zipcode]
+	}
+	return names, nil
 }
 
 //Converts a latitude to fit into the grid
