@@ -6,6 +6,9 @@ data/*.tar
 data/isd-history.csv
 data/isd-history.csv.z
 
+# Generated Data
+*.json
+
 # Binaries for programs and plugins
 *.exe
 *.exe~

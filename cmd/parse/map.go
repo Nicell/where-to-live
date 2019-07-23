@@ -2,7 +2,6 @@ package parse
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 )
 
@@ -14,12 +13,14 @@ type Node struct {
 }
 
 func WriteJSON() {
-	mapUS := BuildMap()
+	mapUS, err := BuildMap()
+	if err != nil {
+		panic(err)
+	}
 	file, err := json.MarshalIndent(mapUS, "", " ")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(file)
 	jsonFile, err := os.Create("test.json")
 	_, err = jsonFile.Write(file)
 	if err != nil {
@@ -28,19 +29,16 @@ func WriteJSON() {
 	defer jsonFile.Close()
 }
 
-func BuildMap() [50][116]Node {
-	fullMap := [50][116]Node{}
-	reverse, err := reverseMap()
+func BuildMap() ([52][116]Node, error) {
+	fullMap := [52][116]Node{}
+	t, err := ParseGSOD(2018)
+	data := AverageStations(t)
 	if err != nil {
-		panic(err)
-	}
-	data, err := parseGSOD(2018)
-	if err != nil {
-		panic(err)
+		return fullMap, err
 	}
 	zips, err := makeMap()
 	if err != nil {
-		panic(err)
+		return fullMap, err
 	}
 	for x, b := range fullMap {
 		for y := range b {
@@ -48,21 +46,9 @@ func BuildMap() [50][116]Node {
 				fullMap[x][y].City = zips[x][y][0].Name
 				fullMap[x][y].Zipcodes = zips[x][y]
 				fullMap[x][y].State = zips[x][y][0].State
-				fullMap[x][y].Weather = data[reverse[Location{x, y, TotalWeather{}}]].Weather
+				fullMap[x][y].Weather = data[x][y].Weather
 			}
 		}
 	}
-	return fullMap
-}
-
-func reverseMap() (map[Location]string, error) {
-	reverse := make(map[Location]string)
-	regular, err := parseISDHistory()
-	if err != nil {
-		return reverse, err
-	}
-	for x, v := range regular {
-		reverse[v] = x
-	}
-	return reverse, nil
+	return fullMap, nil
 }

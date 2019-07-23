@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-//a struct that stores the Zipcode, lat, long, and Name of a Location
+//a struct that stores the Zipcode, lat, long, and Name of a Station
 type Zip struct {
 	Zipcode string
 	lat     string
@@ -96,8 +96,8 @@ func parsePopulation() (map[string]int, error) {
 }
 
 //Maps all Zip codes to a grid stacking overlapping counties
-func makeMap() ([50][116][]Zip, error) {
-	mapUS := [50][116][]Zip{}
+func makeMap() ([52][116][]Zip, error) {
+	mapUS := [52][116][]Zip{}
 	zips, err := parseZip()
 	if err != nil {
 		return mapUS, err
