@@ -135,7 +135,7 @@ export class AppMap {
     ctx.clearRect(0, 0, c.width, c.height);
     const cell = c.width / data[0].length;
     ctx.setTransform(this.transform)
-    drawCanvas(ctx, data, cell);
+    drawCanvas(ctx, data, this.transform, this.width, cell);
   }
 
   calcWidth = () => {
