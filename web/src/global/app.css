@@ -1,0 +1,36 @@
+/*
+  Global App CSS
+  ----------------------
+  Use this file for styles that should be applied to all components.
+  For example, "font-family" within the "body" selector is a CSS property
+  most apps will want applied to all components.
+
+  Any global CSS variables should also be applied here.
+*/
+
+
+:root {
+  --theme: 	hsl(203, 100%, 46%);
+
+  --foreground-theme: hsl(255, 100%, 100%);
+  --foreground-theme-secondary: hsla(255, 100%, 100%, .8);
+
+  --background-light: hsl(255, 0%, 100%);
+  --background: hsl(255, 0%, 98%);
+  --background-dark: hsl(255, 0%, 94%);
+
+  --foreground: hsl(0, 0%, 13%);
+  --foreground-secondary: hsl(0, 0%, 26%);
+
+  --shadow-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  --shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+  --shadow-3: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+}
+
+body {
+  margin: 0px;
+  padding: 0px;
+  background-color: var(--background);
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+  overflow-x: hidden;
+}
