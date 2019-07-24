@@ -2,14 +2,14 @@ package parse
 
 import (
 	"encoding/json"
-	"os"
+	"io/ioutil"
 )
 
 type Node struct {
-	Zipcodes []Zip
-	City     string
-	State    string
-	Weather  TotalWeather
+	Zipcodes []Zip        `json:"z"`
+	City     string       `json:"c"`
+	State    string       `json:"s"`
+	Weather  TotalWeather `json:"w"`
 }
 
 func WriteJSON() {
@@ -21,12 +21,10 @@ func WriteJSON() {
 	if err != nil {
 		panic(err)
 	}
-	jsonFile, err := os.Create("test.json")
-	_, err = jsonFile.Write(file)
+	err = ioutil.WriteFile("test.json", file, 0644)
 	if err != nil {
 		panic(err)
 	}
-	defer jsonFile.Close()
 }
 
 func BuildMap() ([52][116]Node, error) {

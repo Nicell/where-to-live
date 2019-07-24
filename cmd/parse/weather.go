@@ -8,6 +8,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -15,30 +16,30 @@ import (
 )
 
 type TotalWeather struct {
-	January   MonthWeather
-	February  MonthWeather
-	March     MonthWeather
-	April     MonthWeather
-	May       MonthWeather
-	June      MonthWeather
-	July      MonthWeather
-	August    MonthWeather
-	September MonthWeather
-	October   MonthWeather
-	November  MonthWeather
-	December  MonthWeather
+	January   MonthWeather `json:"j"`
+	February  MonthWeather `json:"f"`
+	March     MonthWeather `json:"m"`
+	April     MonthWeather `json:"a"`
+	May       MonthWeather `json:"y"`
+	June      MonthWeather `json:"u"`
+	July      MonthWeather `json:"l"`
+	August    MonthWeather `json:"g"`
+	September MonthWeather `json:"s"`
+	October   MonthWeather `json:"o"`
+	November  MonthWeather `json:"n"`
+	December  MonthWeather `json:"d"`
 	totalDays int
 }
 type MonthWeather struct {
-	Good  float64
-	Bad   float64
+	Good  float64 `json:"g"`
+	Bad   float64 `json:"b"`
 	total int
 }
 
 type Station struct {
 	lat     int
 	long    int
-	Weather TotalWeather
+	Weather TotalWeather `json:"w"`
 }
 type weatherData struct {
 	station                                                               string
@@ -104,42 +105,41 @@ func averageYears(years [][52][116]Station) [52][116]Station {
 	}
 	for x, a := range avg {
 		for y, b := range a {
-			avg[x][y].Weather.January.Good = b.Weather.January.Good / float64(len(years))
-			avg[x][y].Weather.January.Bad = b.Weather.January.Bad / float64(len(years))
+			avg[x][y].Weather.January.Good = float64(math.Round(b.Weather.January.Good / float64(len(years))))
+			avg[x][y].Weather.January.Bad = float64(math.Round(b.Weather.January.Bad / float64(len(years))))
 
-			avg[x][y].Weather.February.Good = b.Weather.February.Good / float64(len(years))
-			avg[x][y].Weather.February.Bad = b.Weather.February.Bad / float64(len(years))
+			avg[x][y].Weather.February.Good = float64(math.Round(b.Weather.February.Good / float64(len(years))))
+			avg[x][y].Weather.February.Bad = float64(math.Round(b.Weather.February.Bad / float64(len(years))))
 
-			avg[x][y].Weather.March.Good = b.Weather.March.Good / float64(len(years))
-			avg[x][y].Weather.March.Bad = b.Weather.March.Bad / float64(len(years))
+			avg[x][y].Weather.March.Good = float64(math.Round(b.Weather.March.Good / float64(len(years))))
+			avg[x][y].Weather.March.Bad = float64(math.Round(b.Weather.March.Bad / float64(len(years))))
 
-			avg[x][y].Weather.April.Good = b.Weather.April.Good / float64(len(years))
-			avg[x][y].Weather.April.Bad = b.Weather.April.Bad / float64(len(years))
+			avg[x][y].Weather.April.Good = float64(math.Round(b.Weather.April.Good / float64(len(years))))
+			avg[x][y].Weather.April.Bad = float64(math.Round(b.Weather.April.Bad / float64(len(years))))
 
-			avg[x][y].Weather.May.Good = b.Weather.May.Good / float64(len(years))
-			avg[x][y].Weather.May.Bad = b.Weather.May.Bad / float64(len(years))
+			avg[x][y].Weather.May.Good = float64(math.Round(b.Weather.May.Good / float64(len(years))))
+			avg[x][y].Weather.May.Bad = float64(math.Round(b.Weather.May.Bad / float64(len(years))))
 
-			avg[x][y].Weather.June.Good = b.Weather.June.Good / float64(len(years))
-			avg[x][y].Weather.June.Bad = b.Weather.June.Bad / float64(len(years))
+			avg[x][y].Weather.June.Good = float64(math.Round(b.Weather.June.Good / float64(len(years))))
+			avg[x][y].Weather.June.Bad = float64(math.Round(b.Weather.June.Bad / float64(len(years))))
 
-			avg[x][y].Weather.July.Good = b.Weather.July.Good / float64(len(years))
-			avg[x][y].Weather.July.Bad = b.Weather.July.Bad / float64(len(years))
+			avg[x][y].Weather.July.Good = float64(math.Round(b.Weather.July.Good / float64(len(years))))
+			avg[x][y].Weather.July.Bad = float64(math.Round(b.Weather.July.Bad / float64(len(years))))
 
-			avg[x][y].Weather.August.Good = b.Weather.August.Good / float64(len(years))
-			avg[x][y].Weather.August.Bad = b.Weather.August.Bad / float64(len(years))
+			avg[x][y].Weather.August.Good = float64(math.Round(b.Weather.August.Good / float64(len(years))))
+			avg[x][y].Weather.August.Bad = float64(math.Round(b.Weather.August.Bad / float64(len(years))))
 
-			avg[x][y].Weather.September.Good = b.Weather.September.Good / float64(len(years))
-			avg[x][y].Weather.September.Bad = b.Weather.September.Bad / float64(len(years))
+			avg[x][y].Weather.September.Good = float64(math.Round(b.Weather.September.Good / float64(len(years))))
+			avg[x][y].Weather.September.Bad = float64(math.Round(b.Weather.September.Bad / float64(len(years))))
 
-			avg[x][y].Weather.October.Good = b.Weather.October.Good / float64(len(years))
-			avg[x][y].Weather.October.Bad = b.Weather.October.Bad / float64(len(years))
+			avg[x][y].Weather.October.Good = float64(math.Round(b.Weather.October.Good / float64(len(years))))
+			avg[x][y].Weather.October.Bad = float64(math.Round(b.Weather.October.Bad / float64(len(years))))
 
-			avg[x][y].Weather.November.Good = b.Weather.November.Good / float64(len(years))
-			avg[x][y].Weather.November.Bad = b.Weather.November.Bad / float64(len(years))
+			avg[x][y].Weather.November.Good = float64(math.Round(b.Weather.November.Good / float64(len(years))))
+			avg[x][y].Weather.November.Bad = float64(math.Round(b.Weather.November.Bad / float64(len(years))))
 
-			avg[x][y].Weather.December.Good = b.Weather.December.Good / float64(len(years))
-			avg[x][y].Weather.December.Bad = b.Weather.December.Bad / float64(len(years))
-
+			avg[x][y].Weather.December.Good = float64(math.Round(b.Weather.December.Good / float64(len(years))))
+			avg[x][y].Weather.December.Bad = float64(math.Round(b.Weather.December.Bad / float64(len(years))))
 		}
 	}
 	return avg

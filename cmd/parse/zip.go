@@ -10,11 +10,11 @@ import (
 
 //a struct that stores the Zipcode, lat, long, and Name of a Station
 type Zip struct {
-	Zipcode string
+	Zipcode string `json:"z"`
 	lat     string
 	long    string
-	Name    string
-	State   string
+	Name    string `json:"n"`
+	State   string `json:"s"`
 }
 
 func parseState() (map[string]string, error) {
