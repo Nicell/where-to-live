@@ -34,9 +34,11 @@ type TotalWeather struct {
 
 //MonthWeather All the data for the entire month is condensed down to MonthWeather
 type MonthWeather struct {
-	Good  float64 `json:"g"`
-	Bad   float64 `json:"b"`
-	total int
+	Good   float64 `json:"g"`
+	Bad    float64 `json:"b"`
+	total  int
+	years  int
+	filled bool
 }
 
 //Station Contains one station with weather and location
@@ -75,79 +77,151 @@ func averageYears(years [][50][116]Station) [50][116]Station {
 			for z := range b {
 				avg[y][z].Weather.January.Good += years[x][y][z].Weather.January.Good
 				avg[y][z].Weather.January.Bad += years[x][y][z].Weather.January.Bad
+				if years[x][y][z].Weather.January.filled {
+					avg[y][z].Weather.January.years++
+				}
 
 				avg[y][z].Weather.February.Good += years[x][y][z].Weather.February.Good
 				avg[y][z].Weather.February.Bad += years[x][y][z].Weather.February.Bad
+				if years[x][y][z].Weather.February.filled {
+					avg[y][z].Weather.February.years++
+				}
 
 				avg[y][z].Weather.March.Good += years[x][y][z].Weather.March.Good
 				avg[y][z].Weather.March.Bad += years[x][y][z].Weather.March.Bad
+				if years[x][y][z].Weather.March.filled {
+					avg[y][z].Weather.March.years++
+				}
 
 				avg[y][z].Weather.April.Good += years[x][y][z].Weather.April.Good
 				avg[y][z].Weather.April.Bad += years[x][y][z].Weather.April.Bad
+				if years[x][y][z].Weather.April.filled {
+					avg[y][z].Weather.April.years++
+				}
 
 				avg[y][z].Weather.May.Good += years[x][y][z].Weather.May.Good
 				avg[y][z].Weather.May.Bad += years[x][y][z].Weather.May.Bad
+				if years[x][y][z].Weather.May.filled {
+					avg[y][z].Weather.May.years++
+				}
 
 				avg[y][z].Weather.June.Good += years[x][y][z].Weather.June.Good
 				avg[y][z].Weather.June.Bad += years[x][y][z].Weather.June.Bad
+				if years[x][y][z].Weather.June.filled {
+					avg[y][z].Weather.June.years++
+				}
 
 				avg[y][z].Weather.July.Good += years[x][y][z].Weather.July.Good
 				avg[y][z].Weather.July.Bad += years[x][y][z].Weather.July.Bad
+				if years[x][y][z].Weather.July.filled {
+					avg[y][z].Weather.July.years++
+				}
 
 				avg[y][z].Weather.August.Good += years[x][y][z].Weather.August.Good
 				avg[y][z].Weather.August.Bad += years[x][y][z].Weather.August.Bad
+				if years[x][y][z].Weather.August.filled {
+					avg[y][z].Weather.August.years++
+				}
 
 				avg[y][z].Weather.September.Good += years[x][y][z].Weather.September.Good
 				avg[y][z].Weather.September.Bad += years[x][y][z].Weather.September.Bad
+				if years[x][y][z].Weather.September.filled {
+					avg[y][z].Weather.September.years++
+				}
 
 				avg[y][z].Weather.October.Good += years[x][y][z].Weather.October.Good
 				avg[y][z].Weather.October.Bad += years[x][y][z].Weather.October.Bad
+				if years[x][y][z].Weather.October.filled {
+					avg[y][z].Weather.October.years++
+				}
 
 				avg[y][z].Weather.November.Good += years[x][y][z].Weather.November.Good
 				avg[y][z].Weather.November.Bad += years[x][y][z].Weather.November.Bad
+				if years[x][y][z].Weather.November.filled {
+					avg[y][z].Weather.November.years++
+				}
 
 				avg[y][z].Weather.December.Good += years[x][y][z].Weather.December.Good
 				avg[y][z].Weather.December.Bad += years[x][y][z].Weather.December.Bad
+				if years[x][y][z].Weather.December.filled {
+					avg[y][z].Weather.December.years++
+				}
 			}
 		}
 	}
 	for x, a := range avg {
 		for y, b := range a {
-			avg[x][y].Weather.January.Good = float64(math.Round(b.Weather.January.Good / float64(len(years))))
-			avg[x][y].Weather.January.Bad = float64(math.Round(b.Weather.January.Bad / float64(len(years))))
+			if b.Weather.January.years == 0 {
+				b.Weather.January.years = 1
+			}
+			avg[x][y].Weather.January.Good = float64(math.Round(b.Weather.January.Good / float64(b.Weather.January.years)))
+			avg[x][y].Weather.January.Bad = float64(math.Round(b.Weather.January.Bad / float64(b.Weather.January.years)))
 
-			avg[x][y].Weather.February.Good = float64(math.Round(b.Weather.February.Good / float64(len(years))))
-			avg[x][y].Weather.February.Bad = float64(math.Round(b.Weather.February.Bad / float64(len(years))))
+			if b.Weather.February.years == 0 {
+				b.Weather.February.years = 1
+			}
+			avg[x][y].Weather.February.Good = float64(math.Round(b.Weather.February.Good / float64(b.Weather.February.years)))
+			avg[x][y].Weather.February.Bad = float64(math.Round(b.Weather.February.Bad / float64(b.Weather.February.years)))
 
-			avg[x][y].Weather.March.Good = float64(math.Round(b.Weather.March.Good / float64(len(years))))
-			avg[x][y].Weather.March.Bad = float64(math.Round(b.Weather.March.Bad / float64(len(years))))
+			if b.Weather.March.years == 0 {
+				b.Weather.March.years = 1
+			}
+			avg[x][y].Weather.March.Good = float64(math.Round(b.Weather.March.Good / float64(b.Weather.March.years)))
+			avg[x][y].Weather.March.Bad = float64(math.Round(b.Weather.March.Bad / float64(b.Weather.March.years)))
 
-			avg[x][y].Weather.April.Good = float64(math.Round(b.Weather.April.Good / float64(len(years))))
-			avg[x][y].Weather.April.Bad = float64(math.Round(b.Weather.April.Bad / float64(len(years))))
+			if b.Weather.April.years == 0 {
+				b.Weather.April.years = 1
+			}
+			avg[x][y].Weather.April.Good = float64(math.Round(b.Weather.April.Good / float64(b.Weather.April.years)))
+			avg[x][y].Weather.April.Bad = float64(math.Round(b.Weather.April.Bad / float64(b.Weather.April.years)))
 
-			avg[x][y].Weather.May.Good = float64(math.Round(b.Weather.May.Good / float64(len(years))))
-			avg[x][y].Weather.May.Bad = float64(math.Round(b.Weather.May.Bad / float64(len(years))))
+			if b.Weather.May.years == 0 {
+				b.Weather.May.years = 1
+			}
+			avg[x][y].Weather.May.Good = float64(math.Round(b.Weather.May.Good / float64(b.Weather.May.years)))
+			avg[x][y].Weather.May.Bad = float64(math.Round(b.Weather.May.Bad / float64(b.Weather.May.years)))
 
-			avg[x][y].Weather.June.Good = float64(math.Round(b.Weather.June.Good / float64(len(years))))
-			avg[x][y].Weather.June.Bad = float64(math.Round(b.Weather.June.Bad / float64(len(years))))
+			if b.Weather.June.years == 0 {
+				b.Weather.June.years = 1
+			}
+			avg[x][y].Weather.June.Good = float64(math.Round(b.Weather.June.Good / float64(b.Weather.June.years)))
+			avg[x][y].Weather.June.Bad = float64(math.Round(b.Weather.June.Bad / float64(b.Weather.June.years)))
 
-			avg[x][y].Weather.July.Good = float64(math.Round(b.Weather.July.Good / float64(len(years))))
-			avg[x][y].Weather.July.Bad = float64(math.Round(b.Weather.July.Bad / float64(len(years))))
+			if b.Weather.July.years == 0 {
+				b.Weather.July.years = 1
+			}
+			avg[x][y].Weather.July.Good = float64(math.Round(b.Weather.July.Good / float64(b.Weather.July.years)))
+			avg[x][y].Weather.July.Bad = float64(math.Round(b.Weather.July.Bad / float64(b.Weather.July.years)))
 
-			avg[x][y].Weather.August.Good = float64(math.Round(b.Weather.August.Good / float64(len(years))))
-			avg[x][y].Weather.August.Bad = float64(math.Round(b.Weather.August.Bad / float64(len(years))))
+			if b.Weather.August.years == 0 {
+				b.Weather.August.years = 1
+			}
+			avg[x][y].Weather.August.Good = float64(math.Round(b.Weather.August.Good / float64(b.Weather.August.years)))
+			avg[x][y].Weather.August.Bad = float64(math.Round(b.Weather.August.Bad / float64(b.Weather.August.years)))
 
-			avg[x][y].Weather.September.Good = float64(math.Round(b.Weather.September.Good / float64(len(years))))
-			avg[x][y].Weather.September.Bad = float64(math.Round(b.Weather.September.Bad / float64(len(years))))
+			if b.Weather.September.years == 0 {
+				b.Weather.September.years = 1
+			}
+			avg[x][y].Weather.September.Good = float64(math.Round(b.Weather.September.Good / float64(b.Weather.September.years)))
+			avg[x][y].Weather.September.Bad = float64(math.Round(b.Weather.September.Bad / float64(b.Weather.September.years)))
 
-			avg[x][y].Weather.October.Good = float64(math.Round(b.Weather.October.Good / float64(len(years))))
-			avg[x][y].Weather.October.Bad = float64(math.Round(b.Weather.October.Bad / float64(len(years))))
+			if b.Weather.October.years == 0 {
+				b.Weather.October.years = 1
+			}
+			avg[x][y].Weather.October.Good = float64(math.Round(b.Weather.October.Good / float64(b.Weather.October.years)))
+			avg[x][y].Weather.October.Bad = float64(math.Round(b.Weather.October.Bad / float64(b.Weather.October.years)))
 
-			avg[x][y].Weather.November.Good = float64(math.Round(b.Weather.November.Good / float64(len(years))))
-			avg[x][y].Weather.November.Bad = float64(math.Round(b.Weather.November.Bad / float64(len(years))))
+			if b.Weather.November.years == 0 {
+				b.Weather.November.years = 1
+			}
+			avg[x][y].Weather.November.Good = float64(math.Round(b.Weather.November.Good / float64(b.Weather.November.years)))
+			avg[x][y].Weather.November.Bad = float64(math.Round(b.Weather.November.Bad / float64(b.Weather.November.years)))
 
-			avg[x][y].Weather.December.Good = float64(math.Round(b.Weather.December.Good / float64(len(years))))
-			avg[x][y].Weather.December.Bad = float64(math.Round(b.Weather.December.Bad / float64(len(years))))
+			if b.Weather.December.years == 0 {
+				b.Weather.December.years = 1
+			}
+			avg[x][y].Weather.December.Good = float64(math.Round(b.Weather.December.Good / float64(b.Weather.December.years)))
+			avg[x][y].Weather.December.Bad = float64(math.Round(b.Weather.December.Bad / float64(b.Weather.December.years)))
 		}
 	}
 	return avg
@@ -283,50 +357,62 @@ func averageStations(in [50][116][]Station) [50][116]Station {
 				if t.January.total != 0 {
 					t.January.Good = (t.January.Good / float64(t.January.total)) * 31
 					t.January.Bad = (t.January.Bad / float64(t.January.total)) * 31
+					t.January.filled = true
 				}
 				if t.February.total != 0 {
 					t.February.Good = (t.February.Good / float64(t.February.total)) * 28
 					t.February.Bad = (t.February.Bad / float64(t.February.total)) * 28
+					t.February.filled = true
 				}
 				if t.March.total != 0 {
 					t.March.Good = (t.March.Good / float64(t.March.total)) * 31
 					t.March.Bad = (t.March.Bad / float64(t.March.total)) * 31
+					t.March.filled = true
 				}
 				if t.April.total != 0 {
 					t.April.Good = (t.April.Good / float64(t.April.total)) * 30
 					t.April.Bad = (t.April.Bad / float64(t.April.total)) * 30
+					t.April.filled = true
 				}
 				if t.May.total != 0 {
 					t.May.Good = (t.May.Good / float64(t.May.total)) * 31
 					t.May.Bad = (t.May.Bad / float64(t.May.total)) * 31
+					t.May.filled = true
 				}
 				if t.June.total != 0 {
 					t.June.Good = (t.June.Good / float64(t.June.total)) * 30
 					t.June.Bad = (t.June.Bad / float64(t.June.total)) * 30
+					t.June.filled = true
 				}
 				if t.July.total != 0 {
 					t.July.Good = (t.July.Good / float64(t.July.total)) * 31
 					t.July.Bad = (t.July.Bad / float64(t.July.total)) * 31
+					t.July.filled = true
 				}
 				if t.August.total != 0 {
 					t.August.Good = (t.August.Good / float64(t.August.total)) * 31
 					t.August.Bad = (t.August.Bad / float64(t.August.total)) * 31
+					t.August.filled = true
 				}
 				if t.September.total != 0 {
 					t.September.Good = (t.September.Good / float64(t.September.total)) * 30
 					t.September.Bad = (t.September.Bad / float64(t.September.total)) * 30
+					t.September.filled = true
 				}
 				if t.October.total != 0 {
 					t.October.Good = (t.October.Good / float64(t.October.total)) * 31
 					t.October.Bad = (t.October.Bad / float64(t.October.total)) * 31
+					t.October.filled = true
 				}
 				if t.November.total != 0 {
 					t.November.Good = (t.November.Good / float64(t.November.total)) * 30
 					t.November.Bad = (t.November.Bad / float64(t.November.total)) * 30
+					t.November.filled = true
 				}
 				if t.December.total != 0 {
 					t.December.Good = (t.December.Good / float64(t.December.total)) * 31
 					t.December.Bad = (t.December.Bad / float64(t.December.total)) * 31
+					t.December.filled = true
 				}
 				out[x][y] = Station{lat: x, long: y, Weather: t}
 			}
