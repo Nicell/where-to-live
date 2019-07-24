@@ -128,7 +128,40 @@ func makeMap() ([52][116][]Zip, error) {
 			mapUS[latConvert(j)][longConvert(k)] = append(mapUS[latConvert(j)][longConvert(k)], i)
 		}
 	}
-	return mapUS, err
+	return fillDeadSpace(mapUS)
+}
+
+//fills known dead space with "No Data" to make map look nicer, not the best fix
+func fillDeadSpace(mapUS [52][116][]Zip) ([52][116][]Zip, error) {
+	for y := 5; y < 54; y++ {
+		for x := 1; x < 26; x++ {
+			if len(mapUS[x][y]) == 0 {
+				mapUS[x][y] = []Zip{{Name: "No Data"}}
+			}
+		}
+	}
+	for y := 8; y < 65; y++ {
+		for x := 26; x < 32; x++ {
+			if len(mapUS[x][y]) == 0 {
+				mapUS[x][y] = []Zip{{Name: "No Data"}}
+			}
+		}
+	}
+	for y := 15; y < 47; y++ {
+		for x := 32; x < 35; x++ {
+			if len(mapUS[x][y]) == 0 {
+				mapUS[x][y] = []Zip{{Name: "No Data"}}
+			}
+		}
+	}
+	for y := 44; y < 54; y++ {
+		for x := 35; x < 41; x++ {
+			if len(mapUS[x][y]) == 0 {
+				mapUS[x][y] = []Zip{{Name: "No Data"}}
+			}
+		}
+	}
+	return mapUS, nil
 }
 
 //Converts a latitude to fit into the grid
