@@ -148,7 +148,7 @@ func nameToPop() (map[string]int, error) {
 
 //Converts a latitude to fit into the grid
 func latConvert(lat float64) int {
-	t := ((math.Round(lat/.5) * .5) * 2) - 49
+	t := 51 - (math.Round(lat/.5) - 49)
 	return int(t)
 }
 
@@ -156,6 +156,6 @@ func latConvert(lat float64) int {
 func longConvert(long float64) int {
 	long = math.Abs(long)
 	long -= 9
-	t := math.Floor(long/.5) - 116
+	t := 115 - (math.Floor(long/.5) - 116)
 	return int(t)
 }
