@@ -1,0 +1,20 @@
+header {
+  background-color: var(--theme);
+  color: var(--foreground-theme);
+  box-shadow: var(--shadow-2);
+  padding: 15px 20px;
+}
+
+header > h1 {
+  margin: 0;
+}
+
+.map-holder {
+  padding: 20px;
+}
+
+@media screen and (max-width: 768px) {
+  .map-holder {
+    padding: 5px;
+  }
+}
