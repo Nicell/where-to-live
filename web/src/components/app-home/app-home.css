@@ -12,3 +12,9 @@ header > h1 {
 .map-holder {
   padding: 20px;
 }
+
+@media screen and (max-width: 768px) {
+  .map-holder {
+    padding: 5px;
+  }
+}
