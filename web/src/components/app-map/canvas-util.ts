@@ -26,7 +26,7 @@ export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMa
   const size = cell * .85;
   const height = width * data.length / data[0].length;
   data.forEach((t, i) => t.forEach((l, j) => {
-    if (l.s && (j * cell + (cell - size) / 2) * transform.a < -transform.e + width && (j * cell + (cell - size) / 2 + size) * transform.a > -transform.e && (i * cell + (cell - size) / 2) * transform.a < -transform.f + height && (i * cell + (cell - size) / 2 + size) * transform.a > -transform.f) {
+    if (l.c && (j * cell + (cell - size) / 2) * transform.a < -transform.e + width && (j * cell + (cell - size) / 2 + size) * transform.a > -transform.e && (i * cell + (cell - size) / 2) * transform.a < -transform.f + height && (i * cell + (cell - size) / 2 + size) * transform.a > -transform.f) {
       const half = size / 2;
       const radius = {
         tl: size / 6,
@@ -35,10 +35,10 @@ export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMa
         bl: size / 6
       }
 
-      const bottom = (i === data.length - 1 ? '' : data[i + 1][j].s).length > 0;
-      const top = (i === 0 ? '' : data[i - 1][j].s).length > 0;
-      const right = (j === data[i].length - 1 ? '' : data[i][j + 1].s).length > 0;
-      const left = (j === 0 ? '' : data[i][j - 1].s).length > 0;
+      const bottom = (i === data.length - 1 ? '' : data[i + 1][j].c).length > 0;
+      const top = (i === 0 ? '' : data[i - 1][j].c).length > 0;
+      const right = (j === data[i].length - 1 ? '' : data[i][j + 1].c).length > 0;
+      const left = (j === 0 ? '' : data[i][j - 1].c).length > 0;
 
       if (!top && !left)
         radius.tl = half;

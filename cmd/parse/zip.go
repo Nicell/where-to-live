@@ -2,6 +2,7 @@ package parse
 
 import (
 	"encoding/csv"
+	"fmt"
 	"math"
 	"os"
 	"strconv"
@@ -64,7 +65,7 @@ func parseZip() ([]Zip, error) {
 		}
 		long, _ := strconv.ParseFloat(data.long, 64)
 		lat, _ := strconv.ParseFloat(data.lat, 64)
-		if !(long < -125.0 || long > -67 || lat > 50 || lat < 24) {
+		if !(long < -125.0 || long > -67 || lat > 49 || lat < 24) {
 			zips = append(zips, data)
 		}
 	}
@@ -99,13 +100,13 @@ func parsePopulation() (map[string]int, error) {
 }
 
 //Maps all Zip codes to a grid stacking overlapping counties
-func makeMap() ([52][116][]Zip, error) {
-	mapUS := [52][116][]Zip{}
+func makeMap() ([50][116][]Zip, error) {
+	mapUS := [50][116][]Zip{}
 	zips, err := parseZip()
 	if err != nil {
 		return mapUS, err
 	}
-	namePop, err := parsePopulation()
+	namePop, err := nameToPop()
 	if err != nil {
 		return mapUS, err
 	}
@@ -131,33 +132,49 @@ func makeMap() ([52][116][]Zip, error) {
 	return fillDeadSpace(mapUS)
 }
 
+func nameToPop() (map[string]int, error) {
+	names := make(map[string]int)
+	zipPop, err := parsePopulation()
+	if err != nil {
+		return names, err
+	}
+	zips, err := parseZip()
+	if err != nil {
+		return names, err
+	}
+	for _, a := range zips {
+		names[a.State+"."+a.Name] += zipPop[a.Zipcode]
+	}
+	return names, nil
+}
+
 //fills known dead space with "No Data" to make map look nicer, not the best fix
-func fillDeadSpace(mapUS [52][116][]Zip) ([52][116][]Zip, error) {
-	for y := 5; y < 54; y++ {
-		for x := 1; x < 26; x++ {
-			if len(mapUS[x][y]) == 0 {
-				mapUS[x][y] = []Zip{{Name: "No Data"}}
+func fillDeadSpace(mapUS [50][116][]Zip) ([50][116][]Zip, error) {
+	for x := 5; x < 51; x++ {
+		for y := 1; y < 25; y++ {
+			if len(mapUS[y][x]) == 0 {
+				mapUS[y][x] = []Zip{{Name: "No Data"}}
 			}
 		}
 	}
-	for y := 8; y < 65; y++ {
-		for x := 26; x < 32; x++ {
-			if len(mapUS[x][y]) == 0 {
-				mapUS[x][y] = []Zip{{Name: "No Data"}}
+	for x := 8; x < 62; x++ {
+		for y := 25; y < 30; y++ {
+			if len(mapUS[y][x]) == 0 {
+				mapUS[y][x] = []Zip{{Name: "No Data"}}
 			}
 		}
 	}
-	for y := 15; y < 47; y++ {
-		for x := 32; x < 35; x++ {
-			if len(mapUS[x][y]) == 0 {
-				mapUS[x][y] = []Zip{{Name: "No Data"}}
+	for x := 15; x < 43; x++ {
+		for y := 30; y < 33; y++ {
+			if len(mapUS[y][x]) == 0 {
+				mapUS[y][x] = []Zip{{Name: "No Data"}}
 			}
 		}
 	}
-	for y := 44; y < 54; y++ {
-		for x := 35; x < 41; x++ {
-			if len(mapUS[x][y]) == 0 {
-				mapUS[x][y] = []Zip{{Name: "No Data"}}
+	for x := 40; x < 50; x++ {
+		for y := 31; y < 39; y++ {
+			if len(mapUS[y][x]) == 0 {
+				mapUS[y][x] = []Zip{{Name: "No Data"}}
 			}
 		}
 	}
@@ -166,7 +183,10 @@ func fillDeadSpace(mapUS [52][116][]Zip) ([52][116][]Zip, error) {
 
 //Converts a latitude to fit into the grid
 func latConvert(lat float64) int {
-	t := 51 - (math.Round(lat/.5) - 49)
+	t := 49 - (math.Round(lat/.5) - 49)
+	if t == -1 {
+		fmt.Println(lat)
+	}
 	return int(t)
 }
 
