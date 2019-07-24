@@ -85,18 +85,18 @@ export class AppMap {
 
   canvasHover = (e: MouseEvent) => {
     const canvas = this.el.querySelector('.map-canvas') as HTMLCanvasElement;
-    const cell = canvas.width / data[0].length;
+    const cell = canvas.width / window.devicePixelRatio / data[0].length;
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left - this.transform.e) / this.transform.a;
-    const y = (e.clientY - rect.top - this.transform.f) / this.transform.a;
+    const x = (e.clientX - rect.left - this.transform.e / window.devicePixelRatio) / this.transform.a;
+    const y = (e.clientY - rect.top - this.transform.f / window.devicePixelRatio) / this.transform.a;
     let hover: Hover;
 
     data.forEach((t, i) => t.forEach((l, j) => {
       if (y > i * cell && y < i * cell + cell && x > j * cell && x < j * cell + cell) {
         if (l) {
           hover = {
-            x: rect.left + this.transform.e + (j * cell + cell / 2) * this.transform.a,
-            y: rect.top + this.transform.f + i * cell * this.transform.a,
+            x: rect.left + this.transform.e / window.devicePixelRatio + (j * cell + cell / 2) * this.transform.a,
+            y: rect.top + this.transform.f / window.devicePixelRatio + i * cell * this.transform.a,
             data: l,
             visible: true
           }
@@ -139,13 +139,13 @@ export class AppMap {
   }
 
   calcWidth = () => {
-    this.width = this.el.querySelector('.app-map').clientWidth;
+    this.width = this.el.querySelector('.app-map').clientWidth * window.devicePixelRatio;
   }
 
   render() {
     return (
       <div class="app-map">
-        <canvas class="map-canvas" width={this.width} height={this.width / data[0].length * data.length}/>
+        <canvas class="map-canvas" style={{ width: this.width / window.devicePixelRatio + 'px', height: this.width / window.devicePixelRatio / data[0].length * data.length + 'px' }} width={this.width} height={this.width / data[0].length * data.length}/>
         <div class="map-controls">
           <div class="map-move">
             <div class="move up" onClick={() => this.changeTranslation(0, this.width / 5)}>
