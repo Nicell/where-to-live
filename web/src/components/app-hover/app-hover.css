@@ -17,7 +17,7 @@
   background: var(--background-light);
   position: absolute;
   bottom: 0;
-  left: 50%;
+  left: var(--before-offset);
   transform: translate(-50%, 6px) rotate(45deg);
   border: 1px solid transparent;
   border-bottom-color: var(--background-dark);
