@@ -96,7 +96,7 @@ export class AppMap {
         if (l) {
           hover = {
             x: rect.left + this.transform.e / window.devicePixelRatio + (j * cell + cell / 2) * this.transform.a,
-            y: rect.top + this.transform.f / window.devicePixelRatio + i * cell * this.transform.a,
+            y: rect.top + window.scrollY + this.transform.f / window.devicePixelRatio + i * cell * this.transform.a,
             data: l,
             visible: true
           }
