@@ -39,7 +39,7 @@ type MonthWeather struct {
 	total int
 }
 
-//Station: Contains one station with weather and location
+//Station Contains one station with weather and location
 type Station struct {
 	lat     int
 	long    int
@@ -156,7 +156,7 @@ func averageYears(years [][52][116]Station) [52][116]Station {
 //Reads through a single GSOD file for the year and returns stations at each location
 func parseGSOD(year int) ([52][116][]Station, error) {
 	filepath := fmt.Sprintf("data/gsod_%d.tar", year)
-	stations, _ := ParseISDHistory()
+	stations, _ := parseISDHistory()
 	weatherMap := [52][116][]Station{}
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -521,7 +521,7 @@ func toStationId(l string) string {
 }
 
 //returns a map that has station id as keys and the station data as values
-func ParseISDHistory() (map[string]Station, error) {
+func parseISDHistory() (map[string]Station, error) {
 	stations := make(map[string]Station)
 	file, err := os.Open("data/isd-history.csv")
 	if err != nil {
