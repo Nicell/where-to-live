@@ -3,8 +3,6 @@ import { drawCanvas } from './canvas-util';
 
 import { Hover } from '../app-home/app-home';
 
-import data from './map.json';
-
 interface dragState {
   dragging: boolean;
   startX: number;
@@ -21,8 +19,10 @@ interface dragState {
 export class AppMap {
   @Element() el: HTMLElement;
   @Prop() handleHover: Function;
+  @Prop() data: any;
   @State() width: number;
   @State() transform: DOMMatrix2DInit;
+  
 
   dragState: dragState;
   hover: Hover;
@@ -56,7 +56,7 @@ export class AppMap {
   }
 
   changeScale = (factor: number) => {
-    const height = this.width * data.length / data[0].length;
+    const height = this.width * this.data.length / this.data[0].length;
     let newScale = 0;
 
     if (factor < 1 && this.transform.a !== 1) {
@@ -75,7 +75,7 @@ export class AppMap {
   }
 
   changeTranslation = (x: number, y: number) => {
-    const height = this.width * data.length / data[0].length;
+    const height = this.width * this.data.length / this.data[0].length;
     const newX = Math.min(Math.max(this.transform.e + x, this.width - this.width * this.transform.a),0);
     const newY = Math.min(Math.max(this.transform.f + y, height - height * this.transform.a), 0);
     if (this.transform.e !== newX || this.transform.f !== newY) {
@@ -85,19 +85,19 @@ export class AppMap {
 
   canvasHover = (e: MouseEvent) => {
     const canvas = this.el.querySelector('.map-canvas') as HTMLCanvasElement;
-    const cell = canvas.width / window.devicePixelRatio / data[0].length;
+    const cell = canvas.width / window.devicePixelRatio / this.data[0].length;
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX - rect.left - this.transform.e / window.devicePixelRatio) / this.transform.a;
     const y = (e.clientY - rect.top - this.transform.f / window.devicePixelRatio) / this.transform.a;
     let hover: Hover;
 
-    data.forEach((t, i) => t.forEach((l, j) => {
+    this.data.forEach((t, i) => t.forEach((l, j) => {
       if (y > i * cell && y < i * cell + cell && x > j * cell && x < j * cell + cell) {
-        if (l) {
+        if (l.s) {
           hover = {
             x: rect.left + window.scrollX + this.transform.e / window.devicePixelRatio + (j * cell + cell / 2) * this.transform.a,
             y: rect.top + window.scrollY + this.transform.f / window.devicePixelRatio + i * cell * this.transform.a,
-            data: l,
+            data: JSON.stringify(l),
             visible: true
           }
         }
@@ -133,9 +133,9 @@ export class AppMap {
     const c = this.el.querySelector('.map-canvas') as HTMLCanvasElement;
     const ctx = c.getContext('2d');
     ctx.clearRect(0, 0, c.width, c.height);
-    const cell = c.width / data[0].length;
+    const cell = c.width / this.data[0].length;
     ctx.setTransform(this.transform)
-    drawCanvas(ctx, data, this.transform, this.width, cell);
+    drawCanvas(ctx, this.data, this.transform, this.width, cell);
   }
 
   calcWidth = () => {
@@ -145,7 +145,7 @@ export class AppMap {
   render() {
     return (
       <div class="app-map">
-        <canvas class="map-canvas" style={{ width: this.width / window.devicePixelRatio + 'px', height: this.width / window.devicePixelRatio / data[0].length * data.length + 'px' }} width={this.width} height={this.width / data[0].length * data.length}/>
+        <canvas class="map-canvas" style={{ width: this.width / window.devicePixelRatio + 'px', height: this.width / window.devicePixelRatio / this.data[0].length * this.data.length + 'px' }} width={this.width} height={this.width / this.data[0].length * this.data.length}/>
         <div class="map-controls">
           <div class="map-move">
             <div class="move up" onClick={() => this.changeTranslation(0, this.width / 5)}>

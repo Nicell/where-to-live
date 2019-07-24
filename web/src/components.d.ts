@@ -16,6 +16,7 @@ export namespace Components {
     'state': Hover;
   }
   interface AppMap {
+    'data': any;
     'handleHover': Function;
   }
 }
@@ -53,6 +54,7 @@ declare namespace LocalJSX {
     'state'?: Hover;
   }
   interface AppMap extends JSXBase.HTMLAttributes<HTMLAppMapElement> {
+    'data'?: any;
     'handleHover'?: Function;
   }
 

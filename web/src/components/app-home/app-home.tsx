@@ -3,7 +3,7 @@ import { Component, State, h } from '@stencil/core';
 export interface Hover {
   x: number;
   y: number;
-  data: string;
+  data: any;
   visible: boolean;
 }
 
@@ -14,6 +14,7 @@ export interface Hover {
 })
 export class AppHome {
   @State() hover: Hover;
+  @State() data: any;
 
   constructor() {
     this.hover = {
@@ -22,6 +23,11 @@ export class AppHome {
       data: '',
       visible: false
     }
+    this.getData();
+  }
+
+  getData = async () => {
+    this.data = await (await fetch('/assets/map.json')).json();
   }
 
   updateHover = (hover: Hover) => {
@@ -34,9 +40,11 @@ export class AppHome {
         <header>
           <h1>🌎 Where to Live</h1>
         </header>
-        <div class='map-holder'>
-          <app-map handleHover={this.updateHover} />
-        </div>
+        {this.data ? (
+          <div class='map-holder'>
+            <app-map data={this.data} handleHover={this.updateHover} />
+          </div>
+        ) : null}
         <app-hover state={this.hover}/>
       </div>
     );
