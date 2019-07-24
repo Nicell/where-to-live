@@ -54,13 +54,13 @@ type weatherData struct {
 }
 
 //BuildWeatherMap Builds the weather map
-func BuildWeatherMap() ([52][116]Station, error) {
-	allYears := [][52][116]Station{}
+func BuildWeatherMap() ([50][116]Station, error) {
+	allYears := [][50][116]Station{}
 	for i := 1990; i < time.Now().Year(); i++ {
 		fmt.Println(i)
 		tmp, err := parseGSOD(i)
 		if err != nil {
-			return [52][116]Station{}, err
+			return [50][116]Station{}, err
 		}
 		allYears = append(allYears, averageStations(tmp))
 	}
@@ -68,8 +68,8 @@ func BuildWeatherMap() ([52][116]Station, error) {
 }
 
 //Averages all years of each station into one station at each US map location
-func averageYears(years [][52][116]Station) [52][116]Station {
-	avg := [52][116]Station{}
+func averageYears(years [][50][116]Station) [50][116]Station {
+	avg := [50][116]Station{}
 	for x, a := range years {
 		for y, b := range a {
 			for z := range b {
@@ -154,10 +154,10 @@ func averageYears(years [][52][116]Station) [52][116]Station {
 }
 
 //Reads through a single GSOD file for the year and returns stations at each location
-func parseGSOD(year int) ([52][116][]Station, error) {
+func parseGSOD(year int) ([50][116][]Station, error) {
 	filepath := fmt.Sprintf("data/gsod_%d.tar", year)
 	stations, _ := parseISDHistory()
-	weatherMap := [52][116][]Station{}
+	weatherMap := [50][116][]Station{}
 	file, err := os.Open(filepath)
 	if err != nil {
 		return weatherMap, err
@@ -221,8 +221,8 @@ func parseGSOD(year int) ([52][116][]Station, error) {
 }
 
 //Averages all stations in one location of the US map
-func averageStations(in [52][116][]Station) [52][116]Station {
-	out := [52][116]Station{}
+func averageStations(in [50][116][]Station) [50][116]Station {
+	out := [50][116]Station{}
 	t := TotalWeather{}
 	for x, a := range in {
 		for y, b := range a {
@@ -540,7 +540,7 @@ func parseISDHistory() (map[string]Station, error) {
 		if i[3] == "US" {
 			lat, _ := strconv.ParseFloat(i[6], 64)
 			long, _ := strconv.ParseFloat(i[7], 64)
-			if !(long < -125.0 || long > -67 || lat > 50 || lat < 24) {
+			if !(long < -125.0 || long > -67 || lat > 49 || lat < 24) {
 				stations[i[0]] = Station{lat: latConvert(lat), long: longConvert(long)}
 			}
 		}
