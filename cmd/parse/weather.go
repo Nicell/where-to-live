@@ -15,6 +15,7 @@ import (
 	"time"
 )
 
+//TotalWeather All the weather for a year
 type TotalWeather struct {
 	January   MonthWeather `json:"j"`
 	February  MonthWeather `json:"f"`
@@ -30,24 +31,29 @@ type TotalWeather struct {
 	December  MonthWeather `json:"d"`
 	totalDays int
 }
+
+//MonthWeather All the data for the entire month is condensed down to MonthWeather
 type MonthWeather struct {
 	Good  float64 `json:"g"`
 	Bad   float64 `json:"b"`
 	total int
 }
 
+//Station Contains one station with weather and location
 type Station struct {
-	lat         int
-	long        int
-	name, state string
-	Weather     TotalWeather `json:"w"`
+	lat     int
+	long    int
+	Weather TotalWeather `json:"w"`
 }
+
+//Contains one day of weather information
 type weatherData struct {
 	station                                                               string
 	visib, minTemp, maxTemp, precip, avgTemp, wind, maxWind, harshWeather float64
 	date                                                                  time.Time
 }
 
+//BuildWeatherMap Builds the weather map
 func BuildWeatherMap() ([52][116]Station, error) {
 	allYears := [][52][116]Station{}
 	for i := 1990; i < time.Now().Year(); i++ {
@@ -61,6 +67,7 @@ func BuildWeatherMap() ([52][116]Station, error) {
 	return averageYears(allYears), nil
 }
 
+//Averages all years of each station into one station at each US map location
 func averageYears(years [][52][116]Station) [52][116]Station {
 	avg := [52][116]Station{}
 	for x, a := range years {
@@ -146,9 +153,10 @@ func averageYears(years [][52][116]Station) [52][116]Station {
 	return avg
 }
 
+//Reads through a single GSOD file for the year and returns stations at each location
 func parseGSOD(year int) ([52][116][]Station, error) {
 	filepath := fmt.Sprintf("data/gsod_%d.tar", year)
-	stations, _ := ParseISDHistory()
+	stations, _ := parseISDHistory()
 	weatherMap := [52][116][]Station{}
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -212,6 +220,7 @@ func parseGSOD(year int) ([52][116][]Station, error) {
 	}
 }
 
+//Averages all stations in one location of the US map
 func averageStations(in [52][116][]Station) [52][116]Station {
 	out := [52][116]Station{}
 	t := TotalWeather{}
@@ -326,6 +335,7 @@ func averageStations(in [52][116][]Station) [52][116]Station {
 	return out
 }
 
+//Takes in one day of weather and stores it to the station provided
 func processDay(station *Station, day weatherData) {
 	if day.precip > 0.1 || day.minTemp < 40 || day.maxTemp > 85 || day.visib < 5 || day.harshWeather > 0 {
 		switch day.date.Month() {
@@ -436,6 +446,7 @@ func processDay(station *Station, day weatherData) {
 	station.Weather.totalDays++
 }
 
+//Takes in a line of GSOD data and converts it to a weatherData struct
 func processLine(line string) (weatherData, error) {
 	data := weatherData{}
 	year, err := strconv.ParseInt(line[14:18], 10, 32)
@@ -504,25 +515,33 @@ func processLine(line string) (weatherData, error) {
 	return data, nil
 }
 
+//Takes in a line of gsod data and returns the station corresponding to that line
 func toStationId(l string) string {
 	return fmt.Sprintf("%s", l[0:6])
 }
 
-func ParseISDHistory() (map[string]Station, error) {
+//returns a map that has station id as keys and the station data as values
+func parseISDHistory() (map[string]Station, error) {
 	stations := make(map[string]Station)
 	file, err := os.Open("data/isd-history.csv")
 	if err != nil {
 		return stations, err
 	}
 	reader := csv.NewReader(file)
-	reader.Read() //skip the title line
+	_, err = reader.Read() //skip the title line
+	if err != nil {
+		return stations, err
+	}
 	lines, err := reader.ReadAll()
+	if err != nil {
+		return stations, err
+	}
 	for _, i := range lines {
 		if i[3] == "US" {
 			lat, _ := strconv.ParseFloat(i[6], 64)
 			long, _ := strconv.ParseFloat(i[7], 64)
 			if !(long < -125.0 || long > -67 || lat > 50 || lat < 24) {
-				stations[i[0]] = Station{lat: latConvert(lat), long: longConvert(long), state: i[4], name: i[2]}
+				stations[i[0]] = Station{lat: latConvert(lat), long: longConvert(long)}
 			}
 		}
 	}

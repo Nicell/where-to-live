@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-//a struct that stores the Zipcode, lat, long, and Name of a Station
+//Zip a struct that stores the Zipcode, lat, long, and Name of a Station
 type Zip struct {
 	Zipcode string `json:"z"`
 	lat     string
@@ -17,6 +17,7 @@ type Zip struct {
 	State   string `json:"s"`
 }
 
+//Parses the states.csv and builds a map with number (as a string) keys and abbreviations (WI, CA, CO, etc.) as value
 func parseState() (map[string]string, error) {
 	states := make(map[string]string)
 	file, err := os.Open("data/states.csv")
@@ -104,7 +105,7 @@ func makeMap() ([52][116][]Zip, error) {
 	if err != nil {
 		return mapUS, err
 	}
-	namePop, err := nameToPop()
+	namePop, err := parsePopulation()
 	if err != nil {
 		return mapUS, err
 	}
@@ -130,30 +131,34 @@ func makeMap() ([52][116][]Zip, error) {
 	return fillDeadSpace(mapUS)
 }
 
-func nameToPop() (map[string]int, error) {
-	names := make(map[string]int)
-	zipPop, err := parsePopulation()
-	if err != nil {
-		return names, err
-	}
-	zips, err := parseZip()
-	if err != nil {
-		return names, err
-	}
-	for _, a := range zips {
-		names[a.State+"."+a.Name] += zipPop[a.Zipcode]
-	}
-	return names, nil
-}
-
+//fills known dead space with "No Data" to make map look nicer, not the best fix
 func fillDeadSpace(mapUS [52][116][]Zip) ([52][116][]Zip, error) {
-	stations, err := ParseISDHistory()
-	if err != nil {
-		return mapUS, err
+	for y := 5; y < 54; y++ {
+		for x := 1; x < 26; x++ {
+			if len(mapUS[x][y]) == 0 {
+				mapUS[x][y] = []Zip{{Name: "No Data"}}
+			}
+		}
 	}
-	for _, a := range stations {
-		if len(mapUS[a.lat][a.long]) == 0 {
-			mapUS[a.lat][a.long] = []Zip{{State: a.state, Name: a.name}}
+	for y := 8; y < 65; y++ {
+		for x := 26; x < 32; x++ {
+			if len(mapUS[x][y]) == 0 {
+				mapUS[x][y] = []Zip{{Name: "No Data"}}
+			}
+		}
+	}
+	for y := 15; y < 47; y++ {
+		for x := 32; x < 35; x++ {
+			if len(mapUS[x][y]) == 0 {
+				mapUS[x][y] = []Zip{{Name: "No Data"}}
+			}
+		}
+	}
+	for y := 44; y < 54; y++ {
+		for x := 35; x < 41; x++ {
+			if len(mapUS[x][y]) == 0 {
+				mapUS[x][y] = []Zip{{Name: "No Data"}}
+			}
 		}
 	}
 	return mapUS, nil
