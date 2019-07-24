@@ -127,7 +127,7 @@ func makeMap() ([52][116][]Zip, error) {
 			mapUS[latConvert(j)][longConvert(k)] = append(mapUS[latConvert(j)][longConvert(k)], i)
 		}
 	}
-	return mapUS, nil
+	return fillDeadSpace(mapUS)
 }
 
 func nameToPop() (map[string]int, error) {
@@ -144,6 +144,19 @@ func nameToPop() (map[string]int, error) {
 		names[a.State+"."+a.Name] += zipPop[a.Zipcode]
 	}
 	return names, nil
+}
+
+func fillDeadSpace(mapUS [52][116][]Zip) ([52][116][]Zip, error) {
+	stations, err := ParseISDHistory()
+	if err != nil {
+		return mapUS, err
+	}
+	for _, a := range stations {
+		if len(mapUS[a.lat][a.long]) == 0 {
+			mapUS[a.lat][a.long] = []Zip{{State: a.state, Name: a.name}}
+		}
+	}
+	return mapUS, nil
 }
 
 //Converts a latitude to fit into the grid

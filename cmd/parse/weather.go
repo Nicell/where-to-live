@@ -37,9 +37,10 @@ type MonthWeather struct {
 }
 
 type Station struct {
-	lat     int
-	long    int
-	Weather TotalWeather `json:"w"`
+	lat         int
+	long        int
+	name, state string
+	Weather     TotalWeather `json:"w"`
 }
 type weatherData struct {
 	station                                                               string
@@ -147,7 +148,7 @@ func averageYears(years [][52][116]Station) [52][116]Station {
 
 func parseGSOD(year int) ([52][116][]Station, error) {
 	filepath := fmt.Sprintf("data/gsod_%d.tar", year)
-	stations, _ := parseISDHistory()
+	stations, _ := ParseISDHistory()
 	weatherMap := [52][116][]Station{}
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -172,7 +173,7 @@ func parseGSOD(year int) ([52][116][]Station, error) {
 			return weatherMap, err
 		}
 		opReader := bufio.NewReader(gzipF)
-		station := Station{-1, -1, TotalWeather{}}
+		station := Station{lat: -1, long: -1, Weather: TotalWeather{}}
 		for {
 			in, prefix, err := opReader.ReadLine()
 			if err == io.EOF {
@@ -318,7 +319,7 @@ func averageStations(in [52][116][]Station) [52][116]Station {
 					t.December.Good = (t.December.Good / float64(t.December.total)) * 31
 					t.December.Bad = (t.December.Bad / float64(t.December.total)) * 31
 				}
-				out[x][y] = Station{x, y, t}
+				out[x][y] = Station{lat: x, long: y, Weather: t}
 			}
 		}
 	}
@@ -507,7 +508,7 @@ func toStationId(l string) string {
 	return fmt.Sprintf("%s", l[0:6])
 }
 
-func parseISDHistory() (map[string]Station, error) {
+func ParseISDHistory() (map[string]Station, error) {
 	stations := make(map[string]Station)
 	file, err := os.Open("data/isd-history.csv")
 	if err != nil {
@@ -521,7 +522,7 @@ func parseISDHistory() (map[string]Station, error) {
 			lat, _ := strconv.ParseFloat(i[6], 64)
 			long, _ := strconv.ParseFloat(i[7], 64)
 			if !(long < -125.0 || long > -67 || lat > 50 || lat < 24) {
-				stations[i[0]] = Station{lat: latConvert(lat), long: longConvert(long)}
+				stations[i[0]] = Station{lat: latConvert(lat), long: longConvert(long), state: i[4], name: i[2]}
 			}
 		}
 	}
