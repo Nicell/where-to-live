@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-//All the weather for a year
+//TotalWeather All the weather for a year
 type TotalWeather struct {
 	January   MonthWeather `json:"j"`
 	February  MonthWeather `json:"f"`
@@ -32,14 +32,14 @@ type TotalWeather struct {
 	totalDays int
 }
 
-//All the data for the entire month is condensed down to MonthWeather
+//MonthWeather All the data for the entire month is condensed down to MonthWeather
 type MonthWeather struct {
 	Good  float64 `json:"g"`
 	Bad   float64 `json:"b"`
 	total int
 }
 
-//Contains one station with weather and location
+//Station: Contains one station with weather and location
 type Station struct {
 	lat     int
 	long    int
@@ -53,7 +53,7 @@ type weatherData struct {
 	date                                                                  time.Time
 }
 
-//Builds the weather map
+//BuildWeatherMap Builds the weather map
 func BuildWeatherMap() ([52][116]Station, error) {
 	allYears := [][52][116]Station{}
 	for i := 1990; i < time.Now().Year(); i++ {

@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-//a struct that stores the Zipcode, lat, long, and Name of a Station
+//Zip a struct that stores the Zipcode, lat, long, and Name of a Station
 type Zip struct {
 	Zipcode string `json:"z"`
 	lat     string

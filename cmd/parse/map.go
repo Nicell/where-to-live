@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 )
 
-//A spot on the final map that is exported to a json file
+//Node A spot on the final map that is exported to a json file
 type Node struct {
 	Zipcodes []Zip        `json:"z"`
 	City     string       `json:"c"`
@@ -13,7 +13,7 @@ type Node struct {
 	Weather  TotalWeather `json:"w"`
 }
 
-//Takes in all the data and writes it to a json file
+//WriteJSON Takes in all the data and writes it to a json file
 func WriteJSON() {
 	mapUS, err := BuildMap()
 	if err != nil {
@@ -29,7 +29,7 @@ func WriteJSON() {
 	}
 }
 
-//Takes in the zip code map and the weather map and combines them
+//BuildMap Takes in the zip code map and the weather map and combines them
 func BuildMap() ([52][116]Node, error) {
 	fullMap := [52][116]Node{}
 	data, err := BuildWeatherMap()
