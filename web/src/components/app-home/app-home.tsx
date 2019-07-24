@@ -20,7 +20,7 @@ export class AppHome {
     this.hover = {
       x: 0,
       y: 0,
-      data: '',
+      data: {},
       visible: false
     }
     this.getData();
@@ -36,12 +36,12 @@ export class AppHome {
 
   render() {
     return (
-      <div class='app-home'>
+      <div class="app-home">
         <header>
           <h1>🌎 Where to Live</h1>
         </header>
         {this.data ? (
-          <div class='map-holder'>
+          <div class="map-holder">
             <app-map data={this.data} handleHover={this.updateHover} />
           </div>
         ) : null}

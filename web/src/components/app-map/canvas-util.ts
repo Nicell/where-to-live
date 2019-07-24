@@ -52,7 +52,9 @@ export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMa
       if (!bottom && !left)
         radius.bl = half;
 
-      ctx.fillStyle = `hsla(203, 100%, 46%, ${Math.random() * .8 + .2})`;
+      const w = data[i][j].w;
+      const days = Object.keys(w).map(m => w[m].g - w[m].b).reduce((a, b) => a + b)
+      ctx.fillStyle = `hsla(203, 100%, 46%, ${ days === 0 ? .2 : (days + 365) / 365 * .8 + .2})`;
       roundRect(ctx, j * cell + (cell - size) / 2, i * cell + (cell - size) / 2, size, size, radius);
     }
   }));
