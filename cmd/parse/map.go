@@ -22,8 +22,10 @@ type ZipCodes struct {
 
 //USMap Returns the top five best and worst places as well as all the data in the map
 type USMap struct {
-	Top    [][]int       `json:"t"`
-	Bottom [][]int       `json:"b"`
+	Top    [5][2]int `json:"t"`
+	valTop [5]int
+	Bottom [5][2]int `json:"b"`
+	valBot [5]int
 	Map    [50][116]Node `json:"m"`
 }
 
@@ -58,7 +60,7 @@ func WriteJSON() {
 //BuildMap Takes in the zip code map and the weather map and combines them
 func BuildMap() (USMap, error) {
 	fullMap := USMap{}
-	data, err := BuildWeatherMap()
+	data, err := buildWeatherMap()
 	if err != nil {
 		return fullMap, err
 	}
