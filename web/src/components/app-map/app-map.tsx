@@ -22,7 +22,7 @@ export class AppMap {
   @Prop() data: any;
   @State() width: number;
   @State() transform: DOMMatrix2DInit;
-  
+
 
   dragState: dragState;
   hover: Hover;
@@ -93,11 +93,11 @@ export class AppMap {
 
     this.data.forEach((t, i) => t.forEach((l, j) => {
       if (y > i * cell && y < i * cell + cell && x > j * cell && x < j * cell + cell) {
-        if (l.s) {
+        if (l.c) {
           hover = {
             x: rect.left + window.scrollX + this.transform.e / window.devicePixelRatio + (j * cell + cell / 2) * this.transform.a,
             y: rect.top + window.scrollY + this.transform.f / window.devicePixelRatio + i * cell * this.transform.a,
-            data: JSON.stringify(l),
+            data: l,
             visible: true
           }
         }

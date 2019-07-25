@@ -38,8 +38,8 @@ func WriteJSON() {
 }
 
 //BuildMap Takes in the zip code map and the weather map and combines them
-func BuildMap() ([52][116]Node, error) {
-	fullMap := [52][116]Node{}
+func BuildMap() ([50][116]Node, error) {
+	fullMap := [50][116]Node{}
 	data, err := BuildWeatherMap()
 	if err != nil {
 		return fullMap, err
