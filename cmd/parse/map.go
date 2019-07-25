@@ -23,7 +23,15 @@ func WriteJSON() {
 	if err != nil {
 		panic(err)
 	}
-	err = ioutil.WriteFile("test.json", file, 0644)
+	err = ioutil.WriteFile("map.json", file, 0644)
+	if err != nil {
+		panic(err)
+	}
+	file, err = json.MarshalIndent(buildSearchZip(mapUS), "", " ")
+	if err != nil {
+		panic(err)
+	}
+	err = ioutil.WriteFile("zip.json", file, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -51,4 +59,24 @@ func BuildMap() ([52][116]Node, error) {
 		}
 	}
 	return fullMap, nil
+}
+
+func buildSearchZip(mapUS [52][116]Node) [][][]string {
+	zipArray := [][][]string{}
+	tmp2 := [][]string{}
+	tmp := []string{}
+	for _, a := range mapUS {
+		for _, b := range a {
+			if len(b.Zipcodes) != 0 {
+				for _, c := range b.Zipcodes {
+					tmp = append(tmp, c.Zipcode+", "+c.Name+", "+c.State)
+					tmp2 = append(tmp2, tmp)
+					tmp = []string{}
+				}
+				zipArray = append(zipArray, tmp2)
+				tmp2 = [][]string{}
+			}
+		}
+	}
+	return zipArray
 }
