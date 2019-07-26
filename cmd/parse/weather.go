@@ -263,6 +263,17 @@ func processLine(line string) (weatherData, error) {
 	if err != nil {
 		return weatherData{}, err
 	}
+	if tmp > 80 {
+		dewpoint, err := strconv.ParseFloat(strings.TrimSpace(line[35:40]), 64)
+		if err != nil {
+			return weatherData{}, err
+		}
+		if dewpoint > 40 {
+			calcHeatIndex(&tmp, calcRelativeHumidity(tmp, dewpoint))
+		}
+	} else if tmp < 50 && (data.wind*1.15078) > 3 {
+		calcWindChill(&tmp, data.wind)
+	}
 	data.avgTemp = tmp
 
 	tmp, err = strconv.ParseFloat(strings.TrimSpace(line[102:108]), 64)
@@ -296,6 +307,29 @@ func processLine(line string) (weatherData, error) {
 	data.harshWeather = l
 
 	return data, nil
+}
+
+//Calculates the windchill taken in a temp and the windspeed - used equation as defined on https://www.weather.gov/media/epz/wxcalc/windChill.pdf
+func calcWindChill(temp *float64, wind float64) {
+	wind *= 1.15078
+	*temp = (((*temp * 0.6215) + 35.74) - (35.75 * math.Pow(wind, 0.16))) + (.4275 * *temp * math.Pow(wind, 0.16))
+}
+
+//Calculates the heat index taken in a temp and the humidity - used equation as defined on https://www.weather.gov/media/epz/wxcalc/heatIndex.pdf
+func calcHeatIndex(temp *float64, humidity float64) {
+	*temp = -42.379 + (2.04901523 * *temp) + (10.14333127 * humidity) - (0.22475541 * *temp * humidity) - (6.83783 * 0.001 * math.Pow(*temp, 2)) - (5.481717 * 0.01 * math.Pow(humidity, 2)) + (1.22874 * .001 * math.Pow(*temp, 2) * humidity) + (8.5282 * 0.0001 * *temp * math.Pow(humidity, 2)) - (1.99 * 0.000001 * math.Pow(*temp, 2) * math.Pow(humidity, 2))
+}
+
+//Calculates and returns the relative humidity given the temp and dewpoint - using http://bmcnoldy.rsmas.miami.edu/Humidity.html
+func calcRelativeHumidity(temp, dewpoint float64) float64 {
+	ftoC(&temp)
+	ftoC(&dewpoint)
+	return 100 * (math.Exp((17.625*dewpoint)/(243.04+dewpoint)) / math.Exp((17.625*temp)/(243.04+temp)))
+}
+
+//Converts fahrenheit to celsius
+func ftoC(temp *float64) {
+	*temp = (*temp - 32) * (5 / 9)
 }
 
 //Takes in a line of gsod data and returns the station corresponding to that line
