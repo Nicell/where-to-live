@@ -22,18 +22,14 @@ export function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w
   ctx.fill();
 }
 
-export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMatrix2DInit, width: number, cell: number) {
+export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMatrix2DInit, width: number, cell: number, search: string) {
   const size = cell * .85;
   const height = width * data.length / data[0].length;
   data.forEach((t, i) => t.forEach((l, j) => {
     if (l.c && (j * cell + (cell - size) / 2) * transform.a < -transform.e + width && (j * cell + (cell - size) / 2 + size) * transform.a > -transform.e && (i * cell + (cell - size) / 2) * transform.a < -transform.f + height && (i * cell + (cell - size) / 2 + size) * transform.a > -transform.f) {
       const half = size / 2;
-      const radius = {
-        tl: size / 6,
-        tr: size / 6,
-        br: size / 6,
-        bl: size / 6
-      }
+      const corner = size / 6;
+      const radius = { tl: corner, tr: corner, br: corner, bl: corner }
 
       const bottom = (i === data.length - 1 ? '' : data[i + 1][j].c).length > 0;
       const top = (i === 0 ? '' : data[i - 1][j].c).length > 0;
@@ -42,19 +38,28 @@ export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMa
 
       if (!top && !left)
         radius.tl = half;
-
       if (!top && !right)
         radius.tr = half;
-
       if (!bottom && !right)
         radius.br = half;
-
       if (!bottom && !left)
         radius.bl = half;
 
-      const w = data[i][j].w;
+      let saturated;
+      if (search.length > 0) {
+        const contains = l.z.filter(zip => zip.z.substr(0, search.length) === search);
+        if (contains.length > 0) {
+          saturated = true;
+        } else {
+          saturated = false;
+        }
+      } else {
+        saturated = true;
+      }
+
+      const w = l.w;
       const days = Object.keys(w).map(m => w[m].g - w[m].b).reduce((a, b) => a + b)
-      ctx.fillStyle = `hsla(203, 100%, 46%, ${ days === 0 ? .2 : (days + 365) / 365 * .8 + .2})`;
+      ctx.fillStyle = `hsla(203, ${saturated ? '100%' : '0%'}, 46%, ${ days === 0 ? .2 : (days + 365) / 365 * .8 + .2})`;
       roundRect(ctx, j * cell + (cell - size) / 2, i * cell + (cell - size) / 2, size, size, radius);
     }
   }));

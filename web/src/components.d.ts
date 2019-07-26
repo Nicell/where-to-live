@@ -18,6 +18,13 @@ export namespace Components {
   interface AppMap {
     'data': any;
     'handleHover': Function;
+    'search': string;
+  }
+  interface AppSearch {
+    'handleChange': Function;
+    'handleHover': Function;
+    'value': string;
+    'zips': any;
   }
 }
 
@@ -41,10 +48,17 @@ declare global {
     prototype: HTMLAppMapElement;
     new (): HTMLAppMapElement;
   };
+
+  interface HTMLAppSearchElement extends Components.AppSearch, HTMLStencilElement {}
+  var HTMLAppSearchElement: {
+    prototype: HTMLAppSearchElement;
+    new (): HTMLAppSearchElement;
+  };
   interface HTMLElementTagNameMap {
     'app-home': HTMLAppHomeElement;
     'app-hover': HTMLAppHoverElement;
     'app-map': HTMLAppMapElement;
+    'app-search': HTMLAppSearchElement;
   }
 }
 
@@ -56,12 +70,20 @@ declare namespace LocalJSX {
   interface AppMap extends JSXBase.HTMLAttributes<HTMLAppMapElement> {
     'data'?: any;
     'handleHover'?: Function;
+    'search'?: string;
+  }
+  interface AppSearch extends JSXBase.HTMLAttributes<HTMLAppSearchElement> {
+    'handleChange'?: Function;
+    'handleHover'?: Function;
+    'value'?: string;
+    'zips'?: any;
   }
 
   interface IntrinsicElements {
     'app-home': AppHome;
     'app-hover': AppHover;
     'app-map': AppMap;
+    'app-search': AppSearch;
   }
 }
 
