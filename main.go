@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/Nicell/where-to-live/cmd"
 	"github.com/Nicell/where-to-live/cmd/parse"
+	"time"
 )
 
 func main() {
