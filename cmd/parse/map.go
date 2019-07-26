@@ -2,7 +2,6 @@ package parse
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"strconv"
 )
@@ -116,8 +115,6 @@ func BuildMap() (USMap, error) {
 			}
 		}
 	}
-	fmt.Println(fullMap.valTop)
-	fmt.Println(fullMap.valBot)
 	return fullMap, nil
 }
 
