@@ -232,15 +232,15 @@ func processDay(station *Station, day weatherData) {
 //Takes in a line of GSOD data and converts it to a weatherData struct
 func processLine(line string) (weatherData, error) {
 	data := weatherData{}
-	year, err := strconv.ParseInt(line[14:18], 10, 32)
+	year, err := strconv.Atoi(line[14:18])
 	if err != nil {
 		return weatherData{}, err
 	}
-	month, err := strconv.ParseInt(line[18:20], 10, 32)
+	month, err := strconv.Atoi(line[18:20])
 	if err != nil {
 		return weatherData{}, err
 	}
-	day, err := strconv.ParseInt(line[20:22], 10, 32)
+	day, err := strconv.Atoi(line[20:22])
 	if err != nil {
 		return weatherData{}, err
 	}
