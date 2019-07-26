@@ -4,6 +4,7 @@ export interface Hover {
   x: number;
   y: number;
   data: any;
+
   visible: boolean;
 }
 
@@ -14,7 +15,9 @@ export interface Hover {
 })
 export class AppHome {
   @State() hover: Hover;
+  @State() search: string;
   @State() data: any;
+  @State() zips: any;
 
   constructor() {
     this.hover = {
@@ -23,15 +26,25 @@ export class AppHome {
       data: {},
       visible: false
     }
+    this.search = '';
     this.getData();
+    this.getZips();
   }
 
   getData = async () => {
     this.data = await (await fetch('/assets/map.json')).json();
   }
 
+  getZips = async () => {
+    this.zips = await (await fetch('/assets/zip.json')).json();
+  }
+
   updateHover = (hover: Hover) => {
     this.hover = hover;
+  }
+
+  updateSearch = (query: string) => {
+    this.search = query;
   }
 
   render() {
@@ -40,12 +53,15 @@ export class AppHome {
         <header>
           <h1>🌎 Where to Live</h1>
         </header>
-        {this.data ? (
-          <div class="map-holder">
-            <app-map data={this.data} handleHover={this.updateHover} />
+        {this.data && this.zips ? (
+          <div>
+            <div class="map-holder">
+              <app-map data={this.data} handleHover={this.updateHover} search={this.search} />
+            </div>
+            <app-hover state={this.hover} />
+            <app-search zips={this.zips} handleHover={this.updateHover} value={this.search} handleChange={this.updateSearch} />
           </div>
         ) : null}
-        <app-hover state={this.hover}/>
       </div>
     );
   }

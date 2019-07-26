@@ -20,6 +20,7 @@ export class AppMap {
   @Element() el: HTMLElement;
   @Prop() handleHover: Function;
   @Prop() data: any;
+  @Prop() search: string;
   @State() width: number;
   @State() transform: DOMMatrix2DInit;
 
@@ -42,6 +43,13 @@ export class AppMap {
   componentDidRender() {
     clearTimeout(this.debounce);
     this.debounce = setTimeout(() => this.renderCanvas(), 50);
+
+    if (this.search.length === 5) {
+      this.searchHover();
+    } else {
+      this.hover = {x: 0, y: 0, data: '', visible: false};
+      this.handleHover(this.hover);
+    }
   }
 
   attachListeners = () => {
@@ -119,6 +127,43 @@ export class AppMap {
     }
   }
 
+  searchHover = () => {
+    console.log('searchover')
+    const canvas = this.el.querySelector('.map-canvas') as HTMLCanvasElement;
+    const cell = canvas.width / window.devicePixelRatio / this.data[0].length;
+    const rect = canvas.getBoundingClientRect();
+    let hover: Hover;
+
+    this.data.forEach((t, i) => t.forEach((l, j) => {
+      if (l.z) {
+        for (let zip of l.z) {
+          if (zip.z === this.search) {
+            hover = {
+              x: rect.left + window.scrollX + this.transform.e / window.devicePixelRatio + (j * cell + cell / 2) * this.transform.a,
+              y: rect.top + window.scrollY + this.transform.f / window.devicePixelRatio + i * cell * this.transform.a,
+              data: l,
+              visible: true
+            }
+          }
+        }
+      }
+    }));
+
+    if (!hover) {
+      hover = {
+        x: 0,
+        y: 0,
+        data: '',
+        visible: false
+      }
+    }
+
+    if (hover.data !== this.hover.data) {
+      this.hover = hover;
+      this.handleHover(this.hover);
+    }
+  }
+
   endHover = () => {
     this.hover = {
       x: 0,
@@ -134,8 +179,8 @@ export class AppMap {
     const ctx = c.getContext('2d');
     ctx.clearRect(0, 0, c.width, c.height);
     const cell = c.width / this.data[0].length;
-    ctx.setTransform(this.transform)
-    drawCanvas(ctx, this.data, this.transform, this.width, cell);
+    ctx.setTransform(this.transform);
+    drawCanvas(ctx, this.data, this.transform, this.width, cell, this.search);
   }
 
   calcWidth = () => {
@@ -143,31 +188,24 @@ export class AppMap {
   }
 
   render() {
+    const adjustedWidth = this.width / window.devicePixelRatio;
     return (
       <div class="app-map">
-        <canvas class="map-canvas" style={{ width: this.width / window.devicePixelRatio + 'px', height: this.width / window.devicePixelRatio / this.data[0].length * this.data.length + 'px' }} width={this.width} height={this.width / this.data[0].length * this.data.length}/>
+        <canvas class="map-canvas"
+          style={{ width: adjustedWidth + 'px', height: adjustedWidth / this.data[0].length * this.data.length + 'px' }}
+          width={this.width}
+          height={this.width / this.data[0].length * this.data.length}
+        />
         <div class="map-controls">
           <div class="map-move">
-            <div class="move up" onClick={() => this.changeTranslation(0, this.width / 5)}>
-              ^
-            </div>
-            <div class="move down" onClick={() => this.changeTranslation(0, -this.width / 5)}>
-              ^
-            </div>
-            <div class="move left" onClick={() => this.changeTranslation(this.width / 5, 0)}>
-              ^
-            </div>
-            <div class="move right" onClick={() => this.changeTranslation(-this.width / 5, 0)}>
-              ^
-            </div>
+            <div class="move up" onClick={() => this.changeTranslation(0, this.width / 5)}>^</div>
+            <div class="move down" onClick={() => this.changeTranslation(0, -this.width / 5)}>^</div>
+            <div class="move left" onClick={() => this.changeTranslation(this.width / 5, 0)}>^</div>
+            <div class="move right" onClick={() => this.changeTranslation(-this.width / 5, 0)}>^</div>
           </div>
           <div class="map-zoom">
-            <div onClick={() => this.changeScale(4/3)}>
-              +
-            </div>
-            <div onClick={() => this.changeScale(3/4)}>
-              -
-            </div>
+            <div onClick={() => this.changeScale(4/3)}>+</div>
+            <div onClick={() => this.changeScale(3/4)}>-</div>
           </div>
         </div>
       </div>
