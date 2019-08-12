@@ -128,7 +128,6 @@ export class AppMap {
   }
 
   searchHover = () => {
-    console.log('searchover')
     const canvas = this.el.querySelector('.map-canvas') as HTMLCanvasElement;
     const cell = canvas.width / window.devicePixelRatio / this.data[0].length;
     const rect = canvas.getBoundingClientRect();
@@ -137,7 +136,7 @@ export class AppMap {
     this.data.forEach((t, i) => t.forEach((l, j) => {
       if (l.z) {
         for (let zip of l.z) {
-          if (zip.z === this.search) {
+          if (('00000' + zip.toString()).slice(-5) === this.search) {
             hover = {
               x: rect.left + window.scrollX + this.transform.e / window.devicePixelRatio + (j * cell + cell / 2) * this.transform.a,
               y: rect.top + window.scrollY + this.transform.f / window.devicePixelRatio + i * cell * this.transform.a,

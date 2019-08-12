@@ -2,35 +2,9 @@ import { Component, Element, Prop, h } from '@stencil/core';
 
 import { Hover } from '../app-home/app-home';
 
-const monthDay = {
-  j: 31,
-  f: 28,
-  m: 31,
-  a: 30,
-  y: 31,
-  u: 30,
-  l: 31,
-  g: 31,
-  s: 30,
-  o: 31,
-  n: 30,
-  d: 31
-}
+const monthDay = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-const monthLetter = {
-  j: 'J',
-  f: 'F',
-  m: 'M',
-  a: 'A',
-  y: 'M',
-  u: 'J',
-  l: 'J',
-  g: 'A',
-  s: 'S',
-  o: 'O',
-  n: 'N',
-  d: 'D'
-}
+const monthLetter = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
 @Component({
   tag: 'app-hover',
@@ -42,21 +16,21 @@ export class AppHover {
   @Prop() state: Hover;
 
   render() {
-    const w = this.state.data && this.state.data.w ? this.state.data.w : {};
+    const w = this.state.data && this.state.data.w && this.state.data.w.m ? this.state.data.w.m : [];
     const offset = Math.min(Math.max(this.state.x, 272 / 2), document.documentElement.clientWidth - 272 / 2);
     return this.state.visible ? (
       <div class="app-hover" style={{ left: offset + 'px', top: this.state.y + 'px', '--before-offset': `calc(50% + ${this.state.x - offset}px)` }}>
-        {this.state.data.c}, {this.state.data.s} {Object.keys(w).map(m => w[m].g - w[m].b).reduce((a,b) => a+b)}
+        {this.state.data.c}, {this.state.data.s} {w.reduce((a, b, i) => i % 2 === 0 ? a + b : a - b, 0)}
         <div class="hover-charts">
-          {Object.keys(w).map(m => (
+          {w.map((m,i) => i%2 === 0 ? (
             <div class="hover-chart">
               <div class="hover-chart-bar">
-                <div style={{ height: w[m].b / monthDay[m] * 100 + '%', background: '#ff5252' }}></div>
-                <div style={{ height: w[m].g / monthDay[m] * 100 + '%', background: '#69f0ae' }}></div>
+                <div style={{ height: w[i+1] / monthDay[i/2] * 100 + '%', background: '#ff5252' }}></div>
+                <div style={{ height: m / monthDay[i/2] * 100 + '%', background: '#69f0ae' }}></div>
               </div>
-              <span>{monthLetter[m]}</span>
+              <span>{monthLetter[i/2]}</span>
             </div>
-          ))}
+          ) : null)}
         </div>
       </div>
     ) : null;
