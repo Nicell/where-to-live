@@ -219,9 +219,9 @@ func averageStations(in [50][116][]Station) [50][116]Station {
 //Takes in one day of weather and stores it to the station provided
 func processDay(station *Station, day weatherData) {
 	t := MonthWeather{}
-	if day.precip > 0.1 || day.minTemp < 40 || day.maxTemp > 85 || day.visib < 5 || day.harshWeather > 0 {
+	if day.precip > 0.1 || day.minTemp < 40 || day.maxTemp > 90 || day.visib < 5 || day.harshWeather > 0 {
 		t.Bad++
-	} else if day.avgTemp > 65 && day.avgTemp < 75 && day.visib > 5 && day.maxTemp < 85 && day.minTemp > 55 && day.precip < .05 && day.harshWeather == 0 {
+	} else if day.avgTemp > 60 && day.avgTemp < 80 && day.visib > 5 && day.maxTemp < 85 && day.minTemp > 50 && day.precip < .05 && day.harshWeather == 0 {
 		t.Good++
 	}
 	t.total++

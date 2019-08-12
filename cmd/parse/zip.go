@@ -9,13 +9,13 @@ import (
 	"strings"
 )
 
-//Zip a struct that stores the Zipcode, lat, long, and Name of a Station
-type Zip struct {
-	Zipcode string `json:"z"`
+//zip a struct that stores the zipcode, lat, long, and name of a Station
+type zip struct {
+	zipcode string
 	lat     string
 	long    string
-	Name    string `json:"n"`
-	State   string `json:"s"`
+	name    string
+	state   string
 }
 
 //Parses the states.csv and builds a map with number (as a string) keys and abbreviations (WI, CA, CO, etc.) as value
@@ -37,7 +37,7 @@ func parseState() (map[string]string, error) {
 }
 
 //parses the zips.tsv file
-func parseZip() ([]Zip, error) {
+func parseZip() ([]zip, error) {
 	file, err := os.Open("data/zips.tsv")
 	if err != nil {
 		return nil, err
@@ -50,18 +50,18 @@ func parseZip() ([]Zip, error) {
 	if err != nil {
 		panic(err)
 	}
-	zips := []Zip{}
+	zips := []zip{}
 	states, err := parseState()
 	if err != nil {
 		return zips, err
 	}
 	for _, i := range lines {
-		data := Zip{
-			Zipcode: i[0],
+		data := zip{
+			zipcode: i[0],
 			lat:     i[1],
 			long:    i[2],
-			Name:    i[4],
-			State:   states[strings.TrimPrefix(i[5], "0")],
+			name:    i[4],
+			state:   states[strings.TrimPrefix(i[5], "0")],
 		}
 		long, _ := strconv.ParseFloat(data.long, 64)
 		lat, _ := strconv.ParseFloat(data.lat, 64)
@@ -72,10 +72,10 @@ func parseZip() ([]Zip, error) {
 	return zips, err
 }
 
-//Parses population-by-Zip.csv to put into a map with keys of Zip codes
+//Parses population-by-zip.csv to put into a map with keys of zip codes
 func parsePopulation() (map[string]int, error) {
 	pop := make(map[string]int)
-	file, err := os.Open("data/population-by-Zip.csv")
+	file, err := os.Open("data/population-by-zip.csv")
 	if err != nil {
 		return pop, err
 	}
@@ -99,9 +99,9 @@ func parsePopulation() (map[string]int, error) {
 	return pop, nil
 }
 
-//Maps all Zip codes to a grid stacking overlapping counties
-func makeMap() ([50][116][]Zip, error) {
-	mapUS := [50][116][]Zip{}
+//Maps all zip codes to a grid stacking overlapping counties
+func makeMap() ([50][116][]zip, error) {
+	mapUS := [50][116][]zip{}
 	zips, err := parseZip()
 	if err != nil {
 		return mapUS, err
@@ -120,8 +120,8 @@ func makeMap() ([50][116][]Zip, error) {
 			return mapUS, err
 		}
 		if len(mapUS[latConvert(j)][longConvert(k)]) != 0 {
-			if namePop[mapUS[latConvert(j)][longConvert(k)][0].State+"."+mapUS[latConvert(j)][longConvert(k)][0].Name] < namePop[i.State+"."+i.Name] {
-				mapUS[latConvert(j)][longConvert(k)] = append([]Zip{i}, mapUS[latConvert(j)][longConvert(k)]...)
+			if namePop[mapUS[latConvert(j)][longConvert(k)][0].state+"."+mapUS[latConvert(j)][longConvert(k)][0].name] < namePop[i.state+"."+i.name] {
+				mapUS[latConvert(j)][longConvert(k)] = append([]zip{i}, mapUS[latConvert(j)][longConvert(k)]...)
 			} else {
 				mapUS[latConvert(j)][longConvert(k)] = append(mapUS[latConvert(j)][longConvert(k)], i)
 			}
@@ -143,38 +143,38 @@ func nameToPop() (map[string]int, error) {
 		return names, err
 	}
 	for _, a := range zips {
-		names[a.State+"."+a.Name] += zipPop[a.Zipcode]
+		names[a.state+"."+a.name] += zipPop[a.zipcode]
 	}
 	return names, nil
 }
 
 //fills known dead space with "No Data" to make map look nicer, not the best fix
-func fillDeadSpace(mapUS [50][116][]Zip) ([50][116][]Zip, error) {
+func fillDeadSpace(mapUS [50][116][]zip) ([50][116][]zip, error) {
 	for x := 5; x < 51; x++ {
 		for y := 1; y < 25; y++ {
 			if len(mapUS[y][x]) == 0 {
-				mapUS[y][x] = []Zip{{Name: "No Data"}}
+				mapUS[y][x] = []zip{{name: "No Data"}}
 			}
 		}
 	}
 	for x := 8; x < 62; x++ {
 		for y := 25; y < 30; y++ {
 			if len(mapUS[y][x]) == 0 {
-				mapUS[y][x] = []Zip{{Name: "No Data"}}
+				mapUS[y][x] = []zip{{name: "No Data"}}
 			}
 		}
 	}
 	for x := 15; x < 43; x++ {
 		for y := 30; y < 33; y++ {
 			if len(mapUS[y][x]) == 0 {
-				mapUS[y][x] = []Zip{{Name: "No Data"}}
+				mapUS[y][x] = []zip{{name: "No Data"}}
 			}
 		}
 	}
 	for x := 40; x < 50; x++ {
 		for y := 31; y < 39; y++ {
 			if len(mapUS[y][x]) == 0 {
-				mapUS[y][x] = []Zip{{Name: "No Data"}}
+				mapUS[y][x] = []zip{{name: "No Data"}}
 			}
 		}
 	}

@@ -11,15 +11,15 @@ Using NOAA weather data from 1990 to the last full year, we calculate the averag
 We calculate the **perceived temperature**, which takes into account relative humidity, to more accurately evaluate the temperature.
 
 A pleasant day is counted when all of the following are met:
- - Average perceived temperature between 65°F and 75°F
+ - Average perceived temperature between 60°F and 80°F
  - Maximum perceived temperature below 85°F
- - Minimum perceived temperature above 55°F
+ - Minimum perceived temperature above 50°F
  - [Visibility](https://en.wikipedia.org/wiki/Visibility) of more than 5
  - Less than .05" of precipitation
 
 An unpleasant day is counted when any of the following are met:
  - Average perceived temperature below 40°F
- - Average perceived temperature above 85°F
+ - Average perceived temperature above 90°F
  - [Visibility](https://en.wikipedia.org/wiki/Visibility) of less than 5
  - Any snow, hail, thunder, or tornados
  - More than .1" of precipitation
