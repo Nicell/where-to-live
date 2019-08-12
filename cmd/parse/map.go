@@ -8,10 +8,15 @@ import (
 
 //Node A spot on the final map that is exported to a json file
 type Node struct {
-	Zipcodes []Zip        `json:"z"`
-	City     string       `json:"c"`
-	State    string       `json:"s"`
-	Weather  TotalWeather `json:"w"`
+	zipcodes []zip
+	ShortZip []int         `json:"z,omitempty"`
+	City     string        `json:"c,omitempty"`
+	State    string        `json:"s,omitempty"`
+	Weather  *SmallWeather `json:"w,omitempty"`
+}
+type SmallWeather struct {
+	Months    *[24]int `json:"m,omitempty"`
+	totalDays int
 }
 
 //ZipCodes Has a name and all zip codes corresponding to it in an array
@@ -72,10 +77,18 @@ func BuildMap() (USMap, error) {
 	for x, b := range fullMap.Map {
 		for y := range b {
 			if len(zips[x][y]) > 0 {
-				fullMap.Map[x][y].City = zips[x][y][0].Name
-				fullMap.Map[x][y].Zipcodes = zips[x][y]
-				fullMap.Map[x][y].State = zips[x][y][0].State
-				fullMap.Map[x][y].Weather = data[x][y].Weather
+				fullMap.Map[x][y].City = zips[x][y][0].name
+				for _, a := range zips[x][y] {
+					if len(a.zipcode) > 0 {
+						i, err := strconv.Atoi(a.zipcode)
+						if err != nil {
+							return fullMap, err
+						}
+						fullMap.Map[x][y].ShortZip = append(fullMap.Map[x][y].ShortZip, i)
+					}
+				}
+				fullMap.Map[x][y].State = zips[x][y][0].state
+				fullMap.Map[x][y].Weather = totalWeathertoSmall(data[x][y].Weather)
 				if fullMap.Map[x][y].City != "No Data" && fullMap.Map[x][y].City != "" {
 					calc := calcGoodBad(x, y, data)
 					if calc > fullMap.valTop[4] {
@@ -118,6 +131,39 @@ func BuildMap() (USMap, error) {
 	return fullMap, nil
 }
 
+func totalWeathertoSmall(weather TotalWeather) *SmallWeather {
+	if len(weather.Months) == 0 {
+		return &SmallWeather{}
+	}
+	Months := [24]int{}
+	Months[0] = int(weather.Months["January"].Good)
+	Months[1] = int(weather.Months["January"].Bad)
+	Months[2] = int(weather.Months["February"].Good)
+	Months[3] = int(weather.Months["February"].Bad)
+	Months[4] = int(weather.Months["March"].Good)
+	Months[5] = int(weather.Months["March"].Bad)
+	Months[6] = int(weather.Months["April"].Good)
+	Months[7] = int(weather.Months["April"].Bad)
+	Months[8] = int(weather.Months["May"].Good)
+	Months[9] = int(weather.Months["May"].Bad)
+	Months[10] = int(weather.Months["June"].Good)
+	Months[11] = int(weather.Months["June"].Bad)
+	Months[12] = int(weather.Months["July"].Good)
+	Months[13] = int(weather.Months["July"].Bad)
+	Months[14] = int(weather.Months["August"].Good)
+	Months[15] = int(weather.Months["August"].Bad)
+	Months[16] = int(weather.Months["September"].Good)
+	Months[17] = int(weather.Months["September"].Bad)
+	Months[18] = int(weather.Months["October"].Good)
+	Months[19] = int(weather.Months["October"].Bad)
+	Months[20] = int(weather.Months["November"].Good)
+	Months[21] = int(weather.Months["November"].Bad)
+	Months[22] = int(weather.Months["December"].Good)
+	Months[23] = int(weather.Months["December"].Bad)
+	smallWeather := SmallWeather{&Months, weather.totalDays}
+	return &smallWeather
+}
+
 //Calculates how pleasant somewhere is by taking good - bad days of all months and adding them together
 func calcGoodBad(lat, long int, weather [50][116]Station) int {
 	score := 0
@@ -133,14 +179,14 @@ func buildSearchZip(mapUS USMap) ([99999]string, error) {
 	mapZip := [99999]string{}
 	for _, a := range mapUS.Map {
 		for _, b := range a {
-			if len(b.Zipcodes) != 0 {
-				for _, c := range b.Zipcodes {
-					if c.Name != "No Data" {
-						zip, err := strconv.Atoi(c.Zipcode)
+			if len(b.zipcodes) != 0 {
+				for _, c := range b.zipcodes {
+					if c.name != "No Data" {
+						zip, err := strconv.Atoi(c.zipcode)
 						if err != nil {
 							return mapZip, err
 						}
-						mapZip[zip] = c.Name + ", " + c.State
+						mapZip[zip] = c.name + ", " + c.state
 					}
 				}
 			}
