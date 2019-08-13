@@ -10,6 +10,7 @@ jobs:
     steps:
       - checkout
       - run: go get -v -t -d ./...
+      - run: go run main.go
       - run: cd web && npm i
       - run: cd web && npm run build
       - persist_to_workspace:
@@ -22,6 +23,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: web
+      - run: npm i -g gh-pages
       - run: gh-pages --dist web/www
 
 workflows:
