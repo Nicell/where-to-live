@@ -11,14 +11,21 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - data-cache
+            - data-v1
+            - node-v1-{{ .Branch }}-{{ checksum "web/package-lock.json" }}
+            - node-v1-{{ .Branch }}-
+            - node-v1-
       - run: go get -v -t -d ./...
       - run: go run main.go
       - save_cache:
-          key: data-cache
+          key: data-v1
           paths:
             - data
       - run: cd web && npm i
+      - save_cache:
+          paths:
+            - web/node_modules
+          key: node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
       - run: cd web && npm run build
       - persist_to_workspace:
           root: web
@@ -36,7 +43,7 @@ jobs:
           git config --global user.name "CircleCI"
       - add_ssh_keys:
           fingerprints:
-            - "7e:7f:3a:da:69:96:d2:9c:a0:58:a1:a5:97:68:53:2e"
+            - "1d:89:d9:d5:87:68:30:6a:42:5e:43:06:b8:d6:ee:41"
       - run: sudo gh-pages --message "CircleCI Deployment" --dist web/www
 
 workflows:
