@@ -19,7 +19,7 @@ A pleasant day is counted when all of the following are met:
 
 An unpleasant day is counted when any of the following are met:
  - Average perceived temperature below 40°F
- - Average perceived temperature above 90°F
+ - Average perceived temperature above 85°F
  - [Visibility](https://en.wikipedia.org/wiki/Visibility) of less than 5
  - Any snow, hail, thunder, or tornados
  - More than .1" of precipitation

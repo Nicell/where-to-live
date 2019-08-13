@@ -18,11 +18,17 @@ export namespace Components {
   interface AppMap {
     'data': any;
     'handleHover': Function;
+    'max': number;
+    'min': number;
     'search': string;
+  }
+  interface AppRanks {
+    'bottom': any;
+    'data': any;
+    'top': any;
   }
   interface AppSearch {
     'handleChange': Function;
-    'handleHover': Function;
     'value': string;
     'zips': any;
   }
@@ -49,6 +55,12 @@ declare global {
     new (): HTMLAppMapElement;
   };
 
+  interface HTMLAppRanksElement extends Components.AppRanks, HTMLStencilElement {}
+  var HTMLAppRanksElement: {
+    prototype: HTMLAppRanksElement;
+    new (): HTMLAppRanksElement;
+  };
+
   interface HTMLAppSearchElement extends Components.AppSearch, HTMLStencilElement {}
   var HTMLAppSearchElement: {
     prototype: HTMLAppSearchElement;
@@ -58,6 +70,7 @@ declare global {
     'app-home': HTMLAppHomeElement;
     'app-hover': HTMLAppHoverElement;
     'app-map': HTMLAppMapElement;
+    'app-ranks': HTMLAppRanksElement;
     'app-search': HTMLAppSearchElement;
   }
 }
@@ -70,11 +83,17 @@ declare namespace LocalJSX {
   interface AppMap extends JSXBase.HTMLAttributes<HTMLAppMapElement> {
     'data'?: any;
     'handleHover'?: Function;
+    'max'?: number;
+    'min'?: number;
     'search'?: string;
+  }
+  interface AppRanks extends JSXBase.HTMLAttributes<HTMLAppRanksElement> {
+    'bottom'?: any;
+    'data'?: any;
+    'top'?: any;
   }
   interface AppSearch extends JSXBase.HTMLAttributes<HTMLAppSearchElement> {
     'handleChange'?: Function;
-    'handleHover'?: Function;
     'value'?: string;
     'zips'?: any;
   }
@@ -83,6 +102,7 @@ declare namespace LocalJSX {
     'app-home': AppHome;
     'app-hover': AppHover;
     'app-map': AppMap;
+    'app-ranks': AppRanks;
     'app-search': AppSearch;
   }
 }

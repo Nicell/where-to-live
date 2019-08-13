@@ -148,33 +148,33 @@ func nameToPop() (map[string]int, error) {
 	return names, nil
 }
 
-//fills known dead space with "No Data" to make map look nicer, not the best fix
+//fills known dead space with "Unknown" to make map look nicer, not the best fix
 func fillDeadSpace(mapUS [50][116][]zip) ([50][116][]zip, error) {
 	for x := 5; x < 51; x++ {
 		for y := 1; y < 25; y++ {
 			if len(mapUS[y][x]) == 0 {
-				mapUS[y][x] = []zip{{name: "No Data"}}
+				mapUS[y][x] = []zip{{name: "Unknown"}}
 			}
 		}
 	}
 	for x := 8; x < 62; x++ {
 		for y := 25; y < 30; y++ {
 			if len(mapUS[y][x]) == 0 {
-				mapUS[y][x] = []zip{{name: "No Data"}}
+				mapUS[y][x] = []zip{{name: "Unknown"}}
 			}
 		}
 	}
 	for x := 15; x < 43; x++ {
 		for y := 30; y < 33; y++ {
 			if len(mapUS[y][x]) == 0 {
-				mapUS[y][x] = []zip{{name: "No Data"}}
+				mapUS[y][x] = []zip{{name: "Unknown"}}
 			}
 		}
 	}
 	for x := 40; x < 50; x++ {
 		for y := 31; y < 39; y++ {
 			if len(mapUS[y][x]) == 0 {
-				mapUS[y][x] = []zip{{name: "No Data"}}
+				mapUS[y][x] = []zip{{name: "Unknown"}}
 			}
 		}
 	}

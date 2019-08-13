@@ -44,7 +44,7 @@ func WriteJSON() {
 	if err != nil {
 		panic(err)
 	}
-	err = ioutil.WriteFile("map.json", file, 0644)
+	err = ioutil.WriteFile("web/src/assets/map.json", file, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -56,7 +56,7 @@ func WriteJSON() {
 	if err != nil {
 		panic(err)
 	}
-	err = ioutil.WriteFile("zip.json", file, 0644)
+	err = ioutil.WriteFile("web/src/assets/zip.json", file, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -74,6 +74,9 @@ func BuildMap() (USMap, error) {
 	if err != nil {
 		return fullMap, err
 	}
+	
+	visitedCities := []string{}
+
 	for x, b := range fullMap.Map {
 		for y := range b {
 			if len(zips[x][y]) > 0 {
@@ -90,7 +93,8 @@ func BuildMap() (USMap, error) {
 				}
 				fullMap.Map[x][y].State = zips[x][y][0].state
 				fullMap.Map[x][y].Weather = totalWeathertoSmall(data[x][y].Weather)
-				if fullMap.Map[x][y].City != "No Data" && fullMap.Map[x][y].City != "" {
+				if fullMap.Map[x][y].City != "Unknown" && fullMap.Map[x][y].City != "" && !stringInSlice(fullMap.Map[x][y].City, visitedCities) {
+					visitedCities = append(visitedCities, fullMap.Map[x][y].City)
 					calc := calcGoodBad(x, y, data)
 					if calc > fullMap.valTop[4] {
 						for c := 0; c < 5; c++ {
@@ -130,6 +134,15 @@ func BuildMap() (USMap, error) {
 		}
 	}
 	return fullMap, nil
+}
+
+func stringInSlice(a string, list []string) bool {
+    for _, b := range list {
+        if b == a {
+            return true
+        }
+    }
+    return false
 }
 
 func totalWeathertoSmall(weather TotalWeather) *SmallWeather {
@@ -182,7 +195,7 @@ func buildSearchZip(mapUS USMap) ([99999]string, error) {
 		for _, b := range a {
 			if len(b.zipcodes) != 0 {
 				for _, c := range b.zipcodes {
-					if c.name != "No Data" {
+					if c.name != "Unknown" {
 						zip, err := strconv.Atoi(c.zipcode)
 						if err != nil {
 							return mapZip, err

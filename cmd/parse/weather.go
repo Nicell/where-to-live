@@ -130,7 +130,7 @@ func parseGSOD(year int) ([50][116][]Station, error) {
 			return weatherMap, err
 		}
 		opReader := bufio.NewReader(gzipF)
-		station := Station{lat: -1, long: -1, Weather: TotalWeather{}, weighted: 20}
+		station := Station{lat: -1, long: -1, Weather: TotalWeather{}, weighted: 200}
 		station.Weather.Months = make(map[string]MonthWeather)
 		for {
 			in, prefix, err := opReader.ReadLine()
@@ -243,14 +243,14 @@ func addStations(in [50][116][]Station, lat, long int) []Station {
 	for len(s) < 4 {
 		latGrid := lat - radius
 		longGrid := long - radius
-		for a := latGrid; a < (2*radius + 1); a++ {
-			for b := longGrid; b < (2*radius + 1); b++ {
+		for a := latGrid; a <= (latGrid + 2*radius + 1); a++ {
+			for b := longGrid; b <= (longGrid + 2*radius + 1); b++ {
 				if a >= 0 && b >= 0 && a < 50 && b < 116 {
-					if len(in[a][b]) > 0 {
+					if len(in[a][b]) > 0 && (int(math.Abs(float64(a - lat))) == radius || int(math.Abs(float64(b - long))) == radius) {
 						for c := range in[a][b] {
-							in[a][b][c].weighted = int(20 / radius)
-							if in[a][b][c].weighted < 2 {
-								in[a][b][c].weighted = 2
+							in[a][b][c].weighted = int(200 / math.Pow(float64(radius), 2))
+							if in[a][b][c].weighted < 1 {
+								in[a][b][c].weighted = 1
 							}
 						}
 						s = append(s, in[a][b]...)
@@ -266,7 +266,7 @@ func addStations(in [50][116][]Station, lat, long int) []Station {
 //Takes in one day of weather and stores it to the station provided
 func processDay(station *Station, day weatherData) {
 	t := MonthWeather{}
-	if day.precip > 0.1 || day.minTemp < 40 || day.maxTemp > 90 || day.visib < 5 || day.harshWeather > 0 {
+	if day.precip > 0.1 || day.minTemp < 40 || day.maxTemp > 85 || day.visib < 5 || day.harshWeather > 0 {
 		t.Bad++
 	} else if day.avgTemp > 60 && day.avgTemp < 80 && day.visib > 5 && day.maxTemp < 85 && day.minTemp > 50 && day.precip < .05 && day.harshWeather == 0 {
 		t.Good++

@@ -1,12 +1,19 @@
 header {
-  background-color: var(--theme);
-  color: var(--foreground-theme);
+  background-color: var(--foreground-secondary);
+  color: var(--background);
   box-shadow: var(--shadow-2);
   padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 header > h1 {
   margin: 0;
+}
+
+header > a {
+  color: var(--background);
 }
 
 .map-holder {
