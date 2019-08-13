@@ -6,7 +6,7 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.12-node
-    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+    working_directory: /go/src/github.com/Nicell/where-to-live
     steps:
       - checkout
       - run: go get -v -t -d ./...
