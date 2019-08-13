@@ -191,11 +191,12 @@ func averageStations(in [50][116][]Station) ([50][116]Station, error) {
 		return out, err
 	}
 	t := TotalWeather{}
+	in2 := in
 	for x, a := range in {
 		for y, b := range a {
 			if len(b) < 4 {
 				if len(zips[x][y]) > 0 {
-					b = addStations(in, x, y)
+					b = addStations(in2, x, y)
 				}
 			}
 			t = TotalWeather{}
@@ -232,8 +233,7 @@ func averageStations(in [50][116][]Station) ([50][116]Station, error) {
 func addStations(in [50][116][]Station, lat, long int) []Station {
 	s := in[lat][long]
 	radius := 1
-	first := true
-	for first || len(s) < 4 {
+	for len(s) < 4 {
 		latGrid := lat - radius
 		longGrid := long - radius
 		for a := latGrid; a < (2*radius + 1); a++ {
@@ -246,7 +246,6 @@ func addStations(in [50][116][]Station, lat, long int) []Station {
 			}
 		}
 		radius++
-		first = false
 	}
 	return s
 }
