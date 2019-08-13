@@ -13,7 +13,7 @@ import (
 
 // Download retrieves all weather data
 func Download() error {
-	for i := 1990; i < time.Now().Year(); i++ {
+	for i := 2008; i < time.Now().Year(); i++ {
 		err := DownloadYear(i)
 		if err != nil {
 			return err

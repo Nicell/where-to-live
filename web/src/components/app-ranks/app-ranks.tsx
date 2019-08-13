@@ -17,7 +17,7 @@ export class AppRanks {
         <div class="rankingBox">
           <div class="ranking about">
             <span>About</span>
-            <p>Using NOAA weather data from 1990 to the last full year, we calculate the average number of pleasant and unpleasant days for each month. We then combine those to display a heatmap of the best places to live by weather.</p>
+            <p>Using NOAA weather data from 2008 to the last full year, we calculate the average number of pleasant and unpleasant days for each month. We then combine those to display a heatmap of the best places to live by weather.</p>
             <p>We calculate the perceived temperature, which takes into account relative humidity, to more accurately evaluate the temperature.</p>
             <p>
               A pleasant day is counted when all of the following are met:
