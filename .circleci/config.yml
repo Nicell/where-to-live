@@ -37,7 +37,7 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "7e:7f:3a:da:69:96:d2:9c:a0:58:a1:a5:97:68:53:2e"
-      - run: gh-pages --message "CircleCI Deployment" --dist web/www
+      - run: sudo gh-pages --message "CircleCI Deployment" --dist web/www
 
 workflows:
   version: 2
