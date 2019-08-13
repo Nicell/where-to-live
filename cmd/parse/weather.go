@@ -32,9 +32,10 @@ type MonthWeather struct {
 
 //Station Contains one station with weather and location
 type Station struct {
-	lat     int
-	long    int
-	Weather TotalWeather `json:"w"`
+	lat      int
+	long     int
+	Weather  TotalWeather `json:"w"`
+	weighted int
 }
 
 //Contains one day of weather information
@@ -129,7 +130,7 @@ func parseGSOD(year int) ([50][116][]Station, error) {
 			return weatherMap, err
 		}
 		opReader := bufio.NewReader(gzipF)
-		station := Station{lat: -1, long: -1, Weather: TotalWeather{}}
+		station := Station{lat: -1, long: -1, Weather: TotalWeather{}, weighted: 20}
 		station.Weather.Months = make(map[string]MonthWeather)
 		for {
 			in, prefix, err := opReader.ReadLine()
@@ -191,14 +192,20 @@ func averageStations(in [50][116][]Station) ([50][116]Station, error) {
 		return out, err
 	}
 	t := TotalWeather{}
-	in2 := in
 	for x, a := range in {
 		for y, b := range a {
 			if len(b) < 4 {
 				if len(zips[x][y]) > 0 {
-					b = addStations(in2, x, y)
+					b = addStations(in, x, y)
 				}
 			}
+			h := []Station{}
+			for _, c := range b {
+				for i := 0; i < c.weighted; i++ {
+					h = append(h, c)
+				}
+			}
+			b = h
 			t = TotalWeather{}
 			t.Months = make(map[string]MonthWeather)
 			for _, c := range b {
@@ -240,6 +247,12 @@ func addStations(in [50][116][]Station, lat, long int) []Station {
 			for b := longGrid; b < (2*radius + 1); b++ {
 				if a >= 0 && b >= 0 && a < 50 && b < 116 {
 					if len(in[a][b]) > 0 {
+						for c := range in[a][b] {
+							in[a][b][c].weighted = int(20 / radius)
+							if in[a][b][c].weighted < 2 {
+								in[a][b][c].weighted = 2
+							}
+						}
 						s = append(s, in[a][b]...)
 					}
 				}
