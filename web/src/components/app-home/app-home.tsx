@@ -56,7 +56,7 @@ export class AppHome {
         {this.data && this.zips ? (
           <div>
             <div class="map-holder">
-              <app-map data={this.data} handleHover={this.updateHover} search={this.search} />
+              <app-map data={this.data.m} handleHover={this.updateHover} search={this.search} />
             </div>
             <app-hover state={this.hover} />
             <app-search zips={this.zips} handleHover={this.updateHover} value={this.search} handleChange={this.updateSearch} />

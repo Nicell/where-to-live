@@ -32,9 +32,10 @@ type MonthWeather struct {
 
 //Station Contains one station with weather and location
 type Station struct {
-	lat     int
-	long    int
-	Weather TotalWeather `json:"w"`
+	lat      int
+	long     int
+	Weather  TotalWeather `json:"w"`
+	weighted int
 }
 
 //Contains one day of weather information
@@ -53,7 +54,11 @@ func buildWeatherMap() ([50][116]Station, error) {
 		if err != nil {
 			return [50][116]Station{}, err
 		}
-		allYears = append(allYears, averageStations(tmp))
+		i, err := averageStations(tmp)
+		if err != nil {
+			return [50][116]Station{}, err
+		}
+		allYears = append(allYears, i)
 	}
 	return averageYears(allYears), nil
 }
@@ -125,7 +130,7 @@ func parseGSOD(year int) ([50][116][]Station, error) {
 			return weatherMap, err
 		}
 		opReader := bufio.NewReader(gzipF)
-		station := Station{lat: -1, long: -1, Weather: TotalWeather{}}
+		station := Station{lat: -1, long: -1, Weather: TotalWeather{}, weighted: 20}
 		station.Weather.Months = make(map[string]MonthWeather)
 		for {
 			in, prefix, err := opReader.ReadLine()
@@ -159,14 +164,14 @@ func parseGSOD(year int) ([50][116][]Station, error) {
 			j := &station
 			processDay(j, data)
 		}
-		if station.Weather.totalDays >= 150 {
+		if station.Weather.totalDays >= 330 {
 			weatherMap[station.lat][station.long] = append(weatherMap[station.lat][station.long], station)
 		}
 	}
 }
 
 //Averages all stations in one location of the US map
-func averageStations(in [50][116][]Station) [50][116]Station {
+func averageStations(in [50][116][]Station) ([50][116]Station, error) {
 	monthNum := map[string]float64{
 		"January":   31,
 		"February":  28,
@@ -182,9 +187,25 @@ func averageStations(in [50][116][]Station) [50][116]Station {
 		"December":  31,
 	}
 	out := [50][116]Station{}
+	zips, err := makeMap()
+	if err != nil {
+		return out, err
+	}
 	t := TotalWeather{}
 	for x, a := range in {
 		for y, b := range a {
+			if len(b) < 4 {
+				if len(zips[x][y]) > 0 {
+					b = addStations(in, x, y)
+				}
+			}
+			h := []Station{}
+			for _, c := range b {
+				for i := 0; i < c.weighted; i++ {
+					h = append(h, c)
+				}
+			}
+			b = h
 			t = TotalWeather{}
 			t.Months = make(map[string]MonthWeather)
 			for _, c := range b {
@@ -213,7 +234,33 @@ func averageStations(in [50][116][]Station) [50][116]Station {
 			}
 		}
 	}
-	return out
+	return out, nil
+}
+
+func addStations(in [50][116][]Station, lat, long int) []Station {
+	s := in[lat][long]
+	radius := 1
+	for len(s) < 4 {
+		latGrid := lat - radius
+		longGrid := long - radius
+		for a := latGrid; a < (2*radius + 1); a++ {
+			for b := longGrid; b < (2*radius + 1); b++ {
+				if a >= 0 && b >= 0 && a < 50 && b < 116 {
+					if len(in[a][b]) > 0 {
+						for c := range in[a][b] {
+							in[a][b][c].weighted = int(20 / radius)
+							if in[a][b][c].weighted < 2 {
+								in[a][b][c].weighted = 2
+							}
+						}
+						s = append(s, in[a][b]...)
+					}
+				}
+			}
+		}
+		radius++
+	}
+	return s
 }
 
 //Takes in one day of weather and stores it to the station provided

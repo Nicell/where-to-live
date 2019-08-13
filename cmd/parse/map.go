@@ -78,6 +78,7 @@ func BuildMap() (USMap, error) {
 		for y := range b {
 			if len(zips[x][y]) > 0 {
 				fullMap.Map[x][y].City = zips[x][y][0].name
+				fullMap.Map[x][y].zipcodes = zips[x][y]
 				for _, a := range zips[x][y] {
 					if len(a.zipcode) > 0 {
 						i, err := strconv.Atoi(a.zipcode)
