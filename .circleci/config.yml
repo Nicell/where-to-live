@@ -9,6 +9,10 @@ jobs:
     working_directory: /go/src/github.com/Nicell/where-to-live
     steps:
       - checkout
+      - save_cache:
+          key: data-cache
+          paths:
+            - data
       - run: go get -v -t -d ./...
       - run: go run main.go
       - run: cd web && npm i
@@ -23,14 +27,23 @@ jobs:
       - checkout
       - attach_workspace:
           at: web
-      - run: npm i -g gh-pages
-      - run: gh-pages --dist web/www
+      - run: |
+          sudo npm i -g gh-pages
+          git config --global user.email "builds@circleci.com"
+          git config --global user.name "CircleCI"
+      - add_ssh_key:
+          fingerprints:
+            - "7e:7f:3a:da:69:96:d2:9c:a0:58:a1:a5:97:68:53:2e"
+      - run: gh-pages --message "CircleCI Deployment" --dist web/www
 
 workflows:
   version: 2
   build:
     jobs:
-      - build
+      - build:
+          filters:
+            branches:
+              ignore: gh-pages
       - deploy:
           requires:
             - build
