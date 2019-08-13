@@ -48,7 +48,7 @@ type weatherData struct {
 //BuildWeatherMap Builds the weather map
 func buildWeatherMap() ([50][116]Station, error) {
 	allYears := [][50][116]Station{}
-	for i := 2008; i < time.Now().Year(); i++ {
+	for i := 1990; i < time.Now().Year(); i++ {
 		fmt.Println(i)
 		tmp, err := parseGSOD(i)
 		if err != nil {
