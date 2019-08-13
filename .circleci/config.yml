@@ -10,9 +10,8 @@ jobs:
     steps:
       - checkout
       - run: go get -v -t -d ./...
-      - run: cd web
-      - run: npm i
-      - run: npm run build
+      - run: cd web && npm i
+      - run: cd web && npm run build
       - persist_to_workspace:
           root: web
           paths: www
