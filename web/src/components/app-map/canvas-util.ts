@@ -22,7 +22,7 @@ export function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w
   ctx.fill();
 }
 
-export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMatrix2DInit, width: number, cell: number, search: string) {
+export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMatrix2DInit, width: number, cell: number, search: string, min: number, max: number, highContrast: boolean) {
   const size = cell * .85;
   const height = width * data.length / data[0].length;
   data.forEach((t, i) => t.forEach((l, j) => {
@@ -63,7 +63,11 @@ export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMa
 
       const w = l.w && l.w.m ? l.w.m : [];
       const days = w.reduce((a, b, i) => i%2 === 0 ? a + b : a - b, 0);
-      ctx.fillStyle = `hsla(203, ${saturated ? '100%' : '0%'}, 46%, ${ days === 0 ? .2 : (days + 365) / (365 + 201) * .8 + .2})`;
+      if (highContrast) {
+        ctx.fillStyle = `hsla(${10 + Math.max((days - min), 0) / (-min + max) * 200}, ${saturated ? '80%' : '20%'}, ${saturated ? '56%' : '76%'}, 1)`;
+      } else {
+        ctx.fillStyle = `hsla(203, ${saturated ? '100%' : '0%'}, 46%, ${Math.max((days - min - 50), 0) / (-min + max - 150) * .8 + .2})`
+      }
       roundRect(ctx, j * cell + (cell - size) / 2, i * cell + (cell - size) / 2, size, size, radius);
     }
   }));

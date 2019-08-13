@@ -17,7 +17,7 @@ export class AppHover {
 
   render() {
     const w = this.state.data && this.state.data.w && this.state.data.w.m ? this.state.data.w.m : [];
-    const offset = Math.min(Math.max(this.state.x, 272 / 2), document.documentElement.clientWidth - 272 / 2);
+    const offset = Math.min(Math.max(this.state.x, 272 / 2) + 5, document.documentElement.clientWidth - 272 / 2 - 5);
     return this.state.visible ? (
       <div class="app-hover" style={{ left: offset + 'px', top: this.state.y + 'px', '--before-offset': `calc(50% + ${this.state.x - offset}px)` }}>
         {this.state.data.c}, {this.state.data.s} {w.reduce((a, b, i) => i % 2 === 0 ? a + b : a - b, 0)}

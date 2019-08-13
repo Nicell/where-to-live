@@ -7,7 +7,6 @@ import { Component, Prop, State, h } from '@stencil/core';
 })
 export class AppSearch {
   @Prop() zips: any;
-  @Prop() handleHover: Function;
   @Prop() value: string;
   @Prop() handleChange: Function;
   @State() results: any[];
@@ -25,7 +24,6 @@ export class AppSearch {
   evalChange = (value: string) => {
     if (isNaN(parseInt(value))) {
       this.handleChange('');
-      console.log('search', value)
       this.searchByName(value);
     } else {
       this.handleChange(value);
@@ -43,7 +41,7 @@ export class AppSearch {
         }
 
         if (this.zips[i].toLowerCase().indexOf(value.toLowerCase()) > -1) {
-          results.push({zip: (i + '00000').slice(0, 5), name: this.zips[i]})
+          results.push({ zip: ('00000' + i).slice(-5), name: this.zips[i]})
         }
       }
 
@@ -69,7 +67,7 @@ export class AppSearch {
         }
 
         if (this.zips[i].length > 0) {
-          results.push({zip: (i + '00000').slice(0, 5), name: this.zips[i]});
+          results.push({ zip: ('00000' + i).slice(-5), name: this.zips[i]});
         }
       }
 
@@ -81,18 +79,20 @@ export class AppSearch {
 
   render() {
     return (
-      <div class="searchHold">
-        {this.results.length > 0 ? (
-          <div class="results">
-            {this.results.map(zip => (
-              <div onClick={() => this.evalChange(zip.zip)}>
-                <span>{zip.zip}</span>
-                <span>{zip.name}</span>
-              </div>
-            ))}
-          </div>
-        ) : null}
-        <input class="search" value={this.value} onInput={(event: UIEvent) => this.changeValue(event)} placeholder="Search"/>
+      <div class="searchWrap">
+        <div class="searchHold">
+          {this.results.length > 0 ? (
+            <div class="results">
+              {this.results.map(zip => (
+                <div onClick={() => this.evalChange(zip.zip)}>
+                  <span>{zip.zip}</span>
+                  <span>{zip.name}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <input class="search" type="search" value={this.value} onInput={(event: UIEvent) => this.changeValue(event)} placeholder="Search"/>
+        </div>
       </div>
     )
   }

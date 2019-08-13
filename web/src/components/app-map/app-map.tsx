@@ -21,6 +21,9 @@ export class AppMap {
   @Prop() handleHover: Function;
   @Prop() data: any;
   @Prop() search: string;
+  @Prop() min: number;
+  @Prop() max: number;
+  @State() highContrast: boolean;
   @State() width: number;
   @State() transform: DOMMatrix2DInit;
 
@@ -31,6 +34,7 @@ export class AppMap {
 
   constructor() {
     this.transform = {a: 1, b: 0, c: 0, d: 1, e: 0, f: 0};
+    this.highContrast = false;
     this.hover = {x: 0, y: 0, data: '', visible: false};
     this.dragState = {dragging: false, startX: 0, startY: 0, lastX: 0, lastY: 0};
   }
@@ -121,7 +125,7 @@ export class AppMap {
       }
     }
 
-    if (hover.data !== this.hover.data) {
+    if (hover.data !== this.hover.data && this.search.length !== 5) {
       this.hover = hover;
       this.handleHover(this.hover);
     }
@@ -164,13 +168,15 @@ export class AppMap {
   }
 
   endHover = () => {
-    this.hover = {
-      x: 0,
-      y: 0,
-      data: '',
-      visible: false
+    if (this.search.length !== 5) {
+      this.hover = {
+        x: 0,
+        y: 0,
+        data: '',
+        visible: false
+      }
+      this.handleHover(this.hover);
     }
-    this.handleHover(this.hover);
   }
 
   renderCanvas = () => {
@@ -179,11 +185,15 @@ export class AppMap {
     ctx.clearRect(0, 0, c.width, c.height);
     const cell = c.width / this.data[0].length;
     ctx.setTransform(this.transform);
-    drawCanvas(ctx, this.data, this.transform, this.width, cell, this.search);
+    drawCanvas(ctx, this.data, this.transform, this.width, cell, this.search, this.min, this.max, this.highContrast);
   }
 
   calcWidth = () => {
     this.width = this.el.querySelector('.app-map').clientWidth * window.devicePixelRatio;
+  }
+
+  toggleMode = () => {
+    this.highContrast = !this.highContrast;
   }
 
   render() {
@@ -195,6 +205,14 @@ export class AppMap {
           width={this.width}
           height={this.width / this.data[0].length * this.data.length}
         />
+        <div class="toggle-mode" onClick={this.toggleMode}>
+          <div class={`modeColor ${this.highContrast ? 'default' : 'highContrast'}`}>
+
+          </div>
+          <div class="modeLabel">
+            {this.highContrast ? 'Default' : 'High Contrast'}
+          </div>
+        </div>
         <div class="map-controls">
           <div class="map-move">
             <div class="move up" onClick={() => this.changeTranslation(0, this.width / 5)}>^</div>

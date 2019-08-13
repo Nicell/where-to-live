@@ -1,0 +1,64 @@
+.rankingWrap {
+  display: flex;
+  justify-content: center;
+}
+
+.rankingBox {
+  display: flex;
+  margin: 20px;
+  margin-top: 40px;
+  background: var(--background-light);
+  border-radius: 4px;
+  box-shadow: var(--shadow-2);
+  flex-wrap: wrap;
+}
+
+.ranking {
+  display: flex;
+  padding: 20px;
+  flex-direction: column;
+  min-width: 300px;
+  flex-grow: 1;
+  flex-shrink: 1;
+  box-sizing: border-box;
+}
+
+.ranking.about {
+  width: 100%;
+  max-width: 800px;
+  flex-shrink: 1;
+}
+
+.ranking.about {
+  border-right: 1px solid #dddddd;
+}
+
+.ranking > span {
+  font-size: 20px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.ranking > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.ranking > div > div {
+  padding: 5px 0px;
+  display: flex;
+  justify-content: space-between
+}
+
+@media screen and (max-width: 1200px) {
+  .ranking.about {
+    max-width: 100%;
+    border-right: none;
+  }
+
+  .rankingCompare {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+  }
+}

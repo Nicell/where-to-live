@@ -2,6 +2,46 @@
   position: relative;
 }
 
+.toggle-mode {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.modeColor {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: solid 5px var(--background-light);
+  box-sizing: border-box;
+  box-shadow: var(--shadow-1);
+  z-index: 1;
+}
+
+.modeLabel {
+  position: absolute;
+  top: 50%;
+  left: calc(100% - 3px);
+  white-space: nowrap;
+  transform: translateY(-50%);
+  padding: 3px 5px 4px 7px;
+  background: var(--background-light);
+  border-radius: 0px 4px 4px 0px;
+  box-shadow: var(--shadow-1);
+}
+
+.default {
+  background: linear-gradient(to right, hsla(203, 100%, 46%, 1), hsla(203, 100%, 46%, 0))
+}
+
+.highContrast {
+  background: linear-gradient(to right, hsl(10, 80%, 56%), hsl(10, 80%, 56%), hsla(35, 80%, 56%, 1), hsl(60, 80%, 56%), hsla(85, 80%, 56%, 1), hsla(135, 80%, 56%, 1), hsl(160, 80%, 56%), hsl(185, 80%, 56%), hsl(210, 80%, 56%), hsl(210, 80%, 56%))
+}
+
 .map-controls {
   position: absolute;
   bottom: 20px;
