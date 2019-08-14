@@ -2,7 +2,7 @@
   "hosting": {
     "headers": [
       {
-        "source": "/where-to-live/build/p-*",
+        "source": "/build/p-*",
         "headers": [
           {
             "key": "Cache-Control",
