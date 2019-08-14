@@ -34,6 +34,7 @@ jobs:
     docker:
       - image: node:12.6
     steps:
+      - checkout
       - attach_workspace:
           at: web
       - run: npm i -g gh-pages
