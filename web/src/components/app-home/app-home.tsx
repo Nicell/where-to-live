@@ -81,7 +81,12 @@ export class AppHome {
             <app-search zips={this.zips} handleChange={this.updateSearch} />
             <app-ranks top={this.data.t} bottom={this.data.b} data={this.data.m} />
           </div>
-        ) : null}
+        ) : (
+          <div class="loading">
+            <app-icon class="loader" icon="sun" />
+            <span>Loading</span>
+          </div>
+        )}
         <app-update/>
       </div>
     );

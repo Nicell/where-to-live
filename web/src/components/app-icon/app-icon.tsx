@@ -1,9 +1,9 @@
 import { Component, Prop, h } from '@stencil/core';
 import { library, config, icon, IconLookup, IconName } from '@fortawesome/fontawesome-svg-core';
-import { faCaretUp, faPlus, faMinus, faTimesCircle, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
+import { faCaretUp, faPlus, faMinus, faTimesCircle, faExclamationCircle, faSun } from '@fortawesome/free-solid-svg-icons';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 
-library.add(faCaretUp, faPlus, faMinus, faTimesCircle, faGithub, faExclamationCircle);
+library.add(faCaretUp, faPlus, faMinus, faTimesCircle, faGithub, faExclamationCircle, faSun);
 
 config.autoAddCss = false;
 
