@@ -1,0 +1,78 @@
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.app-update {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  animation: slideUp .5s ease forwards;
+  z-index: 99;
+}
+
+.holder {
+  display: flex;
+  align-items: center;
+  background: var(--foreground-secondary);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 1.125em;
+  margin: 20px;
+  padding: 10px 20px;
+  box-shadow: var(--shadow-2);
+  cursor: pointer;
+}
+
+.holder app-icon {
+  font-size: 1.5em;
+  margin-right: 10px;
+}
+
+.auto-return {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  flex-grow: 1;
+}
+
+.auto-return span {
+  white-space: nowrap;
+  margin: 0px 5px;
+}
+
+@media only screen and (max-width: 768px) {
+  .app-update {
+    bottom: auto;
+    top: 0;
+    animation-name: slideDown;
+  }
+
+  .holder {
+    width: 100%;
+    margin: 0;
+    border: none;
+    border-bottom: solid 2px var(--primary);
+    border-radius: 0px;
+  }
+
+  .holder span {
+    text-align: center;
+  }
+}

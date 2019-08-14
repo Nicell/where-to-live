@@ -82,6 +82,7 @@ export class AppHome {
             <app-ranks top={this.data.t} bottom={this.data.b} data={this.data.m} />
           </div>
         ) : null}
+        <app-update/>
       </div>
     );
   }
