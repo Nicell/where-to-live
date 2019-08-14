@@ -6,7 +6,7 @@ import { Component, Listen, State, h } from '@stencil/core';
   shadow: true
 })
 export class AppUpdate {
-  @State() visible: boolean = true;
+  @State() visible: boolean = false;
 
   @Listen("swUpdate", { target: 'window' })
   async onSWUpdate() {

@@ -31,7 +31,7 @@
   display: flex;
   align-items: center;
   background: var(--foreground-secondary);
-  border-radius: 8px;
+  border-radius: 4px;
   color: #ffffff;
   font-size: 1.125em;
   margin: 20px;
