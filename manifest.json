@@ -1,0 +1,13 @@
+{
+  "name": "Where to Live",
+  "short_name": "Where to Live",
+  "start_url": "/",
+  "display": "standalone",
+  "icons": [{
+    "src": "assets/icon/icon.png",
+    "sizes": "512x512",
+    "type": "image/png"
+  }],
+  "background_color": "#6200ea",
+  "theme_color": "#6200ea"
+}
