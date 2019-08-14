@@ -12,6 +12,7 @@
 @font-face {
   font-family: 'Lato';
   font-style: normal;
+  font-display: swap;
   font-weight: 400;
   src: local('Lato Regular'), local('Lato-Regular'),
        url('../assets/fonts/lato-v16-latin-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
