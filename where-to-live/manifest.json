@@ -1,7 +1,7 @@
 {
   "name": "Where to Live",
   "short_name": "Where to Live",
-  "start_url": "/",
+  "start_url": "/where-to-live",
   "display": "standalone",
   "icons": [{
     "src": "assets/icon/icon.png",
