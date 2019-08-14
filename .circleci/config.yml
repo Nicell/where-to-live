@@ -32,7 +32,7 @@ jobs:
           paths: www
   deploy:
     docker:
-      - image: circleci/node:12.6
+      - image: node:12.6
     steps:
       - checkout
       - attach_workspace:
