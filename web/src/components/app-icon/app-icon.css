@@ -1,0 +1,6 @@
+.app-icon {
+  display: contents;
+}
+
+/* From @fortawesome\fontawesome-svg-core\styles.css */
+.svg-inline--fa,svg:not(:root).svg-inline--fa{overflow:visible}.svg-inline--fa{display:inline-block}.svg-inline--fa{font-size:inherit;height:1em;vertical-align:-.125em}

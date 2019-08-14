@@ -7,11 +7,13 @@ import { Component, Prop, State, h } from '@stencil/core';
 })
 export class AppSearch {
   @Prop() zips: any;
-  @Prop() value: string;
   @Prop() handleChange: Function;
   @State() results: any[];
 
+  @State() value: string;
+
   constructor() {
+    this.value = '';
     this.results = [];
   }
 
@@ -22,6 +24,8 @@ export class AppSearch {
   }
 
   evalChange = (value: string) => {
+    this.value = value;
+
     if (isNaN(parseInt(value))) {
       this.handleChange('');
       this.searchByName(value);
@@ -81,17 +85,20 @@ export class AppSearch {
     return (
       <div class="searchWrap">
         <div class="searchHold">
-          {this.results.length > 0 ? (
-            <div class="results">
-              {this.results.map(zip => (
+          <div class={this.results.length > 0 ? 'results' : ''}>
+            {this.results.length > 0 ?
+              this.results.map(zip => (
                 <div onClick={() => this.evalChange(zip.zip)}>
                   <span>{zip.zip}</span>
                   <span>{zip.name}</span>
                 </div>
-              ))}
-            </div>
-          ) : null}
-          <input class="search" type="search" value={this.value} onInput={(event: UIEvent) => this.changeValue(event)} placeholder="Search"/>
+              )
+            ) : null}
+          </div>
+          <div class="searchBox">
+            <input class="search" value={this.value} onInput={(event: UIEvent) => this.changeValue(event)} placeholder="Search"/>
+            <div onClick={() => this.evalChange('')}><app-icon icon="times-circle" /></div>
+          </div>
         </div>
       </div>
     )

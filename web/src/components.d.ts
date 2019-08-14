@@ -9,15 +9,26 @@ import { HTMLStencilElement, JSXBase } from '@stencil/core/internal';
 import {
   Hover,
 } from './components/app-home/app-home';
+import {
+  IconLookup,
+  IconName,
+} from '@fortawesome/fontawesome-svg-core';
 
 export namespace Components {
   interface AppHome {}
   interface AppHover {
+    'cell': number;
+    'mapScale': number;
     'state': Hover;
+  }
+  interface AppIcon {
+    'class'?: string;
+    'icon': IconLookup | IconName;
   }
   interface AppMap {
     'data': any;
     'handleHover': Function;
+    'handleScale': Function;
     'max': number;
     'min': number;
     'search': string;
@@ -29,7 +40,6 @@ export namespace Components {
   }
   interface AppSearch {
     'handleChange': Function;
-    'value': string;
     'zips': any;
   }
 }
@@ -47,6 +57,12 @@ declare global {
   var HTMLAppHoverElement: {
     prototype: HTMLAppHoverElement;
     new (): HTMLAppHoverElement;
+  };
+
+  interface HTMLAppIconElement extends Components.AppIcon, HTMLStencilElement {}
+  var HTMLAppIconElement: {
+    prototype: HTMLAppIconElement;
+    new (): HTMLAppIconElement;
   };
 
   interface HTMLAppMapElement extends Components.AppMap, HTMLStencilElement {}
@@ -69,6 +85,7 @@ declare global {
   interface HTMLElementTagNameMap {
     'app-home': HTMLAppHomeElement;
     'app-hover': HTMLAppHoverElement;
+    'app-icon': HTMLAppIconElement;
     'app-map': HTMLAppMapElement;
     'app-ranks': HTMLAppRanksElement;
     'app-search': HTMLAppSearchElement;
@@ -78,11 +95,18 @@ declare global {
 declare namespace LocalJSX {
   interface AppHome extends JSXBase.HTMLAttributes<HTMLAppHomeElement> {}
   interface AppHover extends JSXBase.HTMLAttributes<HTMLAppHoverElement> {
+    'cell'?: number;
+    'mapScale'?: number;
     'state'?: Hover;
+  }
+  interface AppIcon extends JSXBase.HTMLAttributes<HTMLAppIconElement> {
+    'class'?: string;
+    'icon'?: IconLookup | IconName;
   }
   interface AppMap extends JSXBase.HTMLAttributes<HTMLAppMapElement> {
     'data'?: any;
     'handleHover'?: Function;
+    'handleScale'?: Function;
     'max'?: number;
     'min'?: number;
     'search'?: string;
@@ -94,13 +118,13 @@ declare namespace LocalJSX {
   }
   interface AppSearch extends JSXBase.HTMLAttributes<HTMLAppSearchElement> {
     'handleChange'?: Function;
-    'value'?: string;
     'zips'?: any;
   }
 
   interface IntrinsicElements {
     'app-home': AppHome;
     'app-hover': AppHover;
+    'app-icon': AppIcon;
     'app-map': AppMap;
     'app-ranks': AppRanks;
     'app-search': AppSearch;

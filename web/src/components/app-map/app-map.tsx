@@ -19,6 +19,7 @@ interface dragState {
 export class AppMap {
   @Element() el: HTMLElement;
   @Prop() handleHover: Function;
+  @Prop() handleScale: Function;
   @Prop() data: any;
   @Prop() search: string;
   @Prop() min: number;
@@ -26,7 +27,6 @@ export class AppMap {
   @State() highContrast: boolean;
   @State() width: number;
   @State() transform: DOMMatrix2DInit;
-
 
   dragState: dragState;
   hover: Hover;
@@ -83,6 +83,7 @@ export class AppMap {
       const newX = Math.min(Math.max(newXCalc, this.width - this.width * newScale), 0);
       const newY = Math.min(Math.max(newYCalc, height - height * newScale), 0);
       this.transform = { ...this.transform, a: newScale, d: newScale, e: newX, f: newY };
+      this.handleScale(newScale);
     }
   }
 
@@ -215,14 +216,14 @@ export class AppMap {
         </div>
         <div class="map-controls">
           <div class="map-move">
-            <div class="move up" onClick={() => this.changeTranslation(0, this.width / 5)}>^</div>
-            <div class="move down" onClick={() => this.changeTranslation(0, -this.width / 5)}>^</div>
-            <div class="move left" onClick={() => this.changeTranslation(this.width / 5, 0)}>^</div>
-            <div class="move right" onClick={() => this.changeTranslation(-this.width / 5, 0)}>^</div>
+            <div class="move up" onClick={() => this.changeTranslation(0, this.width / 5)}><app-icon icon="caret-up" /></div>
+            <div class="move down" onClick={() => this.changeTranslation(0, -this.width / 5)}><app-icon icon="caret-up" /></div>
+            <div class="move left" onClick={() => this.changeTranslation(this.width / 5, 0)}><app-icon icon="caret-up" /></div>
+            <div class="move right" onClick={() => this.changeTranslation(-this.width / 5, 0)}><app-icon icon="caret-up" /></div>
           </div>
           <div class="map-zoom">
-            <div onClick={() => this.changeScale(4/3)}>+</div>
-            <div onClick={() => this.changeScale(3/4)}>-</div>
+            <div onClick={() => this.changeScale(4 / 3)}><app-icon icon="plus" /></div>
+            <div onClick={() => this.changeScale(3 / 4)}><app-icon icon="minus" /></div>
           </div>
         </div>
       </div>

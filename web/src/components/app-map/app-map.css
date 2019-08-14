@@ -63,6 +63,8 @@
 .move {
   padding: 5px;
   font-size: 24px;
+  width: 15px;
+  height: 15px;
   font-weight: 700;
   line-height: 1;
   display: flex;
@@ -106,7 +108,7 @@
 .map-zoom > div {
   padding: 10px;
   width: 15px;
-  font-size: 24px;
+  font-size: 14px;
   height: 18px;
   display: flex;
   justify-content: center;

@@ -9,6 +9,10 @@
   box-shadow: var(--shadow-2);
 }
 
+.app-hover.flip {
+  transform: translate(-50%, var(--cell-size));
+}
+
 .app-hover:before {
   content: '';
   display: block;
@@ -22,6 +26,12 @@
   border: 1px solid transparent;
   border-bottom-color: var(--background-dark);
   border-right-color: var(--background-dark);
+}
+
+.app-hover.flip:before {
+  top: 0;
+  bottom: none;
+  transform: translate(-50%, -6px) rotate(225deg);
 }
 
 .hover-charts {
