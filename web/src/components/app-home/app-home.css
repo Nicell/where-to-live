@@ -21,6 +21,10 @@ header > h1 {
   margin: 0;
 }
 
+h1 > app-icon {
+  padding-right: 5px;
+}
+
 header > a {
   color: var(--background);
   font-size: 2em;

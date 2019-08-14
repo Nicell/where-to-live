@@ -2,12 +2,21 @@
   Global App CSS
   ----------------------
   Use this file for styles that should be applied to all components.
-  For example, "font-family" within the "body" selector is a CSS property
+  For example, 'font-family' within the 'body' selector is a CSS property
   most apps will want applied to all components.
 
   Any global CSS variables should also be applied here.
 */
 
+/* lato-regular - latin */
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Lato Regular'), local('Lato-Regular'),
+       url('../assets/fonts/lato-v16-latin-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('../assets/fonts/lato-v16-latin-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
 
 :root {
   --theme: 	hsl(203, 100%, 46%);
@@ -31,6 +40,6 @@ body {
   margin: 0px;
   padding: 0px;
   background-color: var(--background);
-  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+  font-family: 'Lato', -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol';
   overflow-x: hidden;
 }

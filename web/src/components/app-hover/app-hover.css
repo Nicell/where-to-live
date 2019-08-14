@@ -34,6 +34,13 @@
   transform: translate(-50%, -6px) rotate(225deg);
 }
 
+.hover-title {
+  display:flex;
+  font-size: 18px;
+  padding-bottom: 5px;
+  justify-content: space-between;
+}
+
 .hover-charts {
   display: flex;
 }

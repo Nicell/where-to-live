@@ -69,7 +69,7 @@ export class AppHome {
     return (
       <div class="app-home">
         <header>
-          <h1>🌎 Where to Live</h1>
+          <h1><app-icon icon="sun" /> Where to Live</h1>
           <a href="https://github.com/Nicell/where-to-live" target="_blank" rel="noreferrer"><app-icon icon={{ prefix: 'fab', iconName: 'github' }}/></a>
         </header>
         {this.data && this.zips ? (
@@ -84,7 +84,7 @@ export class AppHome {
         ) : (
           <div class="loading">
             <app-icon class="loader" icon="sun" />
-            <span>Loading</span>
+            <span>Loading Weather Data</span>
           </div>
         )}
         <app-update/>

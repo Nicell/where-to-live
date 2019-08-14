@@ -21,8 +21,11 @@ export class AppHover {
     const w = this.state.data && this.state.data.w && this.state.data.w.m ? this.state.data.w.m : [];
     const offset = Math.min(Math.max(this.state.x, 272 / 2) + 5, document.documentElement.clientWidth - 272 / 2 - 5);
     return this.state.visible ? (
-      <div class={`app-hover ${this.state.y - 130 < window.pageYOffset ? 'flip' : ''}`} style={{ left: offset + 'px', top: this.state.y + 'px', '--before-offset': `calc(50% + ${this.state.x - offset}px)`, '--cell-size': `${this.cell * this.mapScale + 7}px` }}>
-        {this.state.data.c}, {this.state.data.s} {w.reduce((a, b, i) => i % 2 === 0 ? a + b : a - b, 0)}
+      <div class={`app-hover ${this.state.y - 135 < window.pageYOffset ? 'flip' : ''}`} style={{ left: offset + 'px', top: this.state.y + 'px', '--before-offset': `calc(50% + ${this.state.x - offset}px)`, '--cell-size': `${this.cell * this.mapScale + 7}px` }}>
+        <div class="hover-title">
+          <span>{this.state.data.c.split(' ').map(s => s.charAt(0) + s.toLowerCase().substring(1)).join(' ')}, {this.state.data.s}</span>
+          <span>{w.reduce((a, b, i) => i % 2 === 0 ? a + b : a - b, 0)}</span>
+        </div>
         <div class="hover-charts">
           {w.map((m,i) => i%2 === 0 ? (
             <div class="hover-chart">

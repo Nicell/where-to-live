@@ -90,7 +90,7 @@ export class AppSearch {
               this.results.map(zip => (
                 <div onClick={() => this.evalChange(zip.zip)}>
                   <span>{zip.zip}</span>
-                  <span>{zip.name}</span>
+                  <span>{zip.name.split(' ').slice(0, -1).map(s => s.charAt(0) + s.toLowerCase().substring(1)).join(' ')} {zip.name.split(' ').slice(-1)}</span>
                 </div>
               )
             ) : null}

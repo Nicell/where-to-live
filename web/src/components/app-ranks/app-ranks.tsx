@@ -47,7 +47,7 @@ export class AppRanks {
               <div>
                 {this.top.map(p => (
                   <div>
-                    <span>{this.data[p[1]][p[0]].c}, {this.data[p[1]][p[0]].s}</span>
+                    <span>{this.data[p[1]][p[0]].c.split(' ').map(s => s.charAt(0) + s.toLowerCase().substring(1)).join(' ')}, {this.data[p[1]][p[0]].s}</span>
                     <span>{this.data[p[1]][p[0]].w.m.reduce((a, b, i) => i % 2 === 0 ? a + b : a - b, 0)}</span>
                     </div>
                 ))}
@@ -58,7 +58,7 @@ export class AppRanks {
               <div>
                 {this.bottom.map(p => (
                   <div>
-                    <span>{this.data[p[1]][p[0]].c}, {this.data[p[1]][p[0]].s}</span>
+                    <span>{this.data[p[1]][p[0]].c.split(' ').map(s => s.charAt(0) + s.toLowerCase().substring(1)).join(' ')}, {this.data[p[1]][p[0]].s}</span>
                     <span>{this.data[p[1]][p[0]].w.m.reduce((a, b, i) => i % 2 === 0 ? a + b : a - b, 0)}</span>
                   </div>
                 ))}
