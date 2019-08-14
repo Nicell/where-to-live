@@ -41,7 +41,7 @@ jobs:
           sudo npm i -g gh-pages
           git config --global user.email "builds@circleci.com"
           git config --global user.name "CircleCI"
-          mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+          echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
       - add_ssh_keys:
           fingerprints:
             - "1d:89:d9:d5:87:68:30:6a:42:5e:43:06:b8:d6:ee:41"
