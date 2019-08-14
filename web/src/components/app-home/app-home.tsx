@@ -32,11 +32,11 @@ export class AppHome {
   }
 
   getData = async () => {
-    this.data = await (await fetch('/assets/map.json')).json();
+    this.data = await (await fetch('assets/map.json')).json();
   }
 
   getZips = async () => {
-    this.zips = await (await fetch('/assets/zip.json')).json();
+    this.zips = await (await fetch('assets/zip.json')).json();
   }
 
   updateHover = (hover: Hover) => {

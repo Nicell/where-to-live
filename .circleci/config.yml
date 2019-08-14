@@ -34,17 +34,13 @@ jobs:
     docker:
       - image: node:12.6
     steps:
-      - checkout
       - attach_workspace:
           at: web
-      - run: |
-          npm i -g gh-pages
-          git config --global user.email "builds@circleci.com"
-          git config --global user.name "CircleCI"
+      - run: npm i -g gh-pages
       - add_ssh_keys:
           fingerprints:
             - "1d:89:d9:d5:87:68:30:6a:42:5e:43:06:b8:d6:ee:41"
-      - run: gh-pages --message "CircleCI Deployment" --dist web/www
+      - run: gh-pages --message "CircleCI Deployment" --user "CircleCI <builds@circleci.com>" --dist web/www
 
 workflows:
   version: 2
