@@ -10,7 +10,7 @@ export const config: Config = {
       type: 'www',
       // uncomment the following line to disable service workers in production
       // serviceWorker: null,
-      baseUrl: 'https://nick.winans.codes'
+      baseUrl: 'https://nick.winans.codes/where-to-live'
     }
   ]
 };
