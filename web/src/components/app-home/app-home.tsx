@@ -53,10 +53,10 @@ export class AppHome {
   }
 
   render() {
-    const top = this.data.t[0];
-    const bottom = this.data.b[0];
-    const max = this.getRank(this.data.m[top[1]][top[0]]);
-    const min = this.getRank(this.data.m[bottom[1]][bottom[0]]);
+    const top = this.data ? this.data.t[0] : [0, 0];
+    const bottom = this.data ? this.data.b[0] : [0, 0];
+    const max = this.data ? this.getRank(this.data.m[top[1]][top[0]]) : 0;
+    const min = this.data ? this.getRank(this.data.m[bottom[1]][bottom[0]]) : 0;
     return (
       <div class="app-home">
         <header>
@@ -70,9 +70,9 @@ export class AppHome {
             </div>
             <app-hover state={this.hover} />
             <app-search zips={this.zips} value={this.search} handleChange={this.updateSearch} />
+            <app-ranks top={this.data.t} bottom={this.data.b} data={this.data.m} />
           </div>
         ) : null}
-        <app-ranks top={this.data.t} bottom={this.data.b} data={this.data.m} />
       </div>
     );
   }

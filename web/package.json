@@ -10,7 +10,10 @@
     "test.watch": "stencil test --spec --e2e --watchAll"
   },
   "dependencies": {
-    "@stencil/core": "^1.2.1"
+    "@stencil/core": "^1.2.5"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "workbox-build": "4.3.1"
+  }
 }
