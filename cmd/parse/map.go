@@ -74,8 +74,6 @@ func BuildMap() (USMap, error) {
 	if err != nil {
 		return fullMap, err
 	}
-	
-	visitedCities := []string{}
 
 	for x, b := range fullMap.Map {
 		for y := range b {
@@ -93,56 +91,83 @@ func BuildMap() (USMap, error) {
 				}
 				fullMap.Map[x][y].State = zips[x][y][0].state
 				fullMap.Map[x][y].Weather = totalWeathertoSmall(data[x][y].Weather)
-				if fullMap.Map[x][y].City != "Unknown" && fullMap.Map[x][y].City != "" && !stringInSlice(fullMap.Map[x][y].City, visitedCities) {
-					visitedCities = append(visitedCities, fullMap.Map[x][y].City)
-					calc := calcGoodBad(x, y, data)
-					if calc > fullMap.valTop[4] {
-						for c := 0; c < 5; c++ {
-							if calc > fullMap.valTop[c] {
-								storedArr := fullMap.valTop
-								latLongArr := fullMap.Top
-								latLongArr[c] = [2]int{y, x}
-								storedArr[c] = calc
-								for d := c + 1; d < 5; d++ {
-									storedArr[d] = fullMap.valTop[d-1]
-									latLongArr[d] = fullMap.Top[d-1]
-									c = 6
-								}
-								fullMap.valTop = storedArr
-								fullMap.Top = latLongArr
-							}
-						}
-					} else if calc < fullMap.valBot[4] {
-						for c := 0; c < 5; c++ {
-							if calc < fullMap.valBot[c] {
-								storedArr := fullMap.valBot
-								latLongArr := fullMap.Bottom
-								latLongArr[c] = [2]int{y, x}
-								storedArr[c] = calc
-								for d := c + 1; d < 5; d++ {
-									storedArr[d] = fullMap.valBot[d-1]
-									latLongArr[d] = fullMap.Bottom[d-1]
-									c = 6
-								}
-								fullMap.valBot = storedArr
-								fullMap.Bottom = latLongArr
-							}
-						}
-					}
-				}
+				fullMap = findTopBot(fullMap, x, y, data)
 			}
 		}
 	}
 	return fullMap, nil
 }
 
+// Places given location in top/bottom
+func findTopBot(fullMap USMap, x, y int, data [50][116]Station) USMap {
+	if fullMap.Map[x][y].City != "Unknown" && fullMap.Map[x][y].City != "" {
+		numRanks := len(fullMap.Top)
+		calc := calcGoodBad(x, y, data)
+
+		if calc > fullMap.valTop[numRanks-1] {
+			for j, f := range fullMap.Top {
+				if fullMap.Map[x][y].City == fullMap.Map[f[1]][f[0]].City {
+					if calc > fullMap.valTop[j] {
+						for i := j + 1; i < numRanks; i++ {
+							fullMap.valTop[i-1] = fullMap.valTop[i]
+							fullMap.Top[i-1] = fullMap.Top[i]
+						}
+					}
+				}
+			}
+			for c := 0; c < numRanks; c++ {
+				if calc > fullMap.valTop[c] {
+					storedArr := fullMap.valTop
+					latLongArr := fullMap.Top
+					latLongArr[c] = [2]int{y, x}
+					storedArr[c] = calc
+					for d := c + 1; d < numRanks; d++ {
+						storedArr[d] = fullMap.valTop[d-1]
+						latLongArr[d] = fullMap.Top[d-1]
+						c = 6
+					}
+					fullMap.valTop = storedArr
+					fullMap.Top = latLongArr
+				}
+			}
+		} else if calc < fullMap.valBot[numRanks-1] {
+			for j, f := range fullMap.Bottom {
+				if fullMap.Map[x][y].City == fullMap.Map[f[1]][f[0]].City {
+					if calc < fullMap.valBot[j] {
+						for i := j + 1; i < numRanks; i++ {
+							fullMap.valBot[i-1] = fullMap.valBot[i]
+							fullMap.Bottom[i-1] = fullMap.Bottom[i]
+						}
+					}
+				}
+			}
+			for c := 0; c < numRanks; c++ {
+				if calc < fullMap.valBot[c] {
+					storedArr := fullMap.valBot
+					latLongArr := fullMap.Bottom
+					latLongArr[c] = [2]int{y, x}
+					storedArr[c] = calc
+					for d := c + 1; d < numRanks; d++ {
+						storedArr[d] = fullMap.valBot[d-1]
+						latLongArr[d] = fullMap.Bottom[d-1]
+						c = 6
+					}
+					fullMap.valBot = storedArr
+					fullMap.Bottom = latLongArr
+				}
+			}
+		}
+	}
+	return fullMap
+}
+
 func stringInSlice(a string, list []string) bool {
-    for _, b := range list {
-        if b == a {
-            return true
-        }
-    }
-    return false
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
 
 func totalWeathertoSmall(weather TotalWeather) *SmallWeather {
