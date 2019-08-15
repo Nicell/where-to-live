@@ -185,7 +185,7 @@ export class AppMap {
     const ctx = c.getContext('2d');
     ctx.clearRect(0, 0, c.width, c.height);
     const cell = c.width / this.data[0].length;
-    ctx.setTransform(this.transform);
+    ctx.setTransform(this.transform.a, this.transform.b, this.transform.c, this.transform.d, this.transform.e, this.transform.f);
     drawCanvas(ctx, this.data, this.transform, this.width, cell, this.search, this.min, this.max, this.highContrast);
   }
 
