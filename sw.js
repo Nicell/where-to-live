@@ -27,7 +27,7 @@ self.addEventListener('message', (event) => {
 self.__precacheManifest = [
   {
     "url": "index.html",
-    "revision": "54d4b3c70161cd97b637226431b1c6fd"
+    "revision": "78159421e629273b5397885cdd5c65ce"
   },
   {
     "url": "assets/map.json",
@@ -36,6 +36,9 @@ self.__precacheManifest = [
   {
     "url": "assets/zip.json",
     "revision": "2a387ea3268f1aadfffc0713af20f150"
+  },
+  {
+    "url": "build/p-2l61exce.entry.js"
   },
   {
     "url": "build/p-3ea8955c.js"
@@ -51,9 +54,6 @@ self.__precacheManifest = [
   },
   {
     "url": "build/p-c68d0961.js"
-  },
-  {
-    "url": "build/p-you08pnz.entry.js"
   },
   {
     "url": "manifest.json",
