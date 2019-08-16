@@ -41,7 +41,7 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "1d:89:d9:d5:87:68:30:6a:42:5e:43:06:b8:d6:ee:41"
-      - run: gh-pages --message "CircleCI Deployment" --user "CircleCI <builds@circleci.com>" --dist web/www/where-to-live
+      - run: gh-pages --message "[ci skip] CircleCI Deployment" --dist web/www/where-to-live
 
 workflows:
   version: 2
