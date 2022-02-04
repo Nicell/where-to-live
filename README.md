@@ -6,7 +6,7 @@
 A website to show the best places to live based on weather in the US
 
 # ✨ How it works
-Using NOAA weather data from 2008 to 2020, we calculate the average number of pleasant and unpleasant days for each month. We then combine those to display a heatmap of the best places to live by weather.
+Using NOAA weather data from 2008 to 2021, we calculate the average number of pleasant and unpleasant days for each month. We then combine those to display a heatmap of the best places to live by weather.
 
 We calculate the **perceived temperature**, which takes into account relative humidity, to more accurately evaluate the temperature.
 
