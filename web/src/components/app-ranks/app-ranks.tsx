@@ -22,21 +22,21 @@ export class AppRanks {
             <p>
               A pleasant day is counted when all of the following are met:
               <ul>
-                <li>Average perceived temperature between 60°F and 80°F</li>
-                <li>Maximum perceived temperature below 85°F</li>
-                <li>Minimum perceived temperature above 50°F</li>
-                <li><a href="https://en.wikipedia.org/wiki/Visibility" target="_blank" rel="nofollow">Visibility</a> of more than 5</li>
-                <li>Less than .05" of precipitation</li>
+                <li>Average perceived temperature between 62°F and 75°F</li>
+                <li>Maximum perceived temperature below 82°F</li>
+                <li>Minimum perceived temperature above 55°F</li>
+                <li><a href="https://en.wikipedia.org/wiki/Visibility" target="_blank" rel="nofollow">Visibility</a> of more than 6 statute miles</li>
+                <li>Less than 0.10" of precipitation</li>
               </ul>
             </p>
             <p>
               An unpleasant day is counted when any of the following are met:
               <ul>
-                <li>Average perceived temperature below 40°F</li>
-                <li>Average perceived temperature above 90°F</li>
-                <li><a href="https://en.wikipedia.org/wiki/Visibility" target="_blank" rel="nofollow">Visibility</a> of less than 5</li>
-                <li>Any snow, hail, thunder, or tornados</li>
-                <li>More than .1" of precipitation</li>
+                <li>Average perceived temperature below 45°F</li>
+                <li>Average perceived temperature above 88°F</li>
+                <li><a href="https://en.wikipedia.org/wiki/Visibility" target="_blank" rel="nofollow">Visibility</a> of less than 5 statute miles</li>
+                <li>Any snow, hail, thunder, or tornadoes</li>
+                <li>More than 0.20" of precipitation</li>
               </ul>
             </p>
             <p>All other days are not counted and are instead considered normal days.</p>

@@ -15,13 +15,13 @@ import (
 	"time"
 )
 
-//TotalWeather All the weather for a year
+// TotalWeather All the weather for a year
 type TotalWeather struct {
 	Months    map[string]MonthWeather `json:"m"`
 	totalDays int
 }
 
-//MonthWeather All the data for the entire month is condensed down to MonthWeather
+// MonthWeather All the data for the entire month is condensed down to MonthWeather
 type MonthWeather struct {
 	Good   float64 `json:"g"`
 	Bad    float64 `json:"b"`
@@ -30,7 +30,7 @@ type MonthWeather struct {
 	filled bool
 }
 
-//Station Contains one station with weather and location
+// Station Contains one station with weather and location
 type Station struct {
 	lat      int
 	long     int
@@ -38,14 +38,27 @@ type Station struct {
 	weighted int
 }
 
-//Contains one day of weather information
+// Contains one day of weather information
 type weatherData struct {
 	station                                                               string
 	visib, minTemp, maxTemp, precip, avgTemp, wind, maxWind, harshWeather float64
 	date                                                                  time.Time
 }
 
-//BuildWeatherMap Builds the weather map
+const (
+	pleasantAvgTempMin      = 62.0
+	pleasantAvgTempMax      = 75.0
+	pleasantMaxTempMax      = 82.0
+	pleasantMinTempMin      = 55.0
+	pleasantVisibilityMin   = 6.0
+	pleasantPrecipMax       = 0.10
+	unpleasantAvgTempMin    = 45.0
+	unpleasantAvgTempMax    = 88.0
+	unpleasantVisibilityMax = 5.0
+	unpleasantPrecipMin     = 0.20
+)
+
+// BuildWeatherMap Builds the weather map
 func buildWeatherMap() ([50][116]Station, error) {
 	allYears := [][50][116]Station{}
 	for i := 2016; i < time.Now().Year(); i++ {
@@ -63,7 +76,7 @@ func buildWeatherMap() ([50][116]Station, error) {
 	return averageYears(allYears), nil
 }
 
-//Averages all years of each station into one station at each US map location
+// Averages all years of each station into one station at each US map location
 func averageYears(years [][50][116]Station) [50][116]Station {
 	avg := [50][116]Station{}
 	for x, a := range avg {
@@ -102,7 +115,7 @@ func averageYears(years [][50][116]Station) [50][116]Station {
 	return avg
 }
 
-//Reads through a single GSOD file for the year and returns stations at each location
+// Reads through a single GSOD file for the year and returns stations at each location
 func parseGSOD(year int) ([50][116][]Station, error) {
 	filepath := fmt.Sprintf("data/gsod_%d.tar", year)
 	stations, _ := parseISDHistory()
@@ -170,7 +183,7 @@ func parseGSOD(year int) ([50][116][]Station, error) {
 	}
 }
 
-//Averages all stations in one location of the US map
+// Averages all stations in one location of the US map
 func averageStations(in [50][116][]Station) ([50][116]Station, error) {
 	monthNum := map[string]float64{
 		"January":   31,
@@ -246,7 +259,7 @@ func addStations(in [50][116][]Station, lat, long int) []Station {
 		for a := latGrid; a <= (latGrid + 2*radius + 1); a++ {
 			for b := longGrid; b <= (longGrid + 2*radius + 1); b++ {
 				if a >= 0 && b >= 0 && a < 50 && b < 116 {
-					if len(in[a][b]) > 0 && (int(math.Abs(float64(a - lat))) == radius || int(math.Abs(float64(b - long))) == radius) {
+					if len(in[a][b]) > 0 && (int(math.Abs(float64(a-lat))) == radius || int(math.Abs(float64(b-long))) == radius) {
 						for c := range in[a][b] {
 							in[a][b][c].weighted = int(200 / math.Pow(float64(radius), 2))
 							if in[a][b][c].weighted < 1 {
@@ -263,20 +276,21 @@ func addStations(in [50][116][]Station, lat, long int) []Station {
 	return s
 }
 
-//Takes in one day of weather and stores it to the station provided
+// Takes in one day of weather and stores it to the station provided
 func processDay(station *Station, day weatherData) {
-	t := MonthWeather{}
-	if day.precip > 0.1 || day.minTemp < 40 || day.maxTemp > 85 || day.visib < 5 || day.harshWeather > 0 {
+	month := day.date.Month().String()
+	t := station.Weather.Months[month]
+	if day.precip > unpleasantPrecipMin || day.avgTemp < unpleasantAvgTempMin || day.avgTemp > unpleasantAvgTempMax || day.visib < unpleasantVisibilityMax || day.harshWeather > 0 {
 		t.Bad++
-	} else if day.avgTemp > 60 && day.avgTemp < 80 && day.visib > 5 && day.maxTemp < 85 && day.minTemp > 50 && day.precip < .05 && day.harshWeather == 0 {
+	} else if day.avgTemp >= pleasantAvgTempMin && day.avgTemp <= pleasantAvgTempMax && day.visib > pleasantVisibilityMin && day.maxTemp < pleasantMaxTempMax && day.minTemp > pleasantMinTempMin && day.precip < pleasantPrecipMax && day.harshWeather == 0 {
 		t.Good++
 	}
 	t.total++
-	station.Weather.Months[day.date.Month().String()] = t
+	station.Weather.Months[month] = t
 	station.Weather.totalDays++
 }
 
-//Takes in a line of GSOD data and converts it to a weatherData struct
+// Takes in a line of GSOD data and converts it to a weatherData struct
 func processLine(line string) (weatherData, error) {
 	data := weatherData{}
 	year, err := strconv.Atoi(line[14:18])
@@ -306,34 +320,29 @@ func processLine(line string) (weatherData, error) {
 	}
 	data.maxWind = tmp
 
+	tmp, err = strconv.ParseFloat(strings.TrimSpace(line[35:40]), 64)
+	if err != nil {
+		return weatherData{}, err
+	}
+	dewpoint := tmp
+
 	tmp, err = strconv.ParseFloat(strings.TrimSpace(line[24:30]), 64)
 	if err != nil {
 		return weatherData{}, err
 	}
-	if tmp > 80 {
-		dewpoint, err := strconv.ParseFloat(strings.TrimSpace(line[35:40]), 64)
-		if err != nil {
-			return weatherData{}, err
-		}
-		if dewpoint > 40 {
-			calcHeatIndex(&tmp, calcRelativeHumidity(tmp, dewpoint))
-		}
-	} else if tmp < 50 && (data.wind*1.15078) > 3 {
-		calcWindChill(&tmp, data.wind)
-	}
-	data.avgTemp = tmp
+	data.avgTemp = perceivedTemperature(tmp, dewpoint, data.wind)
 
 	tmp, err = strconv.ParseFloat(strings.TrimSpace(line[102:108]), 64)
 	if err != nil {
 		return weatherData{}, err
 	}
-	data.maxTemp = tmp
+	data.maxTemp = perceivedTemperature(tmp, dewpoint, data.wind)
 
 	tmp, err = strconv.ParseFloat(strings.TrimSpace(line[110:116]), 64)
 	if err != nil {
 		return weatherData{}, err
 	}
-	data.minTemp = tmp
+	data.minTemp = perceivedTemperature(tmp, dewpoint, data.wind)
 
 	tmp, err = strconv.ParseFloat(strings.TrimSpace(line[118:123]), 64)
 	if err != nil {
@@ -356,35 +365,44 @@ func processLine(line string) (weatherData, error) {
 	return data, nil
 }
 
-//Calculates the windchill taken in a temp and the windspeed - used equation as defined on https://www.weather.gov/media/epz/wxcalc/windChill.pdf
+func perceivedTemperature(temp, dewpoint, wind float64) float64 {
+	if temp > 80 && dewpoint > 40 {
+		calcHeatIndex(&temp, calcRelativeHumidity(temp, dewpoint))
+	} else if temp < 50 && (wind*1.15078) > 3 {
+		calcWindChill(&temp, wind)
+	}
+	return temp
+}
+
+// Calculates the windchill taken in a temp and the windspeed - used equation as defined on https://www.weather.gov/media/epz/wxcalc/windChill.pdf
 func calcWindChill(temp *float64, wind float64) {
 	wind *= 1.15078
 	*temp = (((*temp * 0.6215) + 35.74) - (35.75 * math.Pow(wind, 0.16))) + (.4275 * *temp * math.Pow(wind, 0.16))
 }
 
-//Calculates the heat index taken in a temp and the humidity - used equation as defined on https://www.weather.gov/media/epz/wxcalc/heatIndex.pdf
+// Calculates the heat index taken in a temp and the humidity - used equation as defined on https://www.weather.gov/media/epz/wxcalc/heatIndex.pdf
 func calcHeatIndex(temp *float64, humidity float64) {
 	*temp = -42.379 + (2.04901523 * *temp) + (10.14333127 * humidity) - (0.22475541 * *temp * humidity) - (6.83783 * 0.001 * math.Pow(*temp, 2)) - (5.481717 * 0.01 * math.Pow(humidity, 2)) + (1.22874 * .001 * math.Pow(*temp, 2) * humidity) + (8.5282 * 0.0001 * *temp * math.Pow(humidity, 2)) - (1.99 * 0.000001 * math.Pow(*temp, 2) * math.Pow(humidity, 2))
 }
 
-//Calculates and returns the relative humidity given the temp and dewpoint - using http://bmcnoldy.rsmas.miami.edu/Humidity.html
+// Calculates and returns the relative humidity given the temp and dewpoint - using http://bmcnoldy.rsmas.miami.edu/Humidity.html
 func calcRelativeHumidity(temp, dewpoint float64) float64 {
 	ftoC(&temp)
 	ftoC(&dewpoint)
 	return 100 * (math.Exp((17.625*dewpoint)/(243.04+dewpoint)) / math.Exp((17.625*temp)/(243.04+temp)))
 }
 
-//Converts fahrenheit to celsius
+// Converts fahrenheit to celsius
 func ftoC(temp *float64) {
 	*temp = (*temp - 32) * (5 / 9)
 }
 
-//Takes in a line of gsod data and returns the station corresponding to that line
+// Takes in a line of gsod data and returns the station corresponding to that line
 func toStationId(l string) string {
 	return fmt.Sprintf("%s", l[0:6])
 }
 
-//returns a map that has station id as keys and the station data as values
+// returns a map that has station id as keys and the station data as values
 func parseISDHistory() (map[string]Station, error) {
 	stations := make(map[string]Station)
 	file, err := os.Open("data/isd-history.csv")
