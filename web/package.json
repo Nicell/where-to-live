@@ -15,8 +15,5 @@
     "@fortawesome/free-solid-svg-icons": "^5.10.1",
     "@stencil/core": "^1.2.5"
   },
-  "license": "MIT",
-  "devDependencies": {
-    "workbox-build": "4.3.1"
-  }
+  "license": "MIT"
 }

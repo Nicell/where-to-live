@@ -43,7 +43,6 @@ export namespace Components {
     'handleChange': Function;
     'searchIndex': SearchLocation[];
   }
-  interface AppUpdate {}
 }
 
 declare global {
@@ -84,12 +83,6 @@ declare global {
     prototype: HTMLAppSearchElement;
     new (): HTMLAppSearchElement;
   };
-
-  interface HTMLAppUpdateElement extends Components.AppUpdate, HTMLStencilElement {}
-  var HTMLAppUpdateElement: {
-    prototype: HTMLAppUpdateElement;
-    new (): HTMLAppUpdateElement;
-  };
   interface HTMLElementTagNameMap {
     'app-home': HTMLAppHomeElement;
     'app-hover': HTMLAppHoverElement;
@@ -97,7 +90,6 @@ declare global {
     'app-map': HTMLAppMapElement;
     'app-ranks': HTMLAppRanksElement;
     'app-search': HTMLAppSearchElement;
-    'app-update': HTMLAppUpdateElement;
   }
 }
 
@@ -127,7 +119,6 @@ declare namespace LocalJSX {
     'handleChange'?: Function;
     'searchIndex'?: SearchLocation[];
   }
-  interface AppUpdate extends JSXBase.HTMLAttributes<HTMLAppUpdateElement> {}
 
   interface IntrinsicElements {
     'app-home': AppHome;
@@ -136,7 +127,6 @@ declare namespace LocalJSX {
     'app-map': AppMap;
     'app-ranks': AppRanks;
     'app-search': AppSearch;
-    'app-update': AppUpdate;
   }
 }
 

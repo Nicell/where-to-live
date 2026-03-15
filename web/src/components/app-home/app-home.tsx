@@ -77,7 +77,6 @@ export class AppHome {
             <span>Loading Weather Data</span>
           </div>
         )}
-        <app-update/>
       </div>
     );
   }
