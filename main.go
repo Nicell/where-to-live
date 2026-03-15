@@ -2,17 +2,16 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/Nicell/where-to-live/cmd"
 	"github.com/Nicell/where-to-live/cmd/parse"
-	"time"
 )
 
 func main() {
-	err := cmd.Download()
-	if err != nil {
-		fmt.Println(err)
+	if err := cmd.Download(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
-	fmt.Println(time.Now())
 	parse.WriteJSON()
-	fmt.Println(time.Now())
 }

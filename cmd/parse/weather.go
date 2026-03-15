@@ -15,6 +15,8 @@ import (
 	"time"
 )
 
+const missingFloat = math.MaxFloat64
+
 // TotalWeather All the weather for a year
 type TotalWeather struct {
 	Months    map[string]MonthWeather `json:"m"`
@@ -118,7 +120,10 @@ func averageYears(years [][50][116]Station) [50][116]Station {
 // Reads through a single GSOD file for the year and returns stations at each location
 func parseGSOD(year int) ([50][116][]Station, error) {
 	filepath := fmt.Sprintf("data/gsod_%d.tar", year)
-	stations, _ := parseISDHistory()
+	stations, err := parseISDHistory()
+	if err != nil {
+		return [50][116][]Station{}, err
+	}
 	weatherMap := [50][116][]Station{}
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -145,6 +150,7 @@ func parseGSOD(year int) ([50][116][]Station, error) {
 		opReader := bufio.NewReader(gzipF)
 		station := Station{lat: -1, long: -1, Weather: TotalWeather{}, weighted: 200}
 		station.Weather.Months = make(map[string]MonthWeather)
+		skipStation := false
 		for {
 			in, prefix, err := opReader.ReadLine()
 			if err == io.EOF {
@@ -163,11 +169,15 @@ func parseGSOD(year int) ([50][116][]Station, error) {
 				continue
 			}
 			if station.lat == -1 || station.long == -1 {
-				tempStation := stations[toStationId(line)]
+				tempStation, ok := stations[toStationID(line)]
+				if !ok {
+					skipStation = true
+					continue
+				}
 				station.lat = tempStation.lat
 				station.long = tempStation.long
 			}
-			if &station == nil {
+			if skipStation {
 				continue
 			}
 			data, err := processLine(line)
@@ -176,6 +186,9 @@ func parseGSOD(year int) ([50][116][]Station, error) {
 			}
 			j := &station
 			processDay(j, data)
+		}
+		if err := gzipF.Close(); err != nil {
+			return weatherMap, err
 		}
 		if station.Weather.totalDays >= 330 {
 			weatherMap[station.lat][station.long] = append(weatherMap[station.lat][station.long], station)
@@ -222,29 +235,25 @@ func averageStations(in [50][116][]Station) ([50][116]Station, error) {
 			t = TotalWeather{}
 			t.Months = make(map[string]MonthWeather)
 			for _, c := range b {
-				if &c != nil {
-					t.totalDays += c.Weather.totalDays
-					for k, a := range c.Weather.Months {
-						d := t.Months[k]
-						d.total += a.total
-						d.Good += a.Good
-						d.Bad += a.Bad
-						t.Months[k] = d
-					}
+				t.totalDays += c.Weather.totalDays
+				for k, a := range c.Weather.Months {
+					d := t.Months[k]
+					d.total += a.total
+					d.Good += a.Good
+					d.Bad += a.Bad
+					t.Months[k] = d
 				}
 			}
-			if &t != nil {
-				for k := range t.Months {
-					if t.Months[k].total != 0 {
-						d := t.Months[k]
-						d.Good = (d.Good / float64(d.total)) * monthNum[k]
-						d.Bad = (d.Bad / float64(d.total)) * monthNum[k]
-						d.filled = true
-						t.Months[k] = d
-					}
+			for k := range t.Months {
+				if t.Months[k].total != 0 {
+					d := t.Months[k]
+					d.Good = (d.Good / float64(d.total)) * monthNum[k]
+					d.Bad = (d.Bad / float64(d.total)) * monthNum[k]
+					d.filled = true
+					t.Months[k] = d
 				}
-				out[x][y] = Station{lat: x, long: y, Weather: t}
 			}
+			out[x][y] = Station{lat: x, long: y, Weather: t}
 		}
 	}
 	return out, nil
@@ -280,9 +289,26 @@ func addStations(in [50][116][]Station, lat, long int) []Station {
 func processDay(station *Station, day weatherData) {
 	month := day.date.Month().String()
 	t := station.Weather.Months[month]
-	if day.precip > unpleasantPrecipMin || day.avgTemp < unpleasantAvgTempMin || day.avgTemp > unpleasantAvgTempMax || day.visib < unpleasantVisibilityMax || day.harshWeather > 0 {
+
+	isBadTemp := isPresent(day.avgTemp) && (day.avgTemp < unpleasantAvgTempMin || day.avgTemp > unpleasantAvgTempMax)
+	isBadVisib := isPresent(day.visib) && day.visib < unpleasantVisibilityMax
+	isBadPrecip := isPresent(day.precip) && day.precip > unpleasantPrecipMin
+	isPleasant := isPresent(day.avgTemp) &&
+		isPresent(day.visib) &&
+		isPresent(day.maxTemp) &&
+		isPresent(day.minTemp) &&
+		isPresent(day.precip) &&
+		day.avgTemp >= pleasantAvgTempMin &&
+		day.avgTemp <= pleasantAvgTempMax &&
+		day.visib > pleasantVisibilityMin &&
+		day.maxTemp < pleasantMaxTempMax &&
+		day.minTemp > pleasantMinTempMin &&
+		day.precip < pleasantPrecipMax &&
+		day.harshWeather == 0
+
+	if isBadPrecip || isBadTemp || isBadVisib || day.harshWeather > 0 {
 		t.Bad++
-	} else if day.avgTemp >= pleasantAvgTempMin && day.avgTemp <= pleasantAvgTempMax && day.visib > pleasantVisibilityMin && day.maxTemp < pleasantMaxTempMax && day.minTemp > pleasantMinTempMin && day.precip < pleasantPrecipMax && day.harshWeather == 0 {
+	} else if isPleasant {
 		t.Good++
 	}
 	t.total++
@@ -308,55 +334,55 @@ func processLine(line string) (weatherData, error) {
 
 	data.date = time.Date(int(year), time.Month(month), int(day), 0, 0, 0, 0, time.UTC)
 
-	tmp, err := strconv.ParseFloat(strings.TrimSpace(line[78:83]), 64)
+	tmp, err := parseGSODFloat(line[78:83], "999.9")
 	if err != nil {
 		return weatherData{}, err
 	}
 	data.wind = tmp
 
-	tmp, err = strconv.ParseFloat(strings.TrimSpace(line[88:93]), 64)
+	tmp, err = parseGSODFloat(line[88:93], "999.9")
 	if err != nil {
 		return weatherData{}, err
 	}
 	data.maxWind = tmp
 
-	tmp, err = strconv.ParseFloat(strings.TrimSpace(line[35:40]), 64)
+	tmp, err = parseGSODFloat(line[35:41], "9999.9")
 	if err != nil {
 		return weatherData{}, err
 	}
 	dewpoint := tmp
 
-	tmp, err = strconv.ParseFloat(strings.TrimSpace(line[24:30]), 64)
+	tmp, err = parseGSODFloat(line[24:30], "9999.9")
 	if err != nil {
 		return weatherData{}, err
 	}
 	data.avgTemp = perceivedTemperature(tmp, dewpoint, data.wind)
 
-	tmp, err = strconv.ParseFloat(strings.TrimSpace(line[102:108]), 64)
+	tmp, err = parseGSODFloat(line[102:108], "9999.9")
 	if err != nil {
 		return weatherData{}, err
 	}
 	data.maxTemp = perceivedTemperature(tmp, dewpoint, data.wind)
 
-	tmp, err = strconv.ParseFloat(strings.TrimSpace(line[110:116]), 64)
+	tmp, err = parseGSODFloat(line[110:116], "9999.9")
 	if err != nil {
 		return weatherData{}, err
 	}
 	data.minTemp = perceivedTemperature(tmp, dewpoint, data.wind)
 
-	tmp, err = strconv.ParseFloat(strings.TrimSpace(line[118:123]), 64)
+	tmp, err = parseGSODFloat(line[118:123], "99.99")
 	if err != nil {
 		return weatherData{}, err
 	}
 	data.precip = tmp
 
-	tmp, err = strconv.ParseFloat(strings.TrimSpace(line[68:72]), 64)
+	tmp, err = parseGSODFloat(line[68:73], "999.9")
 	if err != nil {
 		return weatherData{}, err
 	}
 	data.visib = tmp
 
-	l, err := strconv.ParseFloat(strings.TrimSpace(line[134:]), 64)
+	l, err := strconv.ParseFloat(strings.TrimSpace(line[132:138]), 64)
 	if err != nil {
 		return weatherData{}, err
 	}
@@ -366,9 +392,12 @@ func processLine(line string) (weatherData, error) {
 }
 
 func perceivedTemperature(temp, dewpoint, wind float64) float64 {
-	if temp > 80 && dewpoint > 40 {
+	if !isPresent(temp) {
+		return temp
+	}
+	if temp > 80 && isPresent(dewpoint) && dewpoint > 40 {
 		calcHeatIndex(&temp, calcRelativeHumidity(temp, dewpoint))
-	} else if temp < 50 && (wind*1.15078) > 3 {
+	} else if temp < 50 && isPresent(wind) && (wind*1.15078) > 3 {
 		calcWindChill(&temp, wind)
 	}
 	return temp
@@ -394,12 +423,12 @@ func calcRelativeHumidity(temp, dewpoint float64) float64 {
 
 // Converts fahrenheit to celsius
 func ftoC(temp *float64) {
-	*temp = (*temp - 32) * (5 / 9)
+	*temp = (*temp - 32) * (5.0 / 9.0)
 }
 
 // Takes in a line of gsod data and returns the station corresponding to that line
-func toStationId(l string) string {
-	return fmt.Sprintf("%s", l[0:6])
+func toStationID(l string) string {
+	return fmt.Sprintf("%s-%s", strings.TrimSpace(l[0:6]), strings.TrimSpace(l[7:12]))
 }
 
 // returns a map that has station id as keys and the station data as values
@@ -423,9 +452,33 @@ func parseISDHistory() (map[string]Station, error) {
 			lat, _ := strconv.ParseFloat(i[6], 64)
 			long, _ := strconv.ParseFloat(i[7], 64)
 			if !(long < -125.0 || long > -67 || lat > 49 || lat < 24) {
-				stations[i[0]] = Station{lat: latConvert(lat), long: longConvert(long)}
+				stations[fmt.Sprintf("%s-%s", i[0], i[1])] = Station{lat: latConvert(lat), long: longConvert(long)}
 			}
 		}
 	}
 	return stations, nil
+}
+
+func parseGSODFloat(raw string, missing ...string) (float64, error) {
+	cleaned := strings.TrimSpace(raw)
+	cleaned = strings.TrimRightFunc(cleaned, func(r rune) bool {
+		return (r < '0' || r > '9') && r != '.' && r != '-' && r != '+'
+	})
+	if cleaned == "" {
+		return missingFloat, nil
+	}
+	for _, sentinel := range missing {
+		if cleaned == sentinel {
+			return missingFloat, nil
+		}
+	}
+	value, err := strconv.ParseFloat(cleaned, 64)
+	if err != nil {
+		return 0, err
+	}
+	return value, nil
+}
+
+func isPresent(value float64) bool {
+	return value != missingFloat
 }
