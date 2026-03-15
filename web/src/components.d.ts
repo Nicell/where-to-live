@@ -10,6 +10,9 @@ import {
   Hover,
 } from './components/app-home/app-home';
 import {
+  PaletteModeId,
+} from './components/app-map/canvas-util';
+import {
   IconLookup,
   IconName,
 } from '@fortawesome/fontawesome-svg-core';
@@ -22,6 +25,7 @@ export namespace Components {
   interface AppHover {
     'cell': number;
     'mapScale': number;
+    'paletteMode': PaletteModeId;
     'state': Hover;
   }
   interface AppIcon {
@@ -31,6 +35,7 @@ export namespace Components {
   interface AppMap {
     'data': any;
     'handleHover': Function;
+    'handlePaletteChange': Function;
     'handleScale': Function;
     'search': string;
   }
@@ -98,6 +103,7 @@ declare namespace LocalJSX {
   interface AppHover extends JSXBase.HTMLAttributes<HTMLAppHoverElement> {
     'cell'?: number;
     'mapScale'?: number;
+    'paletteMode'?: PaletteModeId;
     'state'?: Hover;
   }
   interface AppIcon extends JSXBase.HTMLAttributes<HTMLAppIconElement> {
@@ -107,6 +113,7 @@ declare namespace LocalJSX {
   interface AppMap extends JSXBase.HTMLAttributes<HTMLAppMapElement> {
     'data'?: any;
     'handleHover'?: Function;
+    'handlePaletteChange'?: Function;
     'handleScale'?: Function;
     'search'?: string;
   }

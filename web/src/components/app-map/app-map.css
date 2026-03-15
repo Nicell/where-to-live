@@ -2,44 +2,129 @@
   position: relative;
 }
 
-.toggle-mode {
+.palette-picker {
   position: absolute;
   bottom: 20px;
   left: 20px;
+  z-index: 2;
+}
+
+.palette-trigger {
   display: flex;
-  background: white;
-  border-radius: 50%;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid rgba(16, 24, 40, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--foreground);
+  padding: 8px 12px 8px 8px;
+  box-sizing: border-box;
+  box-shadow: var(--shadow-1);
   cursor: pointer;
 }
 
-.modeColor {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  border: solid 5px var(--background-light);
+.palette-trigger-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.palette-trigger-label {
+  font-size: 11px;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--foreground-secondary);
+}
+
+.palette-trigger-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.trigger-swatch {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+}
+
+.palette-caret {
+  width: 9px;
+  height: 9px;
+  margin-left: 2px;
+  border-right: 2px solid var(--foreground-secondary);
+  border-bottom: 2px solid var(--foreground-secondary);
+  transform: rotate(45deg) translateY(-1px);
+  transition: transform .15s ease;
+}
+
+.palette-caret.open {
+  transform: rotate(225deg) translateY(-1px);
+}
+
+.palette-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 290px;
+  margin-top: 10px;
+}
+
+.palette-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 1px solid rgba(16, 24, 40, 0.1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--foreground);
+  padding: 9px 10px;
+  text-align: left;
+  cursor: pointer;
   box-sizing: border-box;
   box-shadow: var(--shadow-1);
-  z-index: 1;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
 }
 
-.modeLabel {
-  position: absolute;
-  top: 50%;
-  left: calc(100% - 3px);
-  white-space: nowrap;
-  transform: translateY(-50%);
-  padding: 3px 5px 4px 7px;
-  background: var(--background-light);
-  border-radius: 0px 4px 4px 0px;
-  box-shadow: var(--shadow-1);
+.palette-option:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-2);
 }
 
-.default {
-  background: linear-gradient(to right, hsla(203, 100%, 46%, 1), hsla(203, 100%, 46%, 0))
+.palette-option.active {
+  border-color: var(--theme);
+  box-shadow: 0 0 0 2px rgba(0, 117, 138, 0.12), var(--shadow-2);
 }
 
-.highContrast {
-  background: linear-gradient(to right, hsl(10, 80%, 56%), hsl(10, 80%, 56%), hsla(35, 80%, 56%, 1), hsl(60, 80%, 56%), hsla(85, 80%, 56%, 1), hsla(135, 80%, 56%, 1), hsl(160, 80%, 56%), hsl(185, 80%, 56%), hsl(210, 80%, 56%), hsl(210, 80%, 56%))
+.palette-swatch {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  box-shadow: inset 0 0 0 1px rgba(16, 24, 40, 0.1);
+  background-size: cover;
+}
+
+.palette-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.palette-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.palette-description {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--foreground-secondary);
 }
 
 .map-controls {
@@ -122,6 +207,19 @@
 }
 
 @media screen and (max-width: 768px) {
+  .palette-picker {
+    position: static;
+    margin: 0 5px 15px;
+  }
+
+  .palette-trigger {
+    width: auto;
+  }
+
+  .palette-menu {
+    width: 100%;
+  }
+
   .map-controls {
     display: none;
   }

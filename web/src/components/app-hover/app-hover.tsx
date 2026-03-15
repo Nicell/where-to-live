@@ -2,6 +2,7 @@ import { Component, Element, Prop, h } from '@stencil/core';
 
 import { Hover } from '../app-home/app-home';
 import { getRawWeatherScore, getWeatherScore } from '../../utils/score';
+import { defaultPaletteMode, getChartColors, PaletteModeId } from '../app-map/canvas-util';
 
 const monthDay = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
@@ -17,6 +18,7 @@ export class AppHover {
   @Prop() state: Hover;
   @Prop() cell: number;
   @Prop() mapScale: number;
+  @Prop() paletteMode: PaletteModeId = defaultPaletteMode;
 
   renderLocationLabel() {
     const location = this.state.data;
@@ -30,6 +32,7 @@ export class AppHover {
     const normalizedScore = Math.max(0, Math.min(getWeatherScore(this.state.data), 100));
     const rawScore = getRawWeatherScore(this.state.data);
     const offset = Math.min(Math.max(this.state.x, 272 / 2) + 5, document.documentElement.clientWidth - 272 / 2 - 5);
+    const chartColors = getChartColors(this.paletteMode);
     return this.state.visible ? (
       <div class={`app-hover ${this.state.y - 135 < window.pageYOffset ? 'flip' : ''}`} style={{ left: offset + 'px', top: this.state.y + 'px', '--before-offset': `calc(50% + ${this.state.x - offset}px)`, '--cell-size': `${this.cell * this.mapScale + 7}px` }}>
         <div class="hover-title">
@@ -39,9 +42,9 @@ export class AppHover {
         <div class="hover-charts">
           {w.map((m,i) => i%2 === 0 ? (
             <div class="hover-chart">
-              <div class="hover-chart-bar">
-                <div style={{ height: w[i+1] / monthDay[i/2] * 100 + '%', background: '#ff5252' }}></div>
-                <div style={{ height: m / monthDay[i/2] * 100 + '%', background: '#69f0ae' }}></div>
+              <div class="hover-chart-bar" style={{ backgroundColor: chartColors.track }}>
+                <div style={{ height: w[i+1] / monthDay[i/2] * 100 + '%', background: chartColors.negative }}></div>
+                <div style={{ height: m / monthDay[i/2] * 100 + '%', background: chartColors.positive }}></div>
               </div>
               <span>{monthLetter[i/2]}</span>
             </div>

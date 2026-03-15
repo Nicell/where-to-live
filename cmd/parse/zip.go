@@ -197,8 +197,16 @@ func nameToPop() (map[string]int, error) {
 	return names, nil
 }
 
-// fills known dead space with "Unknown" to make map look nicer, not the best fix
+// fills known dead space with "Unknown" to make map look nicer
 func fillDeadSpace(mapUS [50][116][]zip) ([50][116][]zip, error) {
+	mapUS = fillKnownDeadSpace(mapUS)
+	mapUS = fillEnclosedDeadSpace(mapUS)
+	return mapUS, nil
+}
+
+// fillKnownDeadSpace preserves the original hand-tuned regions used to smooth
+// large empty areas in the coarse grid.
+func fillKnownDeadSpace(mapUS [50][116][]zip) [50][116][]zip {
 	for x := 5; x < 51; x++ {
 		for y := 1; y < 25; y++ {
 			if len(mapUS[y][x]) == 0 {
@@ -227,7 +235,32 @@ func fillDeadSpace(mapUS [50][116][]zip) ([50][116][]zip, error) {
 			}
 		}
 	}
-	return mapUS, nil
+	return mapUS
+}
+
+// fillEnclosedDeadSpace patches isolated single-cell gaps when all four
+// orthogonal neighbors already exist. This avoids obvious holes without
+// spreading into coastlines or large empty regions.
+func fillEnclosedDeadSpace(mapUS [50][116][]zip) [50][116][]zip {
+	occupied := [50][116]bool{}
+	for y := range mapUS {
+		for x := range mapUS[y] {
+			occupied[y][x] = len(mapUS[y][x]) > 0
+		}
+	}
+
+	for y := 1; y < len(mapUS)-1; y++ {
+		for x := 1; x < len(mapUS[y])-1; x++ {
+			if occupied[y][x] {
+				continue
+			}
+			if occupied[y-1][x] && occupied[y+1][x] && occupied[y][x-1] && occupied[y][x+1] {
+				mapUS[y][x] = []zip{{name: "Unknown"}}
+			}
+		}
+	}
+
+	return mapUS
 }
 
 // Converts a latitude to fit into the grid

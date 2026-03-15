@@ -1,4 +1,5 @@
 import { Component, State, h } from '@stencil/core';
+import { defaultPaletteMode, PaletteModeId } from '../app-map/canvas-util';
 
 export interface Hover {
   x: number;
@@ -19,6 +20,7 @@ export class AppHome {
   @State() data: any;
   @State() searchIndex: any;
   @State() mapScale: number;
+  @State() paletteMode: PaletteModeId;
 
   constructor() {
     this.hover = {
@@ -29,6 +31,7 @@ export class AppHome {
     }
     this.search = '';
     this.mapScale = 1;
+    this.paletteMode = defaultPaletteMode;
     this.getData();
     this.getSearchIndex();
   }
@@ -53,6 +56,10 @@ export class AppHome {
     this.mapScale = newScale;
   }
 
+  updatePaletteMode = (newMode: PaletteModeId) => {
+    this.paletteMode = newMode;
+  }
+
   render() {
     const cell = this.data ? window.innerWidth / window.devicePixelRatio / this.data.m[0].length : 0;
 
@@ -65,9 +72,9 @@ export class AppHome {
         {this.data && this.searchIndex ? (
           <div>
             <div class="map-holder">
-              <app-map data={this.data.m} handleHover={this.updateHover} handleScale={this.updateMapScale} search={this.search} />
+              <app-map data={this.data.m} handleHover={this.updateHover} handleScale={this.updateMapScale} handlePaletteChange={this.updatePaletteMode} search={this.search} />
             </div>
-            <app-hover state={this.hover} cell={cell} mapScale={this.mapScale} />
+            <app-hover state={this.hover} cell={cell} mapScale={this.mapScale} paletteMode={this.paletteMode} />
             <app-search searchIndex={this.searchIndex} handleChange={this.updateSearch} />
             <app-ranks top={this.data.t} bottom={this.data.b} data={this.data.m} />
           </div>

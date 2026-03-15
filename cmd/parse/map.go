@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"sort"
 	"strconv"
 
 	"github.com/cheggaaa/pb/v3"
@@ -32,12 +33,15 @@ type ZipCodes struct {
 	Zip       []string `json:"z"`
 }
 
-// USMap Returns the top five best and worst places as well as all the data in the map
+const (
+	rankLimit        = 10
+	rankClusterRange = 1
+)
+
+// USMap Returns the top best and worst places as well as all the data in the map
 type USMap struct {
-	Top    [5][2]int `json:"t"`
-	valTop [5]int
-	Bottom [5][2]int `json:"b"`
-	valBot [5]int
+	Top    [][2]int      `json:"t"`
+	Bottom [][2]int      `json:"b"`
 	Map    [50][116]Node `json:"m"`
 }
 
@@ -77,7 +81,6 @@ func WriteJSON() {
 // BuildMap Takes in the zip code map and the weather map and combines them
 func BuildMap() (USMap, error) {
 	fullMap := USMap{}
-	fullMap.valTop = [5]int{-400, -400, -400, -400, -400}
 	data, err := buildWeatherMap()
 	if err != nil {
 		return fullMap, err
@@ -108,85 +111,13 @@ func BuildMap() (USMap, error) {
 				}
 				fullMap.Map[x][y].State = zips[x][y][0].state
 				fullMap.Map[x][y].Weather = totalWeathertoSmall(data[x][y].Weather)
-				fullMap = findTopBot(fullMap, x, y, data)
 			}
 			bar.Increment()
 		}
 	}
 	fullMap = fillApproximateLabels(fullMap)
+	fullMap.Top, fullMap.Bottom = buildRankings(fullMap, data)
 	return normalizeScores(fullMap, data), nil
-}
-
-// Places given location in top/bottom
-func findTopBot(fullMap USMap, x, y int, data [50][116]Station) USMap {
-	if hasRealLocation(fullMap.Map[x][y]) && fullMap.Map[x][y].City != "" {
-		numRanks := len(fullMap.Top)
-		calc := calcGoodBad(x, y, data)
-
-		if calc > fullMap.valTop[numRanks-1] {
-			for j, f := range fullMap.Top {
-				if fullMap.Map[x][y].City == fullMap.Map[f[1]][f[0]].City {
-					if calc > fullMap.valTop[j] {
-						for i := j + 1; i < numRanks; i++ {
-							fullMap.valTop[i-1] = fullMap.valTop[i]
-							fullMap.Top[i-1] = fullMap.Top[i]
-						}
-					}
-				}
-			}
-			for c := 0; c < numRanks; c++ {
-				if calc > fullMap.valTop[c] {
-					storedArr := fullMap.valTop
-					latLongArr := fullMap.Top
-					latLongArr[c] = [2]int{y, x}
-					storedArr[c] = calc
-					for d := c + 1; d < numRanks; d++ {
-						storedArr[d] = fullMap.valTop[d-1]
-						latLongArr[d] = fullMap.Top[d-1]
-						c = 6
-					}
-					fullMap.valTop = storedArr
-					fullMap.Top = latLongArr
-				}
-			}
-		} else if calc < fullMap.valBot[numRanks-1] {
-			for j, f := range fullMap.Bottom {
-				if fullMap.Map[x][y].City == fullMap.Map[f[1]][f[0]].City {
-					if calc < fullMap.valBot[j] {
-						for i := j + 1; i < numRanks; i++ {
-							fullMap.valBot[i-1] = fullMap.valBot[i]
-							fullMap.Bottom[i-1] = fullMap.Bottom[i]
-						}
-					}
-				}
-			}
-			for c := 0; c < numRanks; c++ {
-				if calc < fullMap.valBot[c] {
-					storedArr := fullMap.valBot
-					latLongArr := fullMap.Bottom
-					latLongArr[c] = [2]int{y, x}
-					storedArr[c] = calc
-					for d := c + 1; d < numRanks; d++ {
-						storedArr[d] = fullMap.valBot[d-1]
-						latLongArr[d] = fullMap.Bottom[d-1]
-						c = 6
-					}
-					fullMap.valBot = storedArr
-					fullMap.Bottom = latLongArr
-				}
-			}
-		}
-	}
-	return fullMap
-}
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
 }
 
 func totalWeathertoSmall(weather TotalWeather) *SmallWeather {
@@ -230,6 +161,60 @@ type nodeScore struct {
 	x     int
 	y     int
 	score int
+}
+
+func buildRankings(fullMap USMap, data [50][116]Station) ([][2]int, [][2]int) {
+	candidates := make([]nodeScore, 0)
+	for x, row := range fullMap.Map {
+		for y, node := range row {
+			if !hasRealLocation(node) || node.City == "" {
+				continue
+			}
+			candidates = append(candidates, nodeScore{x: x, y: y, score: calcGoodBad(x, y, data)})
+		}
+	}
+
+	return selectRankings(candidates, false), selectRankings(candidates, true)
+}
+
+func selectRankings(candidates []nodeScore, ascending bool) [][2]int {
+	sorted := append([]nodeScore(nil), candidates...)
+	sort.Slice(sorted, func(i, j int) bool {
+		if sorted[i].score != sorted[j].score {
+			if ascending {
+				return sorted[i].score < sorted[j].score
+			}
+			return sorted[i].score > sorted[j].score
+		}
+		if sorted[i].x != sorted[j].x {
+			return sorted[i].x < sorted[j].x
+		}
+		return sorted[i].y < sorted[j].y
+	})
+
+	selected := make([]nodeScore, 0, rankLimit)
+	rankings := make([][2]int, 0, rankLimit)
+	for _, candidate := range sorted {
+		if overlapsRankArea(candidate, selected) {
+			continue
+		}
+		selected = append(selected, candidate)
+		rankings = append(rankings, [2]int{candidate.y, candidate.x})
+		if len(rankings) == rankLimit {
+			break
+		}
+	}
+
+	return rankings
+}
+
+func overlapsRankArea(candidate nodeScore, selected []nodeScore) bool {
+	for _, existing := range selected {
+		if absInt(existing.x-candidate.x) <= rankClusterRange && absInt(existing.y-candidate.y) <= rankClusterRange {
+			return true
+		}
+	}
+	return false
 }
 
 func normalizeScores(fullMap USMap, data [50][116]Station) USMap {

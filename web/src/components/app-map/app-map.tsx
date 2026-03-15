@@ -1,5 +1,5 @@
 import { Component, Element, Prop, State, h } from '@stencil/core';
-import { drawCanvas } from './canvas-util';
+import { defaultPaletteMode, drawCanvas, PaletteModeId, paletteModes } from './canvas-util';
 
 import { Hover } from '../app-home/app-home';
 
@@ -20,9 +20,11 @@ export class AppMap {
   @Element() el: HTMLElement;
   @Prop() handleHover: Function;
   @Prop() handleScale: Function;
+  @Prop() handlePaletteChange: Function;
   @Prop() data: any;
   @Prop() search: string;
-  @State() highContrast: boolean;
+  @State() paletteMode: PaletteModeId;
+  @State() paletteMenuOpen: boolean;
   @State() width: number;
   @State() transform: DOMMatrix2DInit;
 
@@ -32,14 +34,29 @@ export class AppMap {
 
   constructor() {
     this.transform = {a: 1, b: 0, c: 0, d: 1, e: 0, f: 0};
-    this.highContrast = false;
+    this.paletteMode = defaultPaletteMode;
+    this.paletteMenuOpen = false;
     this.hover = {x: 0, y: 0, data: '', visible: false};
     this.dragState = {dragging: false, startX: 0, startY: 0, lastX: 0, lastY: 0};
+  }
+
+  componentWillLoad() {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const storedMode = window.localStorage.getItem('map-palette-mode') as PaletteModeId;
+    if (paletteModes.some((mode) => mode.id === storedMode)) {
+      this.paletteMode = storedMode;
+    }
   }
 
   componentDidLoad() {
     this.calcWidth();
     this.attachListeners();
+    if (this.handlePaletteChange) {
+      this.handlePaletteChange(this.paletteMode);
+    }
   }
 
   componentDidRender() {
@@ -184,19 +201,36 @@ export class AppMap {
     ctx.clearRect(0, 0, c.width, c.height);
     const cell = c.width / this.data[0].length;
     ctx.setTransform(this.transform.a, this.transform.b, this.transform.c, this.transform.d, this.transform.e, this.transform.f);
-    drawCanvas(ctx, this.data, this.transform, this.width, cell, this.search, this.highContrast);
+    drawCanvas(ctx, this.data, this.transform, this.width, cell, this.search, this.paletteMode);
   }
 
   calcWidth = () => {
     this.width = this.el.querySelector('.app-map').clientWidth * window.devicePixelRatio;
   }
 
-  toggleMode = () => {
-    this.highContrast = !this.highContrast;
+  setPaletteMode = (mode: PaletteModeId) => {
+    if (this.paletteMode === mode) {
+      this.paletteMenuOpen = false;
+      return;
+    }
+
+    this.paletteMode = mode;
+    this.paletteMenuOpen = false;
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('map-palette-mode', mode);
+    }
+    if (this.handlePaletteChange) {
+      this.handlePaletteChange(mode);
+    }
+  }
+
+  togglePaletteMenu = () => {
+    this.paletteMenuOpen = !this.paletteMenuOpen;
   }
 
   render() {
     const adjustedWidth = this.width / window.devicePixelRatio;
+    const activePalette = paletteModes.find((mode) => mode.id === this.paletteMode) || paletteModes[0];
     return (
       <div class="app-map">
         <canvas class="map-canvas"
@@ -204,13 +238,33 @@ export class AppMap {
           width={this.width}
           height={this.width / this.data[0].length * this.data.length}
         />
-        <div class="toggle-mode" onClick={this.toggleMode}>
-          <div class={`modeColor ${this.highContrast ? 'default' : 'highContrast'}`}>
-
-          </div>
-          <div class="modeLabel">
-            {this.highContrast ? 'Default' : 'High Contrast'}
-          </div>
+        <div class={`palette-picker ${this.paletteMenuOpen ? 'open' : ''}`}>
+          <button type="button" class="palette-trigger" onClick={this.togglePaletteMenu} aria-expanded={this.paletteMenuOpen} aria-label="Select map palette">
+            <span class="palette-swatch trigger-swatch" style={{ backgroundImage: activePalette.swatch }}></span>
+            <span class="palette-trigger-copy">
+              <span class="palette-trigger-label">Colors</span>
+              <span class="palette-trigger-name">{activePalette.label}</span>
+            </span>
+            <span class={`palette-caret ${this.paletteMenuOpen ? 'open' : ''}`}></span>
+          </button>
+          {this.paletteMenuOpen ? (
+            <div class="palette-menu" role="group" aria-label="Map color palette">
+              {paletteModes.map((mode) => (
+                <button
+                  type="button"
+                  class={`palette-option ${this.paletteMode === mode.id ? 'active' : ''}`}
+                  onClick={() => this.setPaletteMode(mode.id)}
+                  title={mode.description}
+                >
+                  <span class="palette-swatch" style={{ backgroundImage: mode.swatch }}></span>
+                  <span class="palette-copy">
+                    <span class="palette-name">{mode.label}</span>
+                    <span class="palette-description">{mode.description}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
         <div class="map-controls">
           <div class="map-move">
