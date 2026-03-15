@@ -7,9 +7,28 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
-//zip a struct that stores the zipcode, lat, long, and name of a Station
+var (
+	stateOnce sync.Once
+	stateData map[string]string
+	stateErr  error
+
+	zipOnce sync.Once
+	zipData []zip
+	zipErr  error
+
+	populationOnce sync.Once
+	populationData map[string]int
+	populationErr  error
+
+	mapOnce sync.Once
+	mapData [50][116][]zip
+	mapErr  error
+)
+
+// zip a struct that stores the zipcode, lat, long, and name of a Station
 type zip struct {
 	zipcode string
 	lat     string
@@ -18,118 +37,148 @@ type zip struct {
 	state   string
 }
 
-//Parses the states.csv and builds a map with number (as a string) keys and abbreviations (WI, CA, CO, etc.) as value
+// Parses the states.csv and builds a map with number (as a string) keys and abbreviations (WI, CA, CO, etc.) as value
 func parseState() (map[string]string, error) {
-	states := make(map[string]string)
-	file, err := os.Open("data/states.csv")
-	if err != nil {
-		return states, err
-	}
-	defer file.Close()
-	lines, err := csv.NewReader(file).ReadAll()
-	if err != nil {
-		return states, err
-	}
-	for _, i := range lines {
-		states[i[2]] = i[1]
-	}
-	return states, nil
+	stateOnce.Do(func() {
+		states := make(map[string]string)
+		file, err := os.Open("data/states.csv")
+		if err != nil {
+			stateErr = err
+			return
+		}
+		defer file.Close()
+		lines, err := csv.NewReader(file).ReadAll()
+		if err != nil {
+			stateErr = err
+			return
+		}
+		for _, i := range lines {
+			states[i[2]] = i[1]
+		}
+		stateData = states
+	})
+	return stateData, stateErr
 }
 
-//parses the zips.tsv file
+// parses the zips.tsv file
 func parseZip() ([]zip, error) {
-	file, err := os.Open("data/zips.tsv")
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	reader.Comma = '\t' //CSV reader uses tabs instead of commas
-	lines, err := reader.ReadAll()
-	if err != nil {
-		panic(err)
-	}
-	zips := []zip{}
-	states, err := parseState()
-	if err != nil {
-		return zips, err
-	}
-	for _, i := range lines {
-		data := zip{
-			zipcode: i[0],
-			lat:     i[1],
-			long:    i[2],
-			name:    i[4],
-			state:   states[strings.TrimPrefix(i[5], "0")],
-		}
-		long, _ := strconv.ParseFloat(data.long, 64)
-		lat, _ := strconv.ParseFloat(data.lat, 64)
-		if !(long < -125.0 || long > -67 || lat > 49 || lat < 24) {
-			zips = append(zips, data)
-		}
-	}
-	return zips, err
-}
-
-//Parses population-by-zip.csv to put into a map with keys of zip codes
-func parsePopulation() (map[string]int, error) {
-	pop := make(map[string]int)
-	file, err := os.Open("data/population-by-zip.csv")
-	if err != nil {
-		return pop, err
-	}
-	defer file.Close()
-	reader := csv.NewReader(file)
-	_, err = reader.Read() //ignores column header
-	if err != nil {
-		return pop, err
-	}
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return pop, err
-	}
-	for _, i := range lines {
-		k, err := strconv.ParseInt(i[1], 10, 32)
+	zipOnce.Do(func() {
+		file, err := os.Open("data/zips.tsv")
 		if err != nil {
-			return pop, err
+			zipErr = err
+			return
 		}
-		pop[i[0]] = int(k)
-	}
-	return pop, nil
-}
+		defer file.Close()
 
-//Maps all zip codes to a grid stacking overlapping counties
-func makeMap() ([50][116][]zip, error) {
-	mapUS := [50][116][]zip{}
-	zips, err := parseZip()
-	if err != nil {
-		return mapUS, err
-	}
-	namePop, err := nameToPop()
-	if err != nil {
-		return mapUS, err
-	}
-	for _, i := range zips {
-		j, err := strconv.ParseFloat(i.lat, 64)
+		reader := csv.NewReader(file)
+		reader.Comma = '\t' //CSV reader uses tabs instead of commas
+		lines, err := reader.ReadAll()
 		if err != nil {
-			return mapUS, err
+			zipErr = err
+			return
 		}
-		k, err := strconv.ParseFloat(i.long, 64)
+
+		states, err := parseState()
 		if err != nil {
-			return mapUS, err
+			zipErr = err
+			return
 		}
-		if len(mapUS[latConvert(j)][longConvert(k)]) != 0 {
-			if namePop[mapUS[latConvert(j)][longConvert(k)][0].state+"."+mapUS[latConvert(j)][longConvert(k)][0].name] < namePop[i.state+"."+i.name] {
-				mapUS[latConvert(j)][longConvert(k)] = append([]zip{i}, mapUS[latConvert(j)][longConvert(k)]...)
-			} else {
-				mapUS[latConvert(j)][longConvert(k)] = append(mapUS[latConvert(j)][longConvert(k)], i)
+
+		zips := make([]zip, 0, len(lines))
+		for _, i := range lines {
+			data := zip{
+				zipcode: i[0],
+				lat:     i[1],
+				long:    i[2],
+				name:    i[4],
+				state:   states[strings.TrimPrefix(i[5], "0")],
 			}
-		} else {
-			mapUS[latConvert(j)][longConvert(k)] = append(mapUS[latConvert(j)][longConvert(k)], i)
+			long, _ := strconv.ParseFloat(data.long, 64)
+			lat, _ := strconv.ParseFloat(data.lat, 64)
+			if !(long < -125.0 || long > -67 || lat > 49 || lat < 24) {
+				zips = append(zips, data)
+			}
 		}
-	}
-	return fillDeadSpace(mapUS)
+		zipData = zips
+	})
+	return zipData, zipErr
+}
+
+// Parses population-by-zip.csv to put into a map with keys of zip codes
+func parsePopulation() (map[string]int, error) {
+	populationOnce.Do(func() {
+		pop := make(map[string]int)
+		file, err := os.Open("data/population-by-zip.csv")
+		if err != nil {
+			populationErr = err
+			return
+		}
+		defer file.Close()
+
+		reader := csv.NewReader(file)
+		_, err = reader.Read() //ignores column header
+		if err != nil {
+			populationErr = err
+			return
+		}
+		lines, err := reader.ReadAll()
+		if err != nil {
+			populationErr = err
+			return
+		}
+		for _, i := range lines {
+			k, err := strconv.ParseInt(i[1], 10, 32)
+			if err != nil {
+				populationErr = err
+				return
+			}
+			pop[i[0]] = int(k)
+		}
+		populationData = pop
+	})
+	return populationData, populationErr
+}
+
+// Maps all zip codes to a grid stacking overlapping counties
+func makeMap() ([50][116][]zip, error) {
+	mapOnce.Do(func() {
+		mapUS := [50][116][]zip{}
+		zips, err := parseZip()
+		if err != nil {
+			mapErr = err
+			return
+		}
+		namePop, err := nameToPop()
+		if err != nil {
+			mapErr = err
+			return
+		}
+		for _, i := range zips {
+			j, err := strconv.ParseFloat(i.lat, 64)
+			if err != nil {
+				mapErr = err
+				return
+			}
+			k, err := strconv.ParseFloat(i.long, 64)
+			if err != nil {
+				mapErr = err
+				return
+			}
+			latIdx := latConvert(j)
+			longIdx := longConvert(k)
+			if len(mapUS[latIdx][longIdx]) != 0 {
+				if namePop[mapUS[latIdx][longIdx][0].state+"."+mapUS[latIdx][longIdx][0].name] < namePop[i.state+"."+i.name] {
+					mapUS[latIdx][longIdx] = append([]zip{i}, mapUS[latIdx][longIdx]...)
+				} else {
+					mapUS[latIdx][longIdx] = append(mapUS[latIdx][longIdx], i)
+				}
+			} else {
+				mapUS[latIdx][longIdx] = append(mapUS[latIdx][longIdx], i)
+			}
+		}
+		mapData, mapErr = fillDeadSpace(mapUS)
+	})
+	return mapData, mapErr
 }
 
 func nameToPop() (map[string]int, error) {
@@ -148,7 +197,7 @@ func nameToPop() (map[string]int, error) {
 	return names, nil
 }
 
-//fills known dead space with "Unknown" to make map look nicer, not the best fix
+// fills known dead space with "Unknown" to make map look nicer, not the best fix
 func fillDeadSpace(mapUS [50][116][]zip) ([50][116][]zip, error) {
 	for x := 5; x < 51; x++ {
 		for y := 1; y < 25; y++ {
@@ -181,7 +230,7 @@ func fillDeadSpace(mapUS [50][116][]zip) ([50][116][]zip, error) {
 	return mapUS, nil
 }
 
-//Converts a latitude to fit into the grid
+// Converts a latitude to fit into the grid
 func latConvert(lat float64) int {
 	t := 49 - (math.Round(lat/.5) - 49)
 	if t == -1 {
@@ -190,7 +239,7 @@ func latConvert(lat float64) int {
 	return int(t)
 }
 
-//Converts a longitude value to fit into the grid
+// Converts a longitude value to fit into the grid
 func longConvert(long float64) int {
 	long = math.Abs(long)
 	long -= 9

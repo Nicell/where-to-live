@@ -10,12 +10,27 @@ import (
 	"io"
 	"math"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/cheggaaa/pb/v3"
 )
 
 const missingFloat = math.MaxFloat64
+
+const (
+	datasetStartYear = 2016
+	datasetEndYear   = 2024
+)
+
+var (
+	isdHistoryOnce sync.Once
+	isdHistoryData map[string]Station
+	isdHistoryErr  error
+)
 
 // TotalWeather All the weather for a year
 type TotalWeather struct {
@@ -62,19 +77,87 @@ const (
 
 // BuildWeatherMap Builds the weather map
 func buildWeatherMap() ([50][116]Station, error) {
-	allYears := [][50][116]Station{}
-	for i := 2016; i < time.Now().Year(); i++ {
-		fmt.Println(i)
-		tmp, err := parseGSOD(i)
-		if err != nil {
-			return [50][116]Station{}, err
-		}
-		i, err := averageStations(tmp)
-		if err != nil {
-			return [50][116]Station{}, err
-		}
-		allYears = append(allYears, i)
+	years := make([]int, 0, datasetEndYear-datasetStartYear+1)
+	for year := datasetStartYear; year <= datasetEndYear; year++ {
+		years = append(years, year)
 	}
+	if len(years) == 0 {
+		return [50][116]Station{}, nil
+	}
+
+	stations, err := parseISDHistory()
+	if err != nil {
+		return [50][116]Station{}, err
+	}
+	zips, err := makeMap()
+	if err != nil {
+		return [50][116]Station{}, err
+	}
+
+	type yearResult struct {
+		idx int
+		err error
+	}
+
+	fmt.Printf("Processing %d yearly weather archives\n", len(years))
+	bar := pb.StartNew(len(years))
+	defer bar.Finish()
+
+	workers := runtime.NumCPU()
+	if workers > len(years) {
+		workers = len(years)
+	}
+	if workers < 1 {
+		workers = 1
+	}
+
+	jobs := make(chan int)
+	results := make(chan yearResult, len(years))
+	allYears := make([][50][116]Station, len(years))
+
+	var wg sync.WaitGroup
+	for worker := 0; worker < workers; worker++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for idx := range jobs {
+				year := years[idx]
+				parsed, err := parseGSOD(year, stations)
+				if err != nil {
+					results <- yearResult{idx: idx, err: fmt.Errorf("parse %d: %w", year, err)}
+					continue
+				}
+				averaged, err := averageStations(parsed, zips)
+				if err != nil {
+					results <- yearResult{idx: idx, err: fmt.Errorf("average %d: %w", year, err)}
+					continue
+				}
+				allYears[idx] = averaged
+				results <- yearResult{idx: idx}
+			}
+		}()
+	}
+
+	go func() {
+		for idx := range years {
+			jobs <- idx
+		}
+		close(jobs)
+		wg.Wait()
+		close(results)
+	}()
+
+	var firstErr error
+	for result := range results {
+		bar.Increment()
+		if result.err != nil && firstErr == nil {
+			firstErr = result.err
+		}
+	}
+	if firstErr != nil {
+		return [50][116]Station{}, firstErr
+	}
+
 	return averageYears(allYears), nil
 }
 
@@ -118,12 +201,8 @@ func averageYears(years [][50][116]Station) [50][116]Station {
 }
 
 // Reads through a single GSOD file for the year and returns stations at each location
-func parseGSOD(year int) ([50][116][]Station, error) {
+func parseGSOD(year int, stations map[string]Station) ([50][116][]Station, error) {
 	filepath := fmt.Sprintf("data/gsod_%d.tar", year)
-	stations, err := parseISDHistory()
-	if err != nil {
-		return [50][116][]Station{}, err
-	}
 	weatherMap := [50][116][]Station{}
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -197,7 +276,7 @@ func parseGSOD(year int) ([50][116][]Station, error) {
 }
 
 // Averages all stations in one location of the US map
-func averageStations(in [50][116][]Station) ([50][116]Station, error) {
+func averageStations(in [50][116][]Station, zips [50][116][]zip) ([50][116]Station, error) {
 	monthNum := map[string]float64{
 		"January":   31,
 		"February":  28,
@@ -213,10 +292,6 @@ func averageStations(in [50][116][]Station) ([50][116]Station, error) {
 		"December":  31,
 	}
 	out := [50][116]Station{}
-	zips, err := makeMap()
-	if err != nil {
-		return out, err
-	}
 	t := TotalWeather{}
 	for x, a := range in {
 		for y, b := range a {
@@ -225,22 +300,19 @@ func averageStations(in [50][116][]Station) ([50][116]Station, error) {
 					b = addStations(in, x, y)
 				}
 			}
-			h := []Station{}
-			for _, c := range b {
-				for i := 0; i < c.weighted; i++ {
-					h = append(h, c)
-				}
-			}
-			b = h
 			t = TotalWeather{}
 			t.Months = make(map[string]MonthWeather)
 			for _, c := range b {
-				t.totalDays += c.Weather.totalDays
+				weight := c.weighted
+				if weight < 1 {
+					weight = 1
+				}
+				t.totalDays += c.Weather.totalDays * weight
 				for k, a := range c.Weather.Months {
 					d := t.Months[k]
-					d.total += a.total
-					d.Good += a.Good
-					d.Bad += a.Bad
+					d.total += a.total * weight
+					d.Good += a.Good * float64(weight)
+					d.Bad += a.Bad * float64(weight)
 					t.Months[k] = d
 				}
 			}
@@ -262,7 +334,11 @@ func averageStations(in [50][116][]Station) ([50][116]Station, error) {
 func addStations(in [50][116][]Station, lat, long int) []Station {
 	s := in[lat][long]
 	radius := 1
-	for len(s) < 4 {
+	maxRadius := len(in)
+	if len(in[0]) > maxRadius {
+		maxRadius = len(in[0])
+	}
+	for len(s) < 4 && radius <= maxRadius {
 		latGrid := lat - radius
 		longGrid := long - radius
 		for a := latGrid; a <= (latGrid + 2*radius + 1); a++ {
@@ -433,30 +509,38 @@ func toStationID(l string) string {
 
 // returns a map that has station id as keys and the station data as values
 func parseISDHistory() (map[string]Station, error) {
-	stations := make(map[string]Station)
-	file, err := os.Open("data/isd-history.csv")
-	if err != nil {
-		return stations, err
-	}
-	reader := csv.NewReader(file)
-	_, err = reader.Read() //skip the title line
-	if err != nil {
-		return stations, err
-	}
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return stations, err
-	}
-	for _, i := range lines {
-		if i[3] == "US" {
-			lat, _ := strconv.ParseFloat(i[6], 64)
-			long, _ := strconv.ParseFloat(i[7], 64)
-			if !(long < -125.0 || long > -67 || lat > 49 || lat < 24) {
-				stations[fmt.Sprintf("%s-%s", i[0], i[1])] = Station{lat: latConvert(lat), long: longConvert(long)}
+	isdHistoryOnce.Do(func() {
+		stations := make(map[string]Station)
+		file, err := os.Open("data/isd-history.csv")
+		if err != nil {
+			isdHistoryErr = err
+			return
+		}
+		defer file.Close()
+
+		reader := csv.NewReader(file)
+		_, err = reader.Read() //skip the title line
+		if err != nil {
+			isdHistoryErr = err
+			return
+		}
+		lines, err := reader.ReadAll()
+		if err != nil {
+			isdHistoryErr = err
+			return
+		}
+		for _, i := range lines {
+			if i[3] == "US" {
+				lat, _ := strconv.ParseFloat(i[6], 64)
+				long, _ := strconv.ParseFloat(i[7], 64)
+				if !(long < -125.0 || long > -67 || lat > 49 || lat < 24) {
+					stations[fmt.Sprintf("%s-%s", i[0], i[1])] = Station{lat: latConvert(lat), long: longConvert(long)}
+				}
 			}
 		}
-	}
-	return stations, nil
+		isdHistoryData = stations
+	})
+	return isdHistoryData, isdHistoryErr
 }
 
 func parseGSODFloat(raw string, missing ...string) (float64, error) {

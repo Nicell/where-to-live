@@ -1,5 +1,6 @@
 #Jetbrains
 .idea
+.gocache
 
 # Weather data
 data/*.tar

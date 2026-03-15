@@ -64,6 +64,15 @@ func TestProcessDayDoesNotPenalizeMissingPrecipitation(t *testing.T) {
 	}
 }
 
+func TestAddStationsReturnsWhenNoNeighborsExist(t *testing.T) {
+	var in [50][116][]Station
+
+	got := addStations(in, 10, 10)
+	if len(got) != 0 {
+		t.Fatalf("addStations returned %d stations, want 0", len(got))
+	}
+}
+
 func TestToStationIDIncludesWBAN(t *testing.T) {
 	line := "690150 93121  20250101    70.0  1    50.0  1  1010.0  1  1008.0  1   10.0  1    5.0  1    7.0   10.0    80.0    60.0   0.00G 999.9  000000"
 

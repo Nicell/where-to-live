@@ -2,11 +2,14 @@ package parse
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"strconv"
+
+	"github.com/cheggaaa/pb/v3"
 )
 
-//Node A spot on the final map that is exported to a json file
+// Node A spot on the final map that is exported to a json file
 type Node struct {
 	zipcodes []zip
 	ShortZip []int         `json:"z,omitempty"`
@@ -19,13 +22,13 @@ type SmallWeather struct {
 	totalDays int
 }
 
-//ZipCodes Has a name and all zip codes corresponding to it in an array
+// ZipCodes Has a name and all zip codes corresponding to it in an array
 type ZipCodes struct {
 	CityState string   `json:"c"`
 	Zip       []string `json:"z"`
 }
 
-//USMap Returns the top five best and worst places as well as all the data in the map
+// USMap Returns the top five best and worst places as well as all the data in the map
 type USMap struct {
 	Top    [5][2]int `json:"t"`
 	valTop [5]int
@@ -34,8 +37,9 @@ type USMap struct {
 	Map    [50][116]Node `json:"m"`
 }
 
-//WriteJSON Takes in all the data and writes it to a json file
+// WriteJSON Takes in all the data and writes it to a json file
 func WriteJSON() {
+	fmt.Println("Building map assets")
 	mapUS, err := BuildMap()
 	if err != nil {
 		panic(err)
@@ -62,7 +66,7 @@ func WriteJSON() {
 	}
 }
 
-//BuildMap Takes in the zip code map and the weather map and combines them
+// BuildMap Takes in the zip code map and the weather map and combines them
 func BuildMap() (USMap, error) {
 	fullMap := USMap{}
 	fullMap.valTop = [5]int{-400, -400, -400, -400, -400}
@@ -74,6 +78,11 @@ func BuildMap() (USMap, error) {
 	if err != nil {
 		return fullMap, err
 	}
+
+	totalCells := len(fullMap.Map) * len(fullMap.Map[0])
+	fmt.Printf("Combining weather and zip data across %d grid cells\n", totalCells)
+	bar := pb.StartNew(totalCells)
+	defer bar.Finish()
 
 	for x, b := range fullMap.Map {
 		for y := range b {
@@ -93,6 +102,7 @@ func BuildMap() (USMap, error) {
 				fullMap.Map[x][y].Weather = totalWeathertoSmall(data[x][y].Weather)
 				fullMap = findTopBot(fullMap, x, y, data)
 			}
+			bar.Increment()
 		}
 	}
 	return fullMap, nil
@@ -203,7 +213,7 @@ func totalWeathertoSmall(weather TotalWeather) *SmallWeather {
 	return &smallWeather
 }
 
-//Calculates how pleasant somewhere is by taking good - bad days of all months and adding them together
+// Calculates how pleasant somewhere is by taking good - bad days of all months and adding them together
 func calcGoodBad(lat, long int, weather [50][116]Station) int {
 	score := 0
 	for _, c := range weather[lat][long].Weather.Months {
@@ -213,7 +223,7 @@ func calcGoodBad(lat, long int, weather [50][116]Station) int {
 	return score
 }
 
-//Builds a 2D array of all zips in the mapUS
+// Builds a 2D array of all zips in the mapUS
 func buildSearchZip(mapUS USMap) ([99999]string, error) {
 	mapZip := [99999]string{}
 	for _, a := range mapUS.Map {
