@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"strconv"
 
 	"github.com/cheggaaa/pb/v3"
@@ -11,14 +12,17 @@ import (
 
 // Node A spot on the final map that is exported to a json file
 type Node struct {
-	zipcodes []zip
-	ShortZip []int         `json:"z,omitempty"`
-	City     string        `json:"c,omitempty"`
-	State    string        `json:"s,omitempty"`
-	Weather  *SmallWeather `json:"w,omitempty"`
+	zipcodes    []zip
+	ShortZip    []int         `json:"z,omitempty"`
+	City        string        `json:"c,omitempty"`
+	State       string        `json:"s,omitempty"`
+	Approximate bool          `json:"a,omitempty"`
+	Weather     *SmallWeather `json:"w,omitempty"`
 }
 type SmallWeather struct {
 	Months    *[24]int `json:"m,omitempty"`
+	RawScore  int      `json:"r"`
+	Score     int      `json:"p"`
 	totalDays int
 }
 
@@ -64,6 +68,10 @@ func WriteJSON() {
 	if err != nil {
 		panic(err)
 	}
+	err = writeSearchJSON()
+	if err != nil {
+		panic(err)
+	}
 }
 
 // BuildMap Takes in the zip code map and the weather map and combines them
@@ -105,12 +113,13 @@ func BuildMap() (USMap, error) {
 			bar.Increment()
 		}
 	}
-	return fullMap, nil
+	fullMap = fillApproximateLabels(fullMap)
+	return normalizeScores(fullMap, data), nil
 }
 
 // Places given location in top/bottom
 func findTopBot(fullMap USMap, x, y int, data [50][116]Station) USMap {
-	if fullMap.Map[x][y].City != "Unknown" && fullMap.Map[x][y].City != "" {
+	if hasRealLocation(fullMap.Map[x][y]) && fullMap.Map[x][y].City != "" {
 		numRanks := len(fullMap.Top)
 		calc := calcGoodBad(x, y, data)
 
@@ -209,8 +218,133 @@ func totalWeathertoSmall(weather TotalWeather) *SmallWeather {
 	Months[21] = int(weather.Months["November"].Bad)
 	Months[22] = int(weather.Months["December"].Good)
 	Months[23] = int(weather.Months["December"].Bad)
-	smallWeather := SmallWeather{&Months, weather.totalDays}
+	smallWeather := SmallWeather{Months: &Months, totalDays: weather.totalDays}
 	return &smallWeather
+}
+
+func hasRealLocation(node Node) bool {
+	return len(node.ShortZip) > 0
+}
+
+type nodeScore struct {
+	x     int
+	y     int
+	score int
+}
+
+func normalizeScores(fullMap USMap, data [50][116]Station) USMap {
+	scores := make([]nodeScore, 0)
+	minScore := 0
+	maxScore := 0
+	initialized := false
+	for x, row := range fullMap.Map {
+		for y, node := range row {
+			if node.City == "" || node.Weather == nil {
+				continue
+			}
+			score := calcGoodBad(x, y, data)
+			scores = append(scores, nodeScore{x: x, y: y, score: score})
+			if !initialized {
+				minScore = score
+				maxScore = score
+				initialized = true
+				continue
+			}
+			if score < minScore {
+				minScore = score
+			}
+			if score > maxScore {
+				maxScore = score
+			}
+		}
+	}
+
+	if len(scores) == 0 {
+		return fullMap
+	}
+
+	if minScore == maxScore {
+		for _, entry := range scores {
+			fullMap.Map[entry.x][entry.y].Weather.RawScore = entry.score
+			fullMap.Map[entry.x][entry.y].Weather.Score = 50
+		}
+		return fullMap
+	}
+
+	rangeSize := float64(maxScore - minScore)
+	for _, entry := range scores {
+		normalized := int(math.Round(float64(entry.score-minScore) / rangeSize * 100))
+		fullMap.Map[entry.x][entry.y].Weather.RawScore = entry.score
+		fullMap.Map[entry.x][entry.y].Weather.Score = normalized
+	}
+
+	return fullMap
+}
+
+func fillApproximateLabels(fullMap USMap) USMap {
+	for x, row := range fullMap.Map {
+		for y, node := range row {
+			if hasRealLocation(node) || node.Weather == nil || (node.City != "" && node.City != "Unknown") {
+				continue
+			}
+			city, state, ok := nearestRealLocation(fullMap, x, y)
+			if !ok {
+				continue
+			}
+			fullMap.Map[x][y].City = city
+			fullMap.Map[x][y].State = state
+			fullMap.Map[x][y].Approximate = true
+		}
+	}
+	return fullMap
+}
+
+func nearestRealLocation(fullMap USMap, x, y int) (string, string, bool) {
+	maxRadius := len(fullMap.Map)
+	if len(fullMap.Map[0]) > maxRadius {
+		maxRadius = len(fullMap.Map[0])
+	}
+
+	for radius := 1; radius <= maxRadius; radius++ {
+		bestDistance := maxRadius*maxRadius + len(fullMap.Map[0])*len(fullMap.Map[0])
+		bestCity := ""
+		bestState := ""
+
+		for a := x - radius; a <= x+radius; a++ {
+			for b := y - radius; b <= y+radius; b++ {
+				if a < 0 || b < 0 || a >= len(fullMap.Map) || b >= len(fullMap.Map[a]) {
+					continue
+				}
+				if absInt(a-x) != radius && absInt(b-y) != radius {
+					continue
+				}
+				node := fullMap.Map[a][b]
+				if !hasRealLocation(node) || node.City == "" || node.City == "Unknown" {
+					continue
+				}
+
+				distance := (a-x)*(a-x) + (b-y)*(b-y)
+				if distance < bestDistance {
+					bestDistance = distance
+					bestCity = node.City
+					bestState = node.State
+				}
+			}
+		}
+
+		if bestCity != "" {
+			return bestCity, bestState, true
+		}
+	}
+
+	return "", "", false
+}
+
+func absInt(v int) int {
+	if v < 0 {
+		return -v
+	}
+	return v
 }
 
 // Calculates how pleasant somewhere is by taking good - bad days of all months and adding them together
@@ -230,7 +364,7 @@ func buildSearchZip(mapUS USMap) ([99999]string, error) {
 		for _, b := range a {
 			if len(b.zipcodes) != 0 {
 				for _, c := range b.zipcodes {
-					if c.name != "Unknown" {
+					if c.name != "Unknown" && c.zipcode != "" {
 						zip, err := strconv.Atoi(c.zipcode)
 						if err != nil {
 							return mapZip, err

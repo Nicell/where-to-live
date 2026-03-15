@@ -1,3 +1,5 @@
+import { getWeatherScore } from '../../utils/score';
+
 interface radius {
   tl?: number;
   tr?: number;
@@ -22,7 +24,7 @@ export function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w
   ctx.fill();
 }
 
-export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMatrix2DInit, width: number, cell: number, search: string, min: number, max: number, highContrast: boolean) {
+export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMatrix2DInit, width: number, cell: number, search: string, highContrast: boolean) {
   const size = cell * .85;
   const height = width * data.length / data[0].length;
   data.forEach((t, i) => t.forEach((l, j) => {
@@ -61,12 +63,11 @@ export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMa
         saturated = true;
       }
 
-      const w = l.w && l.w.m ? l.w.m : [];
-      const days = w.reduce((a, b, i) => i%2 === 0 ? a + b : a - b, 0);
+      const score = Math.max(0, Math.min(getWeatherScore(l), 100));
       if (highContrast) {
-        ctx.fillStyle = `hsla(${10 + Math.max((days - min), 0) / (-min + max) * 200}, ${saturated ? '80%' : '20%'}, ${saturated ? '56%' : '76%'}, 1)`;
+        ctx.fillStyle = `hsla(${10 + score / 100 * 200}, ${saturated ? '80%' : '20%'}, ${saturated ? '56%' : '76%'}, 1)`;
       } else {
-        ctx.fillStyle = `hsla(203, ${saturated ? '100%' : '0%'}, 46%, ${Math.max((days - min - 50), 0) / (-min + max - 150) * .8 + .2})`
+        ctx.fillStyle = `hsla(203, ${saturated ? '100%' : '0%'}, 46%, ${score / 100 * .8 + .2})`
       }
       roundRect(ctx, j * cell + (cell - size) / 2, i * cell + (cell - size) / 2, size, size, radius);
     }

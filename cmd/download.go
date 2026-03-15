@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	datasetStartYear = 2016
+	datasetStartYear = 2010
 	datasetEndYear   = 2024
 )
 

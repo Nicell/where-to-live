@@ -1,20 +1,92 @@
 import { Component, Prop, State, h } from '@stencil/core';
 
+export interface SearchLocation {
+  z: string;
+  n: string;
+  p: number;
+  c: number;
+}
+
+interface SearchResult extends SearchLocation {
+  count: number;
+}
+
 @Component({
   tag: 'app-search',
   styleUrl: 'app-search.css',
   shadow: false
 })
 export class AppSearch {
-  @Prop() zips: any;
+  @Prop() searchIndex: SearchLocation[];
   @Prop() handleChange: Function;
-  @State() results: any[];
+  @State() results: SearchResult[];
 
   @State() value: string;
 
   constructor() {
     this.value = '';
     this.results = [];
+  }
+
+  groupNameResults = (locations: SearchLocation[]) => {
+    const grouped = new Map<string, SearchResult>();
+
+    for (const location of locations) {
+      const existing = grouped.get(location.n);
+
+      if (!existing) {
+        grouped.set(location.n, { ...location, count: 1 });
+        continue;
+      }
+
+      existing.count += 1;
+
+      if (location.p > existing.p || (location.p === existing.p && location.z < existing.z)) {
+        existing.z = location.z;
+        existing.p = location.p;
+      }
+    }
+
+    return Array.from(grouped.values());
+  }
+
+  nameMatchRank = (name: string, query: string) => {
+    const city = name.toLowerCase().split(',')[0];
+
+    if (city === query) {
+      return 0;
+    }
+
+    if (city.startsWith(query + ' ')) {
+      return 1;
+    }
+
+    if (city.startsWith(query)) {
+      return 2;
+    }
+
+    if (city.indexOf(' ' + query) > -1) {
+      return 3;
+    }
+
+    return 4;
+  }
+
+  sortNameResults = (query: string, a: SearchLocation, b: SearchLocation) => {
+    const matchRank = this.nameMatchRank(a.n, query) - this.nameMatchRank(b.n, query);
+    if (matchRank !== 0) {
+      return matchRank;
+    }
+
+    if (a.c !== b.c) {
+      return b.c - a.c;
+    }
+
+    if (a.p !== b.p) {
+      return b.p - a.p;
+    }
+
+    return a.z.localeCompare(b.z);
   }
 
   changeValue = (e: UIEvent) => {
@@ -37,19 +109,13 @@ export class AppSearch {
 
   searchByName = (value: string) => {
     if (value.length > 2) {
-      let results = []
+      const query = value.toLowerCase();
 
-      for (let i = 0; i < this.zips.length; i++) {
-        if (results.length === 10) {
-          break;
-        }
-
-        if (this.zips[i].toLowerCase().indexOf(value.toLowerCase()) > -1) {
-          results.push({ zip: ('00000' + i).slice(-5), name: this.zips[i]})
-        }
-      }
-
-      this.results = results;
+      this.results = this.groupNameResults(
+        this.searchIndex.filter(location => location.n.toLowerCase().indexOf(query) > -1)
+      )
+        .sort((a, b) => this.sortNameResults(query, a, b))
+        .slice(0, 10);
     } else {
       this.results = [];
     }
@@ -57,25 +123,10 @@ export class AppSearch {
 
   searchByZip = (value: string) => {
     if (value.length > 1 && value.length < 5) {
-      let results = [];
-      let val = parseInt(value);
-      let endVal = val + 1;
-      let factor = Math.pow(10, 5 - value.length);
-
-      let start = val * factor;
-      let end = endVal * factor;
-
-      for (let i = start; i < end; i++) {
-        if (results.length === 10) {
-          break;
-        }
-
-        if (this.zips[i].length > 0) {
-          results.push({ zip: ('00000' + i).slice(-5), name: this.zips[i]});
-        }
-      }
-
-      this.results = results;
+      this.results = this.searchIndex
+        .filter(location => location.z.indexOf(value) === 0)
+        .map(location => ({ ...location, count: 1 }))
+        .slice(0, 10);
     } else {
       this.results = [];
     }
@@ -88,9 +139,9 @@ export class AppSearch {
           <div class={this.results.length > 0 ? 'results' : ''}>
             {this.results.length > 0 ?
               this.results.map(zip => (
-                <div onClick={() => this.evalChange(zip.zip)}>
-                  <span>{zip.zip}</span>
-                  <span>{zip.name.split(' ').slice(0, -1).map(s => s.charAt(0) + s.toLowerCase().substring(1)).join(' ')} {zip.name.split(' ').slice(-1)}</span>
+                <div onClick={() => this.evalChange(zip.z)}>
+                  <span>{zip.count > 1 ? `${zip.z} +${zip.count - 1}` : zip.z}</span>
+                  <span>{zip.n.split(' ').slice(0, -1).map(s => s.charAt(0) + s.toLowerCase().substring(1)).join(' ')} {zip.n.split(' ').slice(-1)}</span>
                 </div>
               )
             ) : null}

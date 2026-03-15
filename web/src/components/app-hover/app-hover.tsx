@@ -1,6 +1,7 @@
 import { Component, Element, Prop, h } from '@stencil/core';
 
 import { Hover } from '../app-home/app-home';
+import { getRawWeatherScore, getWeatherScore } from '../../utils/score';
 
 const monthDay = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
@@ -17,14 +18,23 @@ export class AppHover {
   @Prop() cell: number;
   @Prop() mapScale: number;
 
+  renderLocationLabel() {
+    const location = this.state.data;
+    const city = location.c.split(' ').map(s => s.charAt(0) + s.toLowerCase().substring(1)).join(' ');
+    const label = `${city}, ${location.s}`;
+    return location.a ? `Near ${label}` : label;
+  }
+
   render() {
     const w = this.state.data && this.state.data.w && this.state.data.w.m ? this.state.data.w.m : [];
+    const normalizedScore = Math.max(0, Math.min(getWeatherScore(this.state.data), 100));
+    const rawScore = getRawWeatherScore(this.state.data);
     const offset = Math.min(Math.max(this.state.x, 272 / 2) + 5, document.documentElement.clientWidth - 272 / 2 - 5);
     return this.state.visible ? (
       <div class={`app-hover ${this.state.y - 135 < window.pageYOffset ? 'flip' : ''}`} style={{ left: offset + 'px', top: this.state.y + 'px', '--before-offset': `calc(50% + ${this.state.x - offset}px)`, '--cell-size': `${this.cell * this.mapScale + 7}px` }}>
         <div class="hover-title">
-          <span>{this.state.data.c.split(' ').map(s => s.charAt(0) + s.toLowerCase().substring(1)).join(' ')}, {this.state.data.s}</span>
-          <span>{w.reduce((a, b, i) => i % 2 === 0 ? a + b : a - b, 0)}</span>
+          <span>{this.renderLocationLabel()}</span>
+          <span title={`Raw score: ${rawScore}`}>{normalizedScore}/100</span>
         </div>
         <div class="hover-charts">
           {w.map((m,i) => i%2 === 0 ? (

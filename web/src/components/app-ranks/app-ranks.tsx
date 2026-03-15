@@ -1,4 +1,5 @@
 import { Component, Prop, h } from '@stencil/core';
+import { getRawWeatherScore, getWeatherScore } from '../../utils/score';
 
 
 @Component({
@@ -11,13 +12,20 @@ export class AppRanks {
   @Prop() bottom: any;
   @Prop() data: any;
 
+  renderScore(location) {
+    const normalized = Math.max(0, Math.min(getWeatherScore(location), 100));
+    const raw = getRawWeatherScore(location);
+    return <span title={`Raw score: ${raw}`}>{normalized}/100</span>;
+  }
+
   render() {
     return (
       <div class="rankingWrap">
         <div class="rankingBox">
           <div class="ranking about">
             <span>About</span>
-            <p>Using NOAA weather data from 2016 to 2024, we calculate the average number of pleasant and unpleasant days for each month. We then combine those to display a heatmap of the best places to live by weather.</p>
+            <p>Using NOAA weather data from 2010 to 2024, we calculate the average number of pleasant and unpleasant days for each month. We then combine those to display a heatmap of the best places to live by weather.</p>
+            <p>The weather score is normalized from the raw pleasant-minus-unpleasant-day total onto a 0 to 100 scale, so the gaps between nearby scores still show up on the map.</p>
             <p>We calculate the perceived temperature, which takes into account relative humidity, to more accurately evaluate the temperature.</p>
             <p>
               A pleasant day is counted when all of the following are met:
@@ -48,7 +56,7 @@ export class AppRanks {
                 {this.top.map(p => (
                   <div>
                     <span>{this.data[p[1]][p[0]].c.split(' ').map(s => s.charAt(0) + s.toLowerCase().substring(1)).join(' ')}, {this.data[p[1]][p[0]].s}</span>
-                    <span>{this.data[p[1]][p[0]].w.m.reduce((a, b, i) => i % 2 === 0 ? a + b : a - b, 0)}</span>
+                    {this.renderScore(this.data[p[1]][p[0]])}
                     </div>
                 ))}
               </div>
@@ -59,7 +67,7 @@ export class AppRanks {
                 {this.bottom.map(p => (
                   <div>
                     <span>{this.data[p[1]][p[0]].c.split(' ').map(s => s.charAt(0) + s.toLowerCase().substring(1)).join(' ')}, {this.data[p[1]][p[0]].s}</span>
-                    <span>{this.data[p[1]][p[0]].w.m.reduce((a, b, i) => i % 2 === 0 ? a + b : a - b, 0)}</span>
+                    {this.renderScore(this.data[p[1]][p[0]])}
                   </div>
                 ))}
               </div>

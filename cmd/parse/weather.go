@@ -22,7 +22,7 @@ import (
 const missingFloat = math.MaxFloat64
 
 const (
-	datasetStartYear = 2016
+	datasetStartYear = 2010
 	datasetEndYear   = 2024
 )
 

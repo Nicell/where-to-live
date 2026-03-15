@@ -13,6 +13,9 @@ import {
   IconLookup,
   IconName,
 } from '@fortawesome/fontawesome-svg-core';
+import {
+  SearchLocation,
+} from './components/app-search/app-search';
 
 export namespace Components {
   interface AppHome {}
@@ -29,8 +32,6 @@ export namespace Components {
     'data': any;
     'handleHover': Function;
     'handleScale': Function;
-    'max': number;
-    'min': number;
     'search': string;
   }
   interface AppRanks {
@@ -40,7 +41,7 @@ export namespace Components {
   }
   interface AppSearch {
     'handleChange': Function;
-    'zips': any;
+    'searchIndex': SearchLocation[];
   }
   interface AppUpdate {}
 }
@@ -115,8 +116,6 @@ declare namespace LocalJSX {
     'data'?: any;
     'handleHover'?: Function;
     'handleScale'?: Function;
-    'max'?: number;
-    'min'?: number;
     'search'?: string;
   }
   interface AppRanks extends JSXBase.HTMLAttributes<HTMLAppRanksElement> {
@@ -126,7 +125,7 @@ declare namespace LocalJSX {
   }
   interface AppSearch extends JSXBase.HTMLAttributes<HTMLAppSearchElement> {
     'handleChange'?: Function;
-    'zips'?: any;
+    'searchIndex'?: SearchLocation[];
   }
   interface AppUpdate extends JSXBase.HTMLAttributes<HTMLAppUpdateElement> {}
 
