@@ -4,7 +4,7 @@ import "testing"
 
 func TestNormalizeScores(t *testing.T) {
 	fullMap := USMap{}
-	data := [50][116]Station{}
+	data := [mapRows][mapCols]Station{}
 
 	fullMap.Map[0][0] = Node{City: "LOW", Weather: &SmallWeather{}}
 	fullMap.Map[0][1] = Node{City: "MID A", Weather: &SmallWeather{}}
@@ -42,7 +42,7 @@ func TestNormalizeScores(t *testing.T) {
 
 func TestNormalizeScoresSingleLocation(t *testing.T) {
 	fullMap := USMap{}
-	data := [50][116]Station{}
+	data := [mapRows][mapCols]Station{}
 
 	fullMap.Map[10][10] = Node{City: "ONLY", Weather: &SmallWeather{}}
 	data[10][10].Weather.Months = map[string]MonthWeather{"January": {Good: 12, Bad: 3}}
@@ -79,7 +79,7 @@ func TestFillApproximateLabels(t *testing.T) {
 
 func TestBuildRankingsKeepsTenDistinctAreas(t *testing.T) {
 	fullMap := USMap{}
-	data := [50][116]Station{}
+	data := [mapRows][mapCols]Station{}
 
 	addLocation := func(x, y, score int, city string) {
 		fullMap.Map[x][y] = Node{
@@ -123,18 +123,18 @@ func TestBuildRankingsKeepsTenDistinctAreas(t *testing.T) {
 		score int
 		city  string
 	}{
-		{40, 100, -300, "COLEBROOK"},
-		{40, 101, -299, "ISLAND POND"},
-		{40, 103, -298, "EUSTIS"},
-		{40, 106, -297, "NEWPORT"},
-		{40, 109, -296, "IRON RIVER"},
-		{43, 100, -295, "CRANE LAKE"},
-		{43, 103, -294, "COOK"},
-		{43, 106, -293, "SARANAC LAKE"},
-		{43, 109, -292, "WEST CHAZY"},
-		{46, 100, -291, "PERU"},
-		{46, 103, -290, "EAGLE RIVER"},
-		{46, 106, -289, "PHILLIPS"},
+		{40, 80, -300, "COLEBROOK"},
+		{40, 81, -299, "ISLAND POND"},
+		{40, 83, -298, "EUSTIS"},
+		{40, 86, -297, "NEWPORT"},
+		{40, 89, -296, "IRON RIVER"},
+		{43, 80, -295, "CRANE LAKE"},
+		{43, 83, -294, "COOK"},
+		{43, 86, -293, "SARANAC LAKE"},
+		{43, 89, -292, "WEST CHAZY"},
+		{46, 80, -291, "PERU"},
+		{46, 83, -290, "EAGLE RIVER"},
+		{46, 86, -289, "PHILLIPS"},
 	}
 	for _, candidate := range bottomCandidates {
 		addLocation(candidate.x, candidate.y, candidate.score, candidate.city)
@@ -156,11 +156,11 @@ func TestBuildRankingsKeepsTenDistinctAreas(t *testing.T) {
 		t.Fatal("top rankings missing strongest square at [0,0]")
 	}
 
-	if containsRank(bottom, 101, 40) {
-		t.Fatal("bottom rankings include adjacent duplicate square at [101,40]")
+	if containsRank(bottom, 81, 40) {
+		t.Fatal("bottom rankings include adjacent duplicate square at [81,40]")
 	}
-	if !containsRank(bottom, 100, 40) {
-		t.Fatal("bottom rankings missing lowest square at [100,40]")
+	if !containsRank(bottom, 80, 40) {
+		t.Fatal("bottom rankings missing lowest square at [80,40]")
 	}
 }
 

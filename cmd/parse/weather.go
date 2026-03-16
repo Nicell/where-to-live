@@ -76,22 +76,22 @@ const (
 )
 
 // BuildWeatherMap Builds the weather map
-func buildWeatherMap() ([50][116]Station, error) {
+func buildWeatherMap() ([mapRows][mapCols]Station, error) {
 	years := make([]int, 0, datasetEndYear-datasetStartYear+1)
 	for year := datasetStartYear; year <= datasetEndYear; year++ {
 		years = append(years, year)
 	}
 	if len(years) == 0 {
-		return [50][116]Station{}, nil
+		return [mapRows][mapCols]Station{}, nil
 	}
 
 	stations, err := parseISDHistory()
 	if err != nil {
-		return [50][116]Station{}, err
+		return [mapRows][mapCols]Station{}, err
 	}
 	zips, err := makeMap()
 	if err != nil {
-		return [50][116]Station{}, err
+		return [mapRows][mapCols]Station{}, err
 	}
 
 	type yearResult struct {
@@ -113,7 +113,7 @@ func buildWeatherMap() ([50][116]Station, error) {
 
 	jobs := make(chan int)
 	results := make(chan yearResult, len(years))
-	allYears := make([][50][116]Station, len(years))
+	allYears := make([][mapRows][mapCols]Station, len(years))
 
 	var wg sync.WaitGroup
 	for worker := 0; worker < workers; worker++ {
@@ -155,15 +155,15 @@ func buildWeatherMap() ([50][116]Station, error) {
 		}
 	}
 	if firstErr != nil {
-		return [50][116]Station{}, firstErr
+		return [mapRows][mapCols]Station{}, firstErr
 	}
 
 	return averageYears(allYears), nil
 }
 
 // Averages all years of each station into one station at each US map location
-func averageYears(years [][50][116]Station) [50][116]Station {
-	avg := [50][116]Station{}
+func averageYears(years [][mapRows][mapCols]Station) [mapRows][mapCols]Station {
+	avg := [mapRows][mapCols]Station{}
 	for x, a := range avg {
 		for y := range a {
 			avg[x][y].Weather.Months = make(map[string]MonthWeather)
@@ -201,9 +201,9 @@ func averageYears(years [][50][116]Station) [50][116]Station {
 }
 
 // Reads through a single GSOD file for the year and returns stations at each location
-func parseGSOD(year int, stations map[string]Station) ([50][116][]Station, error) {
+func parseGSOD(year int, stations map[string]Station) ([mapRows][mapCols][]Station, error) {
 	filepath := fmt.Sprintf("data/gsod_%d.tar", year)
-	weatherMap := [50][116][]Station{}
+	weatherMap := [mapRows][mapCols][]Station{}
 	file, err := os.Open(filepath)
 	if err != nil {
 		return weatherMap, err
@@ -276,7 +276,7 @@ func parseGSOD(year int, stations map[string]Station) ([50][116][]Station, error
 }
 
 // Averages all stations in one location of the US map
-func averageStations(in [50][116][]Station, zips [50][116][]zip) ([50][116]Station, error) {
+func averageStations(in [mapRows][mapCols][]Station, zips [mapRows][mapCols][]zip) ([mapRows][mapCols]Station, error) {
 	monthNum := map[string]float64{
 		"January":   31,
 		"February":  28,
@@ -291,7 +291,7 @@ func averageStations(in [50][116][]Station, zips [50][116][]zip) ([50][116]Stati
 		"November":  30,
 		"December":  31,
 	}
-	out := [50][116]Station{}
+	out := [mapRows][mapCols]Station{}
 	t := TotalWeather{}
 	for x, a := range in {
 		for y, b := range a {
@@ -331,7 +331,7 @@ func averageStations(in [50][116][]Station, zips [50][116][]zip) ([50][116]Stati
 	return out, nil
 }
 
-func addStations(in [50][116][]Station, lat, long int) []Station {
+func addStations(in [mapRows][mapCols][]Station, lat, long int) []Station {
 	s := in[lat][long]
 	radius := 1
 	maxRadius := len(in)
@@ -343,7 +343,7 @@ func addStations(in [50][116][]Station, lat, long int) []Station {
 		longGrid := long - radius
 		for a := latGrid; a <= (latGrid + 2*radius + 1); a++ {
 			for b := longGrid; b <= (longGrid + 2*radius + 1); b++ {
-				if a >= 0 && b >= 0 && a < 50 && b < 116 {
+				if a >= 0 && b >= 0 && a < mapRows && b < mapCols {
 					if len(in[a][b]) > 0 && (int(math.Abs(float64(a-lat))) == radius || int(math.Abs(float64(b-long))) == radius) {
 						for c := range in[a][b] {
 							in[a][b][c].weighted = int(200 / math.Pow(float64(radius), 2))
@@ -534,7 +534,8 @@ func parseISDHistory() (map[string]Station, error) {
 				lat, _ := strconv.ParseFloat(i[6], 64)
 				long, _ := strconv.ParseFloat(i[7], 64)
 				if !(long < -125.0 || long > -67 || lat > 49 || lat < 24) {
-					stations[fmt.Sprintf("%s-%s", i[0], i[1])] = Station{lat: latConvert(lat), long: longConvert(long)}
+					row, col := gridCellFromLatLong(lat, long)
+					stations[fmt.Sprintf("%s-%s", i[0], i[1])] = Station{lat: row, long: col}
 				}
 			}
 		}

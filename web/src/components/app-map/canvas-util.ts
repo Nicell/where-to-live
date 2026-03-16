@@ -139,48 +139,74 @@ export function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w
   ctx.fill();
 }
 
-export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMatrix2DInit, width: number, cell: number, search: string, paletteMode: PaletteModeId) {
-  const size = cell * .85;
+function getStateCode(cell): string {
+  return cell && cell.s ? cell.s : '';
+}
+
+function sameState(a, b): boolean {
+  const state = getStateCode(a);
+  return Boolean(state) && state === getStateCode(b);
+}
+
+export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMatrix2DInit, width: number, cell: number, search: string, paletteMode: PaletteModeId, showStateBorders: boolean) {
   const height = width * data.length / data[0].length;
   data.forEach((t, i) => t.forEach((l, j) => {
-    if (l.c && (j * cell + (cell - size) / 2) * transform.a < -transform.e + width && (j * cell + (cell - size) / 2 + size) * transform.a > -transform.e && (i * cell + (cell - size) / 2) * transform.a < -transform.f + height && (i * cell + (cell - size) / 2 + size) * transform.a > -transform.f) {
-      const half = size / 2;
-      const corner = size / 6;
-      const radius = { tl: corner, tr: corner, br: corner, bl: corner }
+    if (l.c) {
+      const topOccupied = i > 0 && Boolean(data[i - 1][j] && data[i - 1][j].c);
+      const bottomOccupied = i < data.length - 1 && Boolean(data[i + 1][j] && data[i + 1][j].c);
+      const leftOccupied = j > 0 && Boolean(data[i][j - 1] && data[i][j - 1].c);
+      const rightOccupied = j < data[i].length - 1 && Boolean(data[i][j + 1] && data[i][j + 1].c);
+      const topSameState = i > 0 && sameState(l, data[i - 1][j]);
+      const bottomSameState = i < data.length - 1 && sameState(l, data[i + 1][j]);
+      const leftSameState = j > 0 && sameState(l, data[i][j - 1]);
+      const rightSameState = j < data[i].length - 1 && sameState(l, data[i][j + 1]);
 
-      const bottom = (i === data.length - 1 || !data[i + 1][j].c ? '' : data[i + 1][j].c).length > 0;
-      const top = (i === 0 || !data[i - 1][j].c ? '' : data[i - 1][j].c).length > 0;
-      const right = (j === data[i].length - 1 || !data[i][j + 1].c ? '' : data[i][j + 1].c).length > 0;
-      const left = (j === 0 || !data[i][j - 1].c ? '' : data[i][j - 1].c).length > 0;
+      const sharedGap = cell * 0.08;
+      const borderGap = showStateBorders ? cell * 0.4 : sharedGap;
+      const leftInset = showStateBorders && leftOccupied && leftSameState ? sharedGap / 2 : borderGap / 2;
+      const rightInset = showStateBorders && rightOccupied && rightSameState ? sharedGap / 2 : borderGap / 2;
+      const topInset = showStateBorders && topOccupied && topSameState ? sharedGap / 2 : borderGap / 2;
+      const bottomInset = showStateBorders && bottomOccupied && bottomSameState ? sharedGap / 2 : borderGap / 2;
+      const drawX = j * cell + leftInset;
+      const drawY = i * cell + topInset;
+      const drawWidth = cell - leftInset - rightInset;
+      const drawHeight = cell - topInset - bottomInset;
 
-      if (!top && !left)
-        radius.tl = half;
-      if (!top && !right)
-        radius.tr = half;
-      if (!bottom && !right)
-        radius.br = half;
-      if (!bottom && !left)
-        radius.bl = half;
+      if (drawX * transform.a < -transform.e + width && (drawX + drawWidth) * transform.a > -transform.e && drawY * transform.a < -transform.f + height && (drawY + drawHeight) * transform.a > -transform.f) {
+        const minSide = Math.min(drawWidth, drawHeight);
+        const baseRadius = minSide / 6;
+        const outerRadius = minSide / 2;
+        const radius = { tl: baseRadius, tr: baseRadius, br: baseRadius, bl: baseRadius }
 
-      let saturated;
-      if (search.length > 0) {
-        if (l.z) {
-          const contains = l.z.filter(zip => ('00000' + zip.toString()).slice(-5).substr(0, search.length) === search);
-          if (contains.length > 0) {
-            saturated = true;
+        if (!topOccupied && !leftOccupied)
+          radius.tl = outerRadius;
+        if (!topOccupied && !rightOccupied)
+          radius.tr = outerRadius;
+        if (!bottomOccupied && !rightOccupied)
+          radius.br = outerRadius;
+        if (!bottomOccupied && !leftOccupied)
+          radius.bl = outerRadius;
+
+        let saturated;
+        if (search.length > 0) {
+          if (l.z) {
+            const contains = l.z.filter(zip => ('00000' + zip.toString()).slice(-5).substr(0, search.length) === search);
+            if (contains.length > 0) {
+              saturated = true;
+            } else {
+              saturated = false;
+            }
           } else {
             saturated = false;
           }
         } else {
-          saturated = false;
+          saturated = true;
         }
-      } else {
-        saturated = true;
-      }
 
-      const score = Math.max(0, Math.min(getWeatherScore(l), 100));
-      ctx.fillStyle = getFillColor(score, paletteMode, saturated);
-      roundRect(ctx, j * cell + (cell - size) / 2, i * cell + (cell - size) / 2, size, size, radius);
+        const score = Math.max(0, Math.min(getWeatherScore(l), 100));
+        ctx.fillStyle = getFillColor(score, paletteMode, saturated);
+        roundRect(ctx, drawX, drawY, drawWidth, drawHeight, radius);
+      }
     }
   }));
 }

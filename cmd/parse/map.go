@@ -40,9 +40,9 @@ const (
 
 // USMap Returns the top best and worst places as well as all the data in the map
 type USMap struct {
-	Top    [][2]int      `json:"t"`
-	Bottom [][2]int      `json:"b"`
-	Map    [50][116]Node `json:"m"`
+	Top    [][2]int               `json:"t"`
+	Bottom [][2]int               `json:"b"`
+	Map    [mapRows][mapCols]Node `json:"m"`
 }
 
 // WriteJSON Takes in all the data and writes it to a json file
@@ -163,7 +163,7 @@ type nodeScore struct {
 	score int
 }
 
-func buildRankings(fullMap USMap, data [50][116]Station) ([][2]int, [][2]int) {
+func buildRankings(fullMap USMap, data [mapRows][mapCols]Station) ([][2]int, [][2]int) {
 	candidates := make([]nodeScore, 0)
 	for x, row := range fullMap.Map {
 		for y, node := range row {
@@ -217,7 +217,7 @@ func overlapsRankArea(candidate nodeScore, selected []nodeScore) bool {
 	return false
 }
 
-func normalizeScores(fullMap USMap, data [50][116]Station) USMap {
+func normalizeScores(fullMap USMap, data [mapRows][mapCols]Station) USMap {
 	scores := make([]nodeScore, 0)
 	minScore := 0
 	maxScore := 0
@@ -333,7 +333,7 @@ func absInt(v int) int {
 }
 
 // Calculates how pleasant somewhere is by taking good - bad days of all months and adding them together
-func calcGoodBad(lat, long int, weather [50][116]Station) int {
+func calcGoodBad(lat, long int, weather [mapRows][mapCols]Station) int {
 	score := 0
 	for _, c := range weather[lat][long].Weather.Months {
 		score += int(c.Good)

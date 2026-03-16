@@ -65,7 +65,7 @@ func TestProcessDayDoesNotPenalizeMissingPrecipitation(t *testing.T) {
 }
 
 func TestAddStationsReturnsWhenNoNeighborsExist(t *testing.T) {
-	var in [50][116][]Station
+	var in [mapRows][mapCols][]Station
 
 	got := addStations(in, 10, 10)
 	if len(got) != 0 {

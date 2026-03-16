@@ -17,6 +17,8 @@ interface dragState {
   shadow: false
 })
 export class AppMap {
+  private static readonly stateBorderStorageKey = 'map-state-borders';
+
   @Element() el: HTMLElement;
   @Prop() handleHover: Function;
   @Prop() handleScale: Function;
@@ -25,6 +27,7 @@ export class AppMap {
   @Prop() search: string;
   @State() paletteMode: PaletteModeId;
   @State() paletteMenuOpen: boolean;
+  @State() showStateBorders: boolean;
   @State() width: number;
   @State() transform: DOMMatrix2DInit;
 
@@ -36,6 +39,7 @@ export class AppMap {
     this.transform = {a: 1, b: 0, c: 0, d: 1, e: 0, f: 0};
     this.paletteMode = defaultPaletteMode;
     this.paletteMenuOpen = false;
+    this.showStateBorders = false;
     this.hover = {x: 0, y: 0, data: '', visible: false};
     this.dragState = {dragging: false, startX: 0, startY: 0, lastX: 0, lastY: 0};
   }
@@ -49,6 +53,8 @@ export class AppMap {
     if (paletteModes.some((mode) => mode.id === storedMode)) {
       this.paletteMode = storedMode;
     }
+
+    this.showStateBorders = window.localStorage.getItem(AppMap.stateBorderStorageKey) === 'true';
   }
 
   componentDidLoad() {
@@ -201,7 +207,7 @@ export class AppMap {
     ctx.clearRect(0, 0, c.width, c.height);
     const cell = c.width / this.data[0].length;
     ctx.setTransform(this.transform.a, this.transform.b, this.transform.c, this.transform.d, this.transform.e, this.transform.f);
-    drawCanvas(ctx, this.data, this.transform, this.width, cell, this.search, this.paletteMode);
+    drawCanvas(ctx, this.data, this.transform, this.width, cell, this.search, this.paletteMode, this.showStateBorders);
   }
 
   calcWidth = () => {
@@ -226,6 +232,14 @@ export class AppMap {
 
   togglePaletteMenu = () => {
     this.paletteMenuOpen = !this.paletteMenuOpen;
+  }
+
+  toggleStateBorders = () => {
+    const nextValue = !this.showStateBorders;
+    this.showStateBorders = nextValue;
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(AppMap.stateBorderStorageKey, String(nextValue));
+    }
   }
 
   render() {
@@ -263,6 +277,20 @@ export class AppMap {
                   </span>
                 </button>
               ))}
+              <button
+                type="button"
+                class={`palette-option toggle-option ${this.showStateBorders ? 'active' : ''}`}
+                onClick={this.toggleStateBorders}
+                aria-pressed={this.showStateBorders ? 'true' : 'false'}
+              >
+                <span class={`toggle-pill ${this.showStateBorders ? 'active' : ''}`} aria-hidden="true">
+                  <span class="toggle-knob"></span>
+                </span>
+                <span class="palette-copy">
+                  <span class="palette-name">State gaps</span>
+                  <span class="palette-description">Separate states with larger gaps instead of one continuous land mass.</span>
+                </span>
+              </button>
             </div>
           ) : null}
         </div>

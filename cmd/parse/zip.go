@@ -2,8 +2,6 @@ package parse
 
 import (
 	"encoding/csv"
-	"fmt"
-	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -24,7 +22,7 @@ var (
 	populationErr  error
 
 	mapOnce sync.Once
-	mapData [50][116][]zip
+	mapData [mapRows][mapCols][]zip
 	mapErr  error
 )
 
@@ -140,9 +138,9 @@ func parsePopulation() (map[string]int, error) {
 }
 
 // Maps all zip codes to a grid stacking overlapping counties
-func makeMap() ([50][116][]zip, error) {
+func makeMap() ([mapRows][mapCols][]zip, error) {
 	mapOnce.Do(func() {
-		mapUS := [50][116][]zip{}
+		mapUS := [mapRows][mapCols][]zip{}
 		zips, err := parseZip()
 		if err != nil {
 			mapErr = err
@@ -164,8 +162,7 @@ func makeMap() ([50][116][]zip, error) {
 				mapErr = err
 				return
 			}
-			latIdx := latConvert(j)
-			longIdx := longConvert(k)
+			latIdx, longIdx := gridCellFromLatLong(j, k)
 			if len(mapUS[latIdx][longIdx]) != 0 {
 				if namePop[mapUS[latIdx][longIdx][0].state+"."+mapUS[latIdx][longIdx][0].name] < namePop[i.state+"."+i.name] {
 					mapUS[latIdx][longIdx] = append([]zip{i}, mapUS[latIdx][longIdx]...)
@@ -198,84 +195,73 @@ func nameToPop() (map[string]int, error) {
 }
 
 // fills known dead space with "Unknown" to make map look nicer
-func fillDeadSpace(mapUS [50][116][]zip) ([50][116][]zip, error) {
-	mapUS = fillKnownDeadSpace(mapUS)
+func fillDeadSpace(mapUS [mapRows][mapCols][]zip) ([mapRows][mapCols][]zip, error) {
 	mapUS = fillEnclosedDeadSpace(mapUS)
 	return mapUS, nil
 }
 
-// fillKnownDeadSpace preserves the original hand-tuned regions used to smooth
-// large empty areas in the coarse grid.
-func fillKnownDeadSpace(mapUS [50][116][]zip) [50][116][]zip {
-	for x := 5; x < 51; x++ {
-		for y := 1; y < 25; y++ {
-			if len(mapUS[y][x]) == 0 {
-				mapUS[y][x] = []zip{{name: "Unknown"}}
-			}
-		}
-	}
-	for x := 8; x < 62; x++ {
-		for y := 25; y < 30; y++ {
-			if len(mapUS[y][x]) == 0 {
-				mapUS[y][x] = []zip{{name: "Unknown"}}
-			}
-		}
-	}
-	for x := 15; x < 43; x++ {
-		for y := 30; y < 33; y++ {
-			if len(mapUS[y][x]) == 0 {
-				mapUS[y][x] = []zip{{name: "Unknown"}}
-			}
-		}
-	}
-	for x := 40; x < 50; x++ {
-		for y := 31; y < 39; y++ {
-			if len(mapUS[y][x]) == 0 {
-				mapUS[y][x] = []zip{{name: "Unknown"}}
-			}
-		}
-	}
-	return mapUS
+type gridPoint struct {
+	row int
+	col int
 }
 
-// fillEnclosedDeadSpace patches isolated single-cell gaps when all four
-// orthogonal neighbors already exist. This avoids obvious holes without
-// spreading into coastlines or large empty regions.
-func fillEnclosedDeadSpace(mapUS [50][116][]zip) [50][116][]zip {
-	occupied := [50][116]bool{}
+// fillEnclosedDeadSpace fills empty regions that are completely surrounded by
+// occupied cells. Regions connected to the outer edge are preserved so coastlines
+// and open water remain untouched.
+func fillEnclosedDeadSpace(mapUS [mapRows][mapCols][]zip) [mapRows][mapCols][]zip {
+	occupied := [mapRows][mapCols]bool{}
+	visited := [mapRows][mapCols]bool{}
 	for y := range mapUS {
 		for x := range mapUS[y] {
 			occupied[y][x] = len(mapUS[y][x]) > 0
 		}
 	}
 
-	for y := 1; y < len(mapUS)-1; y++ {
-		for x := 1; x < len(mapUS[y])-1; x++ {
-			if occupied[y][x] {
+	directions := []gridPoint{{row: -1, col: 0}, {row: 1, col: 0}, {row: 0, col: -1}, {row: 0, col: 1}}
+
+	for y := range mapUS {
+		for x := range mapUS[y] {
+			if occupied[y][x] || visited[y][x] {
 				continue
 			}
-			if occupied[y-1][x] && occupied[y+1][x] && occupied[y][x-1] && occupied[y][x+1] {
-				mapUS[y][x] = []zip{{name: "Unknown"}}
+
+			queue := []gridPoint{{row: y, col: x}}
+			region := []gridPoint{}
+			visited[y][x] = true
+			touchesEdge := false
+
+			for len(queue) > 0 {
+				current := queue[0]
+				queue = queue[1:]
+				region = append(region, current)
+
+				if current.row == 0 || current.row == mapRows-1 || current.col == 0 || current.col == mapCols-1 {
+					touchesEdge = true
+				}
+
+				for _, direction := range directions {
+					nextRow := current.row + direction.row
+					nextCol := current.col + direction.col
+					if nextRow < 0 || nextRow >= mapRows || nextCol < 0 || nextCol >= mapCols {
+						continue
+					}
+					if occupied[nextRow][nextCol] || visited[nextRow][nextCol] {
+						continue
+					}
+					visited[nextRow][nextCol] = true
+					queue = append(queue, gridPoint{row: nextRow, col: nextCol})
+				}
+			}
+
+			if touchesEdge {
+				continue
+			}
+
+			for _, point := range region {
+				mapUS[point.row][point.col] = []zip{{name: "Unknown"}}
 			}
 		}
 	}
 
 	return mapUS
-}
-
-// Converts a latitude to fit into the grid
-func latConvert(lat float64) int {
-	t := 49 - (math.Round(lat/.5) - 49)
-	if t == -1 {
-		fmt.Println(lat)
-	}
-	return int(t)
-}
-
-// Converts a longitude value to fit into the grid
-func longConvert(long float64) int {
-	long = math.Abs(long)
-	long -= 9
-	t := 115 - (math.Floor(long/.5) - 116)
-	return int(t)
 }
