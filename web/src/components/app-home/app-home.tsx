@@ -35,23 +35,36 @@ export default function AppHome() {
   const [data, setData] = createSignal<MapData | null>(null);
   const [searchIndex, setSearchIndex] = createSignal<SearchLocation[] | null>(null);
   const [mapScale, setMapScale] = createSignal(1);
+  const [mapWidth, setMapWidth] = createSignal(0);
   const [paletteMode, setPaletteMode] = createSignal<PaletteModeId>(defaultPaletteMode);
+  const [detailsOpen, setDetailsOpen] = createSignal(false);
   const [loadError, setLoadError] = createSignal<string | null>(null);
-  const [viewportWidth, setViewportWidth] = createSignal(
-    typeof window === 'undefined' ? 0 : window.innerWidth
-  );
 
   const cell = createMemo(() => {
     const mapData = data();
-    if (!mapData || mapData.m.length === 0) {
+    const currentMapWidth = mapWidth();
+    if (!mapData || mapData.m.length === 0 || currentMapWidth === 0) {
       return 0;
     }
 
-    return viewportWidth() / window.devicePixelRatio / mapData.m[0].length;
+    return currentMapWidth / mapData.m[0].length;
+  });
+
+  const mapAspect = createMemo(() => {
+    const mapData = data();
+    if (!mapData || mapData.m.length === 0) {
+      return 1.8;
+    }
+
+    return mapData.m[0].length / mapData.m.length;
   });
 
   onMount(() => {
-    const handleResize = () => setViewportWidth(window.innerWidth);
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setDetailsOpen(false);
+      }
+    };
     window.addEventListener('resize', handleResize);
     onCleanup(() => window.removeEventListener('resize', handleResize));
 
@@ -74,15 +87,7 @@ export default function AppHome() {
   });
 
   return (
-    <div class="app-home">
-      <header>
-        <h1>
-          <AppIcon icon="sun" /> Where to Live
-        </h1>
-        <a href="https://github.com/Nicell/where-to-live" target="_blank" rel="noreferrer">
-          <AppIcon icon={{ prefix: 'fab', iconName: 'github' }} />
-        </a>
-      </header>
+    <div class="app-root">
       <Show
         when={data()}
         fallback={
@@ -104,7 +109,36 @@ export default function AppHome() {
           </div>
         }
       >
-        <div>
+        <section class="app-home" style={{ '--map-aspect': String(mapAspect()) }}>
+          <div class="top-hud">
+            <div class="hud-brand">
+              <AppIcon icon="sun" />
+              <span>Where to Live</span>
+            </div>
+            <Show when={searchIndex()}>
+              <div class="hud-search">
+                <AppSearch searchIndex={searchIndex() ?? []} onChange={setSearch} />
+              </div>
+            </Show>
+            <span class="hud-chip hud-meta">NOAA 2010-2024</span>
+            <button
+              type="button"
+              class="hud-chip hud-details"
+              onClick={() => setDetailsOpen((open) => !open)}
+              aria-expanded={detailsOpen()}
+            >
+              {detailsOpen() ? 'Hide details' : 'Open details'}
+            </button>
+            <a
+              class="hud-chip hud-source"
+              href="https://github.com/Nicell/where-to-live"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <AppIcon icon={{ prefix: 'fab', iconName: 'github' }} />
+              <span>Source</span>
+            </a>
+          </div>
           <div class="map-holder">
             <AppMap
               data={data()!.m}
@@ -112,19 +146,23 @@ export default function AppHome() {
               onHoverChange={setHover}
               onScaleChange={setMapScale}
               onPaletteChange={setPaletteMode}
+              onWidthChange={setMapWidth}
             />
           </div>
+          <Show when={detailsOpen()}>
+            <aside class="detail-panel">
+              <div class="detail-panel-body">
+                <AppRanks top={data()!.t} bottom={data()!.b} data={data()!.m} />
+              </div>
+            </aside>
+          </Show>
           <AppHover
             state={hover()}
             cell={cell()}
             mapScale={mapScale()}
             paletteMode={paletteMode()}
           />
-          <Show when={searchIndex()}>
-            <AppSearch searchIndex={searchIndex() ?? []} onChange={setSearch} />
-          </Show>
-          <AppRanks top={data()!.t} bottom={data()!.b} data={data()!.m} />
-        </div>
+        </section>
       </Show>
     </div>
   );

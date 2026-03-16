@@ -119,6 +119,17 @@ export default function AppSearch(props: AppSearchProps) {
   return (
     <div class="searchWrap">
       <div class="searchHold">
+        <div class="searchBox">
+          <input
+            class="search"
+            value={value()}
+            onInput={(event) => evalChange(event.currentTarget.value)}
+            placeholder="Search ZIP code or city"
+          />
+          <button type="button" onClick={() => evalChange('')} aria-label="Clear search">
+            <AppIcon icon="times-circle" />
+          </button>
+        </div>
         <Show when={results().length > 0}>
           <div class="results">
             <For each={results()}>
@@ -131,17 +142,6 @@ export default function AppSearch(props: AppSearchProps) {
             </For>
           </div>
         </Show>
-        <div class="searchBox">
-          <input
-            class="search"
-            value={value()}
-            onInput={(event) => evalChange(event.currentTarget.value)}
-            placeholder="Search"
-          />
-          <button type="button" onClick={() => evalChange('')} aria-label="Clear search">
-            <AppIcon icon="times-circle" />
-          </button>
-        </div>
       </div>
     </div>
   );

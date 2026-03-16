@@ -1,26 +1,49 @@
 :root {
   --theme: hsl(189, 100%, 27%);
+  --accent: hsl(177, 100%, 26%);
 
-  --foreground-theme: hsl(0, 0%, 100%);
-  --foreground-theme-secondary: hsla(0, 0%, 100%, .8);
+  --background: hsl(45, 18%, 96%);
+  --foreground: hsl(210, 16%, 11%);
+  --foreground-secondary: hsl(210, 10%, 36%);
 
-  --background-light: hsl(210, 33%, 99%);
-  --background: hsl(210, 29%, 96%);
-  --background-dark: hsl(213, 25%, 87%);
+  --border-subtle: hsla(210, 14%, 14%, 0.1);
+  --hud-border: hsla(210, 14%, 14%, 0.08);
+  --hud-surface: rgba(255, 255, 255, 0.74);
 
-  --foreground: hsl(216, 33%, 15%);
-  --foreground-secondary: hsl(215, 18%, 33%);
+  --shadow-1: 0 14px 34px rgba(16, 24, 32, 0.08);
+  --shadow-2: 0 24px 60px rgba(16, 24, 32, 0.12);
+}
 
-  --shadow-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-  --shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
-  --shadow-3: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+html,
+body,
+#app {
+  height: 100%;
+}
+
+html {
+  background: linear-gradient(180deg, #f6f3ee 0%, #f2efe9 100%);
 }
 
 body {
-  margin: 0px;
-  padding: 0px;
-  background-color: var(--background);
+  margin: 0;
+  min-width: 320px;
+  background: transparent;
   color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  overflow-x: hidden;
+  font-family: "Helvetica Neue", "Arial Nova", "Nimbus Sans", Arial, sans-serif;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+a {
+  color: inherit;
 }

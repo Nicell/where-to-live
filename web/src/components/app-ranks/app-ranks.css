@@ -1,64 +1,103 @@
-.rankingWrap {
-  display: flex;
-  justify-content: center;
-}
-
-.rankingBox {
-  display: flex;
-  margin: 20px;
-  margin-top: 40px;
-  background: var(--background-light);
-  border-radius: 4px;
-  box-shadow: var(--shadow-2);
-  flex-wrap: wrap;
-}
-
-.ranking {
-  display: flex;
-  padding: 20px;
-  flex-direction: column;
-  min-width: 300px;
-  flex-grow: 1;
-  flex-shrink: 1;
-  box-sizing: border-box;
-}
-
-.ranking.about {
-  width: 100%;
-  max-width: 800px;
-  flex-shrink: 1;
-}
-
-.ranking.about {
-  border-right: 1px solid #dddddd;
-}
-
-.ranking > span {
-  font-size: 20px;
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-.ranking > div {
+.rankingPane {
   display: flex;
   flex-direction: column;
+  gap: 18px;
+  padding: 16px;
 }
 
-.ranking > div > div {
-  padding: 5px 0px;
+.rankingSection {
   display: flex;
-  justify-content: space-between
+  flex-direction: column;
+  gap: 10px;
 }
 
-@media screen and (max-width: 1200px) {
-  .ranking.about {
-    max-width: 100%;
-    border-right: none;
-  }
+.rankingSection + .rankingSection {
+  padding-top: 16px;
+  border-top: 1px solid rgba(15, 23, 42, 0.07);
+}
 
-  .rankingCompare {
-    width: 100%;
-    display: flex;
-    flex-wrap: wrap;
-  }
+.rankingLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--foreground-secondary);
+}
+
+.rankingSection > p {
+  margin: 0;
+  color: var(--foreground-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.criteriaGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.criteriaBlock {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.criteriaBlock > span {
+  display: inline-flex;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.criteriaBlock > ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--foreground-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.criteriaBlock a {
+  text-underline-offset: 2px;
+}
+
+.rankingHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.rankingHeading > h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.rankingList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rankingList > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.rankingList > div > span:first-child {
+  min-width: 0;
+}
+
+.rankingList > div > span:last-child {
+  color: var(--foreground-secondary);
+  white-space: nowrap;
 }

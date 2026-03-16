@@ -1,12 +1,13 @@
 .app-hover {
   position: absolute;
-  transform: translate(-50%, calc(-100% - 7px));
-  box-sizing: border-box;
-  padding: 10px 15px;
-  border-radius: 4px;
-  background: var(--background-light);
-  border: solid 1px var(--background-dark);
-  box-shadow: var(--shadow-2);
+  z-index: 10;
+  transform: translate(-50%, calc(-100% - 8px));
+  min-width: 252px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--hud-border);
+  background: rgb(255, 255, 255);
+  box-shadow: var(--shadow-1);
 }
 
 .app-hover.flip {
@@ -15,51 +16,59 @@
 
 .app-hover:before {
   content: '';
-  display: block;
-  width: 10px;
-  height: 10px;
-  background: var(--background-light);
   position: absolute;
-  bottom: 0;
   left: var(--before-offset);
-  transform: translate(-50%, 6px) rotate(45deg);
-  border: 1px solid transparent;
-  border-bottom-color: var(--background-dark);
-  border-right-color: var(--background-dark);
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  background: rgb(255, 255, 255);
+  transform: translate(-50%, 7px) rotate(45deg);
+  box-shadow: 1px 1px 0 0 var(--hud-border);
 }
 
 .app-hover.flip:before {
   top: 0;
-  bottom: none;
-  transform: translate(-50%, -6px) rotate(225deg);
+  bottom: auto;
+  transform: translate(-50%, -7px) rotate(225deg);
+  box-shadow: -1px -1px 0 0 var(--hud-border);
 }
 
 .hover-title {
-  display:flex;
-  font-size: 18px;
-  padding-bottom: 5px;
+  display: flex;
   justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hover-title > span:last-child {
+  color: var(--foreground-secondary);
 }
 
 .hover-charts {
   display: flex;
+  gap: 5px;
 }
 
 .hover-chart {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-right: 5px;
-  font-size: 12px;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--foreground-secondary);
 }
 
 .hover-chart-bar {
   display: flex;
-  height: 60px;
-  width: 15px;
-  background-color: #eee;
+  height: 56px;
+  width: 14px;
   flex-direction: column;
   justify-content: flex-end;
+  overflow: hidden;
+  border-radius: 4px;
+  background: rgba(31, 41, 55, 0.08);
 }
 
 .hover-chart-bar > div {

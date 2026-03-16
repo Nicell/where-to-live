@@ -26,6 +26,7 @@ interface AppMapProps {
   onHoverChange: (hover: HoverState) => void;
   onScaleChange: (scale: number) => void;
   onPaletteChange: (mode: PaletteModeId) => void;
+  onWidthChange?: (width: number) => void;
 }
 
 interface TransformState {
@@ -278,6 +279,10 @@ export default function AppMap(props: AppMapProps) {
 
   createEffect(() => {
     props.onPaletteChange(paletteMode());
+  });
+
+  createEffect(() => {
+    props.onWidthChange?.(adjustedWidth());
   });
 
   createEffect(() => {

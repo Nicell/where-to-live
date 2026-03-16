@@ -2,65 +2,252 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
-    transform: rotate(360deg)
+    transform: rotate(360deg);
   }
 }
 
-header {
-  background-color: var(--foreground-secondary);
-  color: var(--background);
-  box-shadow: var(--shadow-2);
-  padding: 15px 20px;
-  display: flex;
-  justify-content: space-between;
+.app-root {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.app-home {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.top-hud {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: auto minmax(280px, 460px) 1fr auto auto auto;
+  grid-template-areas: "brand search . meta details source";
   align-items: center;
+  gap: 12px;
+  pointer-events: none;
 }
 
-header > h1 {
-  margin: 0;
+.top-hud > * {
+  pointer-events: auto;
 }
 
-h1 > app-icon {
-  padding-right: 5px;
+.hud-brand,
+.hud-chip {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--hud-border);
+  background: var(--hud-surface);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-1);
 }
 
-h1 > .app-icon {
-  padding-right: 5px;
+.hud-brand {
+  grid-area: brand;
+  justify-self: start;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-header > a {
-  color: var(--background);
-  font-size: 2em;
+.hud-search {
+  grid-area: search;
+}
+
+.hud-brand > .app-icon {
+  color: var(--accent);
+  font-size: 15px;
+}
+
+.hud-chip {
+  color: var(--foreground);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+button.hud-chip {
+  cursor: pointer;
+}
+
+.hud-meta {
+  grid-area: meta;
+  justify-self: end;
+  color: var(--foreground-secondary);
+}
+
+.hud-details {
+  grid-area: details;
+  justify-self: end;
+}
+
+.hud-source {
+  grid-area: source;
+  justify-self: end;
 }
 
 .map-holder {
-  padding: 20px;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:
+    clamp(68px, 9.5vh, 94px)
+    clamp(12px, 1.8vw, 22px)
+    clamp(72px, 10vh, 96px);
+}
+
+.map-holder > .app-map {
+  width: min(100%, calc((100dvh - 160px) * var(--map-aspect)));
+}
+
+.detail-panel {
+  position: absolute;
+  top: 74px;
+  right: 14px;
+  bottom: 14px;
+  width: 360px;
+  z-index: 4;
+}
+
+.detail-panel-body {
+  height: 100%;
+  min-height: 0;
+  border: 1px solid var(--hud-border);
+  border-radius: 24px;
+  background: var(--hud-surface);
+  box-shadow: var(--shadow-1);
+  backdrop-filter: blur(24px);
+  overflow: auto;
 }
 
 .loading {
-  width: 100%;
+  height: 100%;
   display: flex;
-  height: 50vh;
-  font-size: 32px;
+  flex-direction: column;
+  gap: 12px;
   justify-content: center;
   align-items: center;
+  padding: 48px 24px;
+  font-size: 28px;
+  text-align: center;
 }
 
 .loader {
   animation: spin 2s linear infinite;
-  font-size: 48px;
-  height: 48px;
-  width: 47px;
-  margin: 15px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #ff8f00;
+  font-size: 44px;
+  height: 44px;
+  width: 44px;
+  color: var(--accent);
+}
+
+@media screen and (max-width: 1180px) {
+  .top-hud {
+    grid-template-columns: auto minmax(240px, 380px) 1fr auto auto;
+    grid-template-areas: "brand search . details source";
+  }
+
+  .detail-panel {
+    width: 332px;
+  }
+
+  .hud-meta {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 860px) {
+  .top-hud {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "brand . source"
+      "search search search"
+      "details details details";
+    align-items: start;
+  }
+
+  .hud-search {
+    align-self: end;
+    justify-self: center;
+    width: min(100%, 420px);
+  }
+
+  .hud-details {
+    justify-self: center;
+  }
 }
 
 @media screen and (max-width: 768px) {
+  .app-root {
+    padding: 0;
+  }
+
+  .top-hud {
+    inset: 10px;
+    display: block;
+  }
+
+  .hud-brand,
+  .hud-chip {
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .hud-brand {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .hud-source {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+
+  .hud-search {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 54px;
+    width: 100%;
+  }
+
+  .hud-details {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    justify-self: auto;
+    transform: translateX(-50%);
+  }
+
   .map-holder {
-    padding: 5px;
+    padding: 64px 10px 156px;
+  }
+
+  .map-holder > .app-map {
+    width: min(100%, calc((100dvh - 238px) * var(--map-aspect)));
+  }
+
+  .detail-panel {
+    top: auto;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    width: auto;
+    height: min(62dvh, 520px);
   }
 }
