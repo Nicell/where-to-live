@@ -57,16 +57,32 @@ type Station struct {
 
 // Contains one day of weather information
 type weatherData struct {
-	station                                                               string
-	visib, minTemp, maxTemp, precip, avgTemp, wind, maxWind, harshWeather float64
-	date                                                                  time.Time
+	station                         string
+	visib, minTemp, maxTemp, precip float64
+	avgTemp, wind, maxWind          float64
+	flags                           weatherFlags
+	precipFlag                      string
+	date                            time.Time
+}
+
+type weatherFlags struct {
+	fog     bool
+	rain    bool
+	snow    bool
+	hail    bool
+	thunder bool
+	tornado bool
+}
+
+func (f weatherFlags) hasHarshOutdoorEvent() bool {
+	return f.snow || f.hail || f.thunder || f.tornado
 }
 
 const (
 	pleasantAvgTempMin      = 62.0
 	pleasantAvgTempMax      = 75.0
 	pleasantMaxTempMax      = 82.0
-	pleasantMinTempMin      = 55.0
+	pleasantMinTempMin      = 50.0
 	pleasantVisibilityMin   = 6.0
 	pleasantPrecipMax       = 0.10
 	unpleasantAvgTempMin    = 45.0
@@ -77,6 +93,8 @@ const (
 
 // BuildWeatherMap Builds the weather map
 func buildWeatherMap() ([mapRows][mapCols]Station, error) {
+	resetWeatherDebug()
+
 	years := make([]int, 0, datasetEndYear-datasetStartYear+1)
 	for year := datasetStartYear; year <= datasetEndYear; year++ {
 		years = append(years, year)
@@ -157,6 +175,8 @@ func buildWeatherMap() ([mapRows][mapCols]Station, error) {
 	if firstErr != nil {
 		return [mapRows][mapCols]Station{}, firstErr
 	}
+
+	printWeatherDebugSummary()
 
 	return averageYears(allYears), nil
 }
@@ -366,25 +386,12 @@ func processDay(station *Station, day weatherData) {
 	month := day.date.Month().String()
 	t := station.Weather.Months[month]
 
-	isBadTemp := isPresent(day.avgTemp) && (day.avgTemp < unpleasantAvgTempMin || day.avgTemp > unpleasantAvgTempMax)
-	isBadVisib := isPresent(day.visib) && day.visib < unpleasantVisibilityMax
-	isBadPrecip := isPresent(day.precip) && day.precip > unpleasantPrecipMin
-	isPleasant := isPresent(day.avgTemp) &&
-		isPresent(day.visib) &&
-		isPresent(day.maxTemp) &&
-		isPresent(day.minTemp) &&
-		isPresent(day.precip) &&
-		day.avgTemp >= pleasantAvgTempMin &&
-		day.avgTemp <= pleasantAvgTempMax &&
-		day.visib > pleasantVisibilityMin &&
-		day.maxTemp < pleasantMaxTempMax &&
-		day.minTemp > pleasantMinTempMin &&
-		day.precip < pleasantPrecipMax &&
-		day.harshWeather == 0
+	classification := classifyDay(day)
+	recordWeatherDebug(day, classification)
 
-	if isBadPrecip || isBadTemp || isBadVisib || day.harshWeather > 0 {
+	if classification.isUnpleasant {
 		t.Bad++
-	} else if isPleasant {
+	} else if classification.isPleasant {
 		t.Good++
 	}
 	t.total++
@@ -446,11 +453,13 @@ func processLine(line string) (weatherData, error) {
 	}
 	data.minTemp = perceivedTemperature(tmp, dewpoint, data.wind)
 
-	tmp, err = parseGSODFloat(line[118:123], "99.99")
+	rawPrecip := line[118:124]
+	tmp, err = parseGSODFloat(rawPrecip, "99.99")
 	if err != nil {
 		return weatherData{}, err
 	}
 	data.precip = tmp
+	data.precipFlag = parsePrecipFlag(rawPrecip)
 
 	tmp, err = parseGSODFloat(line[68:73], "999.9")
 	if err != nil {
@@ -458,13 +467,61 @@ func processLine(line string) (weatherData, error) {
 	}
 	data.visib = tmp
 
-	l, err := strconv.ParseFloat(strings.TrimSpace(line[132:138]), 64)
+	flags, err := parseFRSHTT(line[132:138])
 	if err != nil {
 		return weatherData{}, err
 	}
-	data.harshWeather = l
+	data.flags = flags
 
 	return data, nil
+}
+
+func parseFRSHTT(raw string) (weatherFlags, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return weatherFlags{}, nil
+	}
+	if len(trimmed) != 6 {
+		return weatherFlags{}, fmt.Errorf("invalid FRSHTT value %q", raw)
+	}
+
+	flags := weatherFlags{}
+	for idx, ch := range trimmed {
+		if ch != '0' && ch != '1' {
+			return weatherFlags{}, fmt.Errorf("invalid FRSHTT value %q", raw)
+		}
+		on := ch == '1'
+		switch idx {
+		case 0:
+			flags.fog = on
+		case 1:
+			flags.rain = on
+		case 2:
+			flags.snow = on
+		case 3:
+			flags.hail = on
+		case 4:
+			flags.thunder = on
+		case 5:
+			flags.tornado = on
+		}
+	}
+
+	return flags, nil
+}
+
+func parsePrecipFlag(raw string) string {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return ""
+	}
+
+	last := trimmed[len(trimmed)-1]
+	if last < 'A' || last > 'Z' {
+		return ""
+	}
+
+	return string(last)
 }
 
 func perceivedTemperature(temp, dewpoint, wind float64) float64 {

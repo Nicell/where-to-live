@@ -29,7 +29,8 @@ export default function AppRanks(props: AppRanksProps) {
         <span class="rankingLabel">Method</span>
         <p>
           NOAA weather data from 2010 to 2024. Each place is scored by pleasant days minus
-          unpleasant days, then normalized to 0-100. Perceived temperature includes humidity.
+          unpleasant days, then normalized to 0-100. Days that are neither pleasant nor
+          unpleasant are treated as neutral. Perceived temperature includes humidity.
         </p>
       </section>
       <section class="rankingSection">
@@ -40,7 +41,7 @@ export default function AppRanks(props: AppRanksProps) {
             <ul>
               <li>Average perceived temperature between 62°F and 75°F</li>
               <li>Maximum perceived temperature below 82°F</li>
-              <li>Minimum perceived temperature above 55°F</li>
+              <li>Minimum perceived temperature above 50°F</li>
               <li>
                 <a href="https://en.wikipedia.org/wiki/Visibility" target="_blank" rel="nofollow">
                   Visibility
@@ -48,12 +49,15 @@ export default function AppRanks(props: AppRanksProps) {
                 above 6 statute miles
               </li>
               <li>Less than 0.10&quot; of precipitation</li>
+              <li>Missing visibility does not block a pleasant day</li>
+              <li>Missing precipitation does not block a pleasant day</li>
+              <li>NOAA incomplete zero-precipitation reports do not count as pleasant</li>
             </ul>
           </div>
           <div class="criteriaBlock">
             <span>Unpleasant</span>
             <ul>
-              <li>Average perceived temperature below 45°F</li>
+              <li>Average perceived temperature below 45°F, unless the maximum still reaches 55°F</li>
               <li>Average perceived temperature above 88°F</li>
               <li>
                 <a href="https://en.wikipedia.org/wiki/Visibility" target="_blank" rel="nofollow">
@@ -61,7 +65,7 @@ export default function AppRanks(props: AppRanksProps) {
                 </a>{' '}
                 below 5 statute miles
               </li>
-              <li>Any snow, hail, thunder, or tornadoes</li>
+              <li>Any snow or ice pellets, hail, thunder, or tornadoes/funnel clouds</li>
               <li>More than 0.20&quot; of precipitation</li>
             </ul>
           </div>
