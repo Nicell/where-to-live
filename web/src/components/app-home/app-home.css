@@ -17,7 +17,7 @@
   position: relative;
   height: 100%;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.56);
+  background: var(--background);
 }
 
 .top-hud {
@@ -45,11 +45,10 @@
   align-items: center;
   gap: 10px;
   padding: 0 14px;
-  border-radius: 999px;
+  border-radius: 10px;
   border: 1px solid var(--hud-border);
   background: var(--hud-surface);
-  backdrop-filter: blur(20px);
-  box-shadow: var(--shadow-1);
+  box-shadow: none;
 }
 
 .hud-brand {
@@ -74,7 +73,7 @@
   color: var(--foreground);
   text-decoration: none;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 button.hud-chip {
@@ -85,11 +84,15 @@ button.hud-chip {
   grid-area: meta;
   justify-self: end;
   color: var(--foreground-secondary);
+  background: var(--hud-surface-muted);
 }
 
 .hud-details {
   grid-area: details;
   justify-self: end;
+  background: var(--foreground);
+  border-color: var(--foreground);
+  color: white;
 }
 
 .hud-source {
@@ -125,11 +128,9 @@ button.hud-chip {
 .detail-panel-body {
   height: 100%;
   min-height: 0;
-  border: 1px solid var(--hud-border);
-  border-radius: 24px;
+  border: 1px solid var(--hud-border-strong);
+  border-radius: 10px;
   background: var(--hud-surface);
-  box-shadow: var(--shadow-1);
-  backdrop-filter: blur(24px);
   overflow: auto;
 }
 
@@ -243,11 +244,11 @@ button.hud-chip {
   }
 
   .detail-panel {
-    top: auto;
+    top: 132px;
     left: 10px;
     right: 10px;
-    bottom: 10px;
+    bottom: 118px;
     width: auto;
-    height: min(62dvh, 520px);
+    height: auto;
   }
 }

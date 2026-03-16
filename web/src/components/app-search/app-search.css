@@ -15,12 +15,10 @@
   min-height: 46px;
   padding: 0 44px 0 16px;
   border: 1px solid var(--hud-border);
-  border-radius: 999px;
+  border-radius: 10px;
   background: var(--hud-surface);
   color: var(--foreground);
   outline: none;
-  box-shadow: var(--shadow-1);
-  backdrop-filter: blur(20px);
   transition: border-color .18s ease, background-color .18s ease;
 }
 
@@ -29,8 +27,8 @@
 }
 
 .search:focus {
-  border-color: rgba(0, 112, 122, 0.26);
-  background: rgba(255, 255, 255, 0.82);
+  border-color: var(--hud-border-strong);
+  background: white;
 }
 
 .searchBox > button {
@@ -60,10 +58,9 @@
   gap: 2px;
   padding: 8px;
   border: 1px solid var(--hud-border);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: var(--shadow-2);
-  backdrop-filter: blur(20px);
+  border-radius: 10px;
+  background: var(--hud-surface);
+  box-shadow: var(--shadow-1);
   z-index: 8;
 }
 
@@ -74,7 +71,7 @@
   width: 100%;
   padding: 10px 12px;
   border: none;
-  border-radius: 12px;
+  border-radius: 6px;
   background: transparent;
   color: inherit;
   cursor: pointer;

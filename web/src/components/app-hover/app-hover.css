@@ -4,8 +4,8 @@
   transform: translate(-50%, calc(-100% - 8px));
   min-width: 252px;
   padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--hud-border);
+  border-radius: 8px;
+  border: 1px solid var(--hud-border-strong);
   background: rgb(255, 255, 255);
   box-shadow: var(--shadow-1);
 }
@@ -38,8 +38,8 @@
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 8px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .hover-title > span:last-child {
@@ -67,7 +67,7 @@
   flex-direction: column;
   justify-content: flex-end;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: 2px;
   background: rgba(31, 41, 55, 0.08);
 }
 

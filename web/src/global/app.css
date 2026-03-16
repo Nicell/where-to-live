@@ -2,16 +2,18 @@
   --theme: hsl(189, 100%, 27%);
   --accent: hsl(177, 100%, 26%);
 
-  --background: hsl(45, 18%, 96%);
+  --background: hsl(45, 18%, 95%);
   --foreground: hsl(210, 16%, 11%);
-  --foreground-secondary: hsl(210, 10%, 36%);
+  --foreground-secondary: hsl(210, 9%, 34%);
 
-  --border-subtle: hsla(210, 14%, 14%, 0.1);
-  --hud-border: hsla(210, 14%, 14%, 0.08);
-  --hud-surface: rgba(255, 255, 255, 0.74);
+  --border-subtle: hsla(210, 14%, 14%, 0.11);
+  --hud-border: hsla(210, 14%, 14%, 0.12);
+  --hud-border-strong: hsla(210, 14%, 14%, 0.22);
+  --hud-surface: rgb(249, 247, 242);
+  --hud-surface-muted: rgb(244, 241, 235);
 
-  --shadow-1: 0 14px 34px rgba(16, 24, 32, 0.08);
-  --shadow-2: 0 24px 60px rgba(16, 24, 32, 0.12);
+  --shadow-1: 0 2px 10px rgba(16, 24, 32, 0.05);
+  --shadow-2: 0 8px 22px rgba(16, 24, 32, 0.08);
 }
 
 html,
@@ -21,7 +23,7 @@ body,
 }
 
 html {
-  background: linear-gradient(180deg, #f6f3ee 0%, #f2efe9 100%);
+  background: var(--background);
 }
 
 body {

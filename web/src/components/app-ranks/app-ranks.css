@@ -1,8 +1,8 @@
 .rankingPane {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 16px;
+  gap: 14px;
+  padding: 16px 18px;
 }
 
 .rankingSection {
@@ -12,7 +12,7 @@
 }
 
 .rankingSection + .rankingSection {
-  padding-top: 16px;
+  padding-top: 14px;
   border-top: 1px solid rgba(15, 23, 42, 0.07);
 }
 
@@ -39,9 +39,9 @@
 
 .criteriaBlock {
   padding: 12px 14px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.42);
-  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 8px;
+  background: var(--hud-surface-muted);
+  border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 .criteriaBlock > span {
@@ -72,8 +72,8 @@
 
 .rankingHeading > h2 {
   margin: 0;
-  font-size: 18px;
-  letter-spacing: -0.02em;
+  font-size: 16px;
+  letter-spacing: -0.01em;
 }
 
 .rankingList {
@@ -88,9 +88,9 @@
   gap: 12px;
   align-items: baseline;
   padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.42);
-  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 8px;
+  background: white;
+  border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 .rankingList > div > span:first-child {
