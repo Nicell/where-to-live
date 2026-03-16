@@ -22,10 +22,21 @@
     />
     <link rel="apple-touch-icon" href="/src/assets/icon/icon.png" />
     <link rel="icon" type="image/x-icon" href="/src/assets/icon/favicon.ico" />
-    <link rel="manifest" href="/where-to-live/manifest.json" />
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div class="app-home">
+        <header>
+          <h1>Where to Live</h1>
+          <a href="https://github.com/Nicell/where-to-live" target="_blank" rel="noreferrer">
+            GitHub
+          </a>
+        </header>
+        <div class="loading">
+          <span>Loading Weather Data</span>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

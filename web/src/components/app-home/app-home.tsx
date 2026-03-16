@@ -55,17 +55,21 @@ export default function AppHome() {
     window.addEventListener('resize', handleResize);
     onCleanup(() => window.removeEventListener('resize', handleResize));
 
-    void Promise.all([
-      fetchJson<MapData>(mapDataUrl),
-      fetchJson<SearchLocation[]>(searchDataUrl)
-    ])
-      .then(([mapPayload, searchPayload]) => {
+    void fetchJson<MapData>(mapDataUrl)
+      .then((mapPayload) => {
         setData(mapPayload);
-        setSearchIndex(searchPayload);
       })
       .catch((error: unknown) => {
         const message = error instanceof Error ? error.message : 'Unable to load weather data.';
         setLoadError(message);
+      });
+
+    void fetchJson<SearchLocation[]>(searchDataUrl)
+      .then((searchPayload) => {
+        setSearchIndex(searchPayload);
+      })
+      .catch((error: unknown) => {
+        console.error('Unable to load search index.', error);
       });
   });
 
@@ -80,7 +84,7 @@ export default function AppHome() {
         </a>
       </header>
       <Show
-        when={data() && searchIndex()}
+        when={data()}
         fallback={
           <div class="loading">
             <Show
@@ -116,7 +120,9 @@ export default function AppHome() {
             mapScale={mapScale()}
             paletteMode={paletteMode()}
           />
-          <AppSearch searchIndex={searchIndex() ?? []} onChange={setSearch} />
+          <Show when={searchIndex()}>
+            <AppSearch searchIndex={searchIndex() ?? []} onChange={setSearch} />
+          </Show>
           <AppRanks top={data()!.t} bottom={data()!.b} data={data()!.m} />
         </div>
       </Show>
