@@ -8,6 +8,7 @@ export const config: Config = {
   outputTargets: [
     {
       type: 'www',
+      copy: [{ src: 'sw.js' }],
       serviceWorker: null,
       baseUrl: 'https://nick.winans.codes/where-to-live'
     }
