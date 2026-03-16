@@ -1,4 +1,4 @@
-import { For, Show, createMemo, createSignal } from 'solid-js';
+import { For, Show, createEffect, createMemo, createSignal } from 'solid-js';
 
 import './app-search.css';
 
@@ -78,6 +78,7 @@ function sortNameResults(query: string, a: SearchLocation, b: SearchLocation) {
 
 export default function AppSearch(props: AppSearchProps) {
   const [value, setValue] = createSignal('');
+  const [highlightedIndex, setHighlightedIndex] = createSignal(-1);
 
   const results = createMemo<SearchResult[]>(() => {
     const currentValue = value();
@@ -105,8 +106,25 @@ export default function AppSearch(props: AppSearchProps) {
     return [];
   });
 
+  createEffect(() => {
+    const nextResults = results();
+    const currentIndex = highlightedIndex();
+
+    if (nextResults.length === 0) {
+      if (currentIndex !== -1) {
+        setHighlightedIndex(-1);
+      }
+      return;
+    }
+
+    if (currentIndex >= nextResults.length) {
+      setHighlightedIndex(nextResults.length - 1);
+    }
+  });
+
   const evalChange = (nextValue: string) => {
     setValue(nextValue);
+    setHighlightedIndex(-1);
 
     if (Number.isNaN(parseInt(nextValue, 10))) {
       props.onChange('');
@@ -114,6 +132,48 @@ export default function AppSearch(props: AppSearchProps) {
     }
 
     props.onChange(nextValue);
+  };
+
+  const selectResult = (result: SearchResult) => {
+    evalChange(result.z);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    const nextResults = results();
+    if (nextResults.length === 0) {
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setHighlightedIndex((currentIndex) =>
+        currentIndex < nextResults.length - 1 ? currentIndex + 1 : nextResults.length - 1
+      );
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setHighlightedIndex((currentIndex) => (currentIndex > 0 ? currentIndex - 1 : 0));
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      const currentIndex = highlightedIndex();
+      if (currentIndex < 0) {
+        event.preventDefault();
+        selectResult(nextResults[0]);
+        return;
+      }
+
+      event.preventDefault();
+      selectResult(nextResults[currentIndex]);
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      setHighlightedIndex(-1);
+    }
   };
 
   return (
@@ -124,17 +184,32 @@ export default function AppSearch(props: AppSearchProps) {
             class="search"
             value={value()}
             onInput={(event) => evalChange(event.currentTarget.value)}
+            onKeyDown={(event) => handleKeyDown(event)}
             placeholder="Search ZIP code or city"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={results().length > 0}
+            aria-activedescendant={
+              highlightedIndex() >= 0 ? `search-result-${highlightedIndex()}` : undefined
+            }
           />
           <button type="button" onClick={() => evalChange('')} aria-label="Clear search">
             <AppIcon icon="times-circle" />
           </button>
         </div>
         <Show when={results().length > 0}>
-          <div class="results">
+          <div class="results" role="listbox">
             <For each={results()}>
-              {(result) => (
-                <button type="button" onClick={() => evalChange(result.z)}>
+              {(result, index) => (
+                <button
+                  id={`search-result-${index()}`}
+                  type="button"
+                  role="option"
+                  aria-selected={highlightedIndex() === index()}
+                  classList={{ active: highlightedIndex() === index() }}
+                  onMouseEnter={() => setHighlightedIndex(index())}
+                  onClick={() => selectResult(result)}
+                >
                   <span>{result.count > 1 ? `${result.z} +${result.count - 1}` : result.z}</span>
                   <span>{formatSearchLabel(result.n)}</span>
                 </button>
