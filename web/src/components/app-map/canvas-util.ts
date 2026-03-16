@@ -1,3 +1,4 @@
+import type { ScoreRange } from '../../lib/types';
 import { getWeatherScore } from '../../utils/score';
 
 interface radius {
@@ -116,11 +117,18 @@ export function getChartColors(id: PaletteModeId = defaultPaletteMode) {
   };
 }
 
-function getFillColor(score: number, paletteMode: PaletteModeId, saturated: boolean): string {
+type FillEmphasis = 'full' | 'soft' | 'muted';
+
+function getFillColor(score: number, paletteMode: PaletteModeId, emphasis: FillEmphasis): string {
   const stops = paletteStops[paletteMode] || paletteStops[defaultPaletteMode];
   const base = interpolate(stops, score / 100);
-  const fill = saturated ? base : mix(base, neutralFill, 0.72);
-  const alpha = saturated ? 1 : 0.55;
+  const fill =
+    emphasis === 'full'
+      ? base
+      : emphasis === 'soft'
+        ? mix(base, neutralFill, 0.72)
+        : mix(base, neutralFill, 0.84);
+  const alpha = emphasis === 'full' ? 1 : emphasis === 'soft' ? 0.55 : 0.22;
   return `rgba(${fill.r}, ${fill.g}, ${fill.b}, ${alpha})`;
 }
 
@@ -148,8 +156,19 @@ function sameState(a, b): boolean {
   return Boolean(state) && state === getStateCode(b);
 }
 
-export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMatrix2DInit, width: number, cell: number, search: string, paletteMode: PaletteModeId, showStateBorders: boolean) {
+export function drawCanvas(
+  ctx: CanvasRenderingContext2D,
+  data,
+  transform: DOMMatrix2DInit,
+  width: number,
+  cell: number,
+  search: string,
+  paletteMode: PaletteModeId,
+  showStateBorders: boolean,
+  scoreRange: ScoreRange
+) {
   const height = width * data.length / data[0].length;
+  const rangeFilterActive = scoreRange.min > 0 || scoreRange.max < 100;
   data.forEach((t, i) => t.forEach((l, j) => {
     if (l.c) {
       const topOccupied = i > 0 && Boolean(data[i - 1][j] && data[i - 1][j].c);
@@ -187,25 +206,28 @@ export function drawCanvas(ctx: CanvasRenderingContext2D, data, transform: DOMMa
         if (!bottomOccupied && !leftOccupied)
           radius.bl = outerRadius;
 
-        let saturated;
-        if (search.length > 0) {
-          if (l.z) {
-            const contains = l.z.filter(zip => ('00000' + zip.toString()).slice(-5).substr(0, search.length) === search);
-            if (contains.length > 0) {
-              saturated = true;
-            } else {
-              saturated = false;
-            }
-          } else {
-            saturated = false;
-          }
-        } else {
-          saturated = true;
-        }
-
         const score = Math.max(0, Math.min(getWeatherScore(l), 100));
-        ctx.fillStyle = getFillColor(score, paletteMode, saturated);
+        const matchesSearch =
+          search.length === 0
+            ? true
+            : Boolean(
+                l.z?.some((zip) => (`00000${zip}`).slice(-5).slice(0, search.length) === search)
+              );
+        const inSelectedRange = score >= scoreRange.min && score <= scoreRange.max;
+        const isHighlighted = matchesSearch && inSelectedRange;
+        const emphasis: FillEmphasis = isHighlighted
+          ? 'full'
+          : rangeFilterActive
+            ? 'muted'
+            : 'soft';
+
+        ctx.fillStyle = getFillColor(score, paletteMode, emphasis);
         roundRect(ctx, drawX, drawY, drawWidth, drawHeight, radius);
+        if (isHighlighted && rangeFilterActive) {
+          ctx.lineWidth = Math.max(1, cell * 0.06);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.82)';
+          ctx.stroke();
+        }
       }
     }
   }));

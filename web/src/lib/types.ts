@@ -33,3 +33,8 @@ export interface HoverState {
   data: LocationCell | null;
   visible: boolean;
 }
+
+export interface ScoreRange {
+  min: number;
+  max: number;
+}

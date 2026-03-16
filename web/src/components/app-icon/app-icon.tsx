@@ -6,6 +6,7 @@ import { config, icon, library, type IconLookup, type IconName } from '@fortawes
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import {
   faCaretUp,
+  faCog,
   faExclamationCircle,
   faMinus,
   faPlus,
@@ -13,7 +14,7 @@ import {
   faTimesCircle
 } from '@fortawesome/free-solid-svg-icons';
 
-library.add(faCaretUp, faPlus, faMinus, faTimesCircle, faGithub, faExclamationCircle, faSun);
+library.add(faCaretUp, faCog, faPlus, faMinus, faTimesCircle, faGithub, faExclamationCircle, faSun);
 
 config.autoAddCss = false;
 

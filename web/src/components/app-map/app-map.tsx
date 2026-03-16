@@ -2,7 +2,7 @@ import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount }
 
 import './app-map.css';
 
-import type { HoverState, LocationCell, MapGrid } from '../../lib/types';
+import type { HoverState, LocationCell, MapGrid, ScoreRange } from '../../lib/types';
 import AppIcon from '../app-icon/app-icon';
 import {
   defaultPaletteMode,
@@ -12,6 +12,7 @@ import {
 } from './canvas-util';
 
 const stateBorderStorageKey = 'map-state-borders';
+const scoreRangeStorageKey = 'map-score-range';
 
 const emptyHover: HoverState = {
   x: 0,
@@ -44,8 +45,10 @@ export default function AppMap(props: AppMapProps) {
   let currentHover = emptyHover;
 
   const [paletteMode, setPaletteMode] = createSignal<PaletteModeId>(defaultPaletteMode);
-  const [paletteMenuOpen, setPaletteMenuOpen] = createSignal(false);
+  const [settingsMenuOpen, setSettingsMenuOpen] = createSignal(false);
+  const [paletteSubmenuOpen, setPaletteSubmenuOpen] = createSignal(false);
   const [showStateBorders, setShowStateBorders] = createSignal(false);
+  const [scoreRange, setScoreRange] = createSignal<ScoreRange>({ min: 0, max: 100 });
   const [width, setWidth] = createSignal(0);
   const [transform, setTransform] = createSignal<TransformState>({
     a: 1,
@@ -60,6 +63,7 @@ export default function AppMap(props: AppMapProps) {
   const activePalette = createMemo(
     () => paletteModes.find((mode) => mode.id === paletteMode()) ?? paletteModes[0]
   );
+  const rangeFilterActive = createMemo(() => scoreRange().min > 0 || scoreRange().max < 100);
 
   const commitHover = (nextHover: HoverState) => {
     if (
@@ -259,8 +263,39 @@ export default function AppMap(props: AppMapProps) {
       cell,
       props.search,
       paletteMode(),
-      showStateBorders()
+      showStateBorders(),
+      scoreRange()
     );
+  };
+
+  const clampScore = (value: number) => Math.max(0, Math.min(100, value));
+
+  const persistScoreRange = (nextRange: ScoreRange) => {
+    setScoreRange(nextRange);
+    window.localStorage.setItem(scoreRangeStorageKey, JSON.stringify(nextRange));
+  };
+
+  const updateScoreRange = (key: keyof ScoreRange, nextValue: string) => {
+    const parsedValue = Number.parseInt(nextValue, 10);
+    const safeValue = Number.isNaN(parsedValue) ? 0 : clampScore(parsedValue);
+    const currentRange = scoreRange();
+
+    if (key === 'min') {
+      persistScoreRange({
+        min: Math.min(safeValue, currentRange.max),
+        max: currentRange.max
+      });
+      return;
+    }
+
+    persistScoreRange({
+      min: currentRange.min,
+      max: Math.max(safeValue, currentRange.min)
+    });
+  };
+
+  const resetScoreRange = () => {
+    persistScoreRange({ min: 0, max: 100 });
   };
 
   onMount(() => {
@@ -270,6 +305,17 @@ export default function AppMap(props: AppMapProps) {
     }
 
     setShowStateBorders(window.localStorage.getItem(stateBorderStorageKey) === 'true');
+    const storedScoreRange = window.localStorage.getItem(scoreRangeStorageKey);
+    if (storedScoreRange) {
+      try {
+        const parsedScoreRange = JSON.parse(storedScoreRange) as Partial<ScoreRange>;
+        const min = clampScore(parsedScoreRange.min ?? 0);
+        const max = clampScore(parsedScoreRange.max ?? 100);
+        setScoreRange({ min: Math.min(min, max), max: Math.max(max, min) });
+      } catch (error) {
+        console.error('Unable to restore score range.', error);
+      }
+    }
     calcWidth();
 
     const handleResize = () => calcWidth();
@@ -303,6 +349,7 @@ export default function AppMap(props: AppMapProps) {
     transform();
     paletteMode();
     showStateBorders();
+    scoreRange();
     props.search;
 
     const timer = window.setTimeout(() => renderCanvas(), 50);
@@ -311,13 +358,29 @@ export default function AppMap(props: AppMapProps) {
 
   const updatePaletteMode = (mode: PaletteModeId) => {
     if (paletteMode() === mode) {
-      setPaletteMenuOpen(false);
+      setPaletteSubmenuOpen(false);
       return;
     }
 
     setPaletteMode(mode);
-    setPaletteMenuOpen(false);
+    setPaletteSubmenuOpen(false);
     window.localStorage.setItem('map-palette-mode', mode);
+  };
+
+  const toggleSettingsMenu = () => {
+    const nextValue = !settingsMenuOpen();
+    setSettingsMenuOpen(nextValue);
+    if (!nextValue) {
+      setPaletteSubmenuOpen(false);
+    }
+  };
+
+  const togglePaletteSubmenu = () => {
+    if (!settingsMenuOpen()) {
+      setSettingsMenuOpen(true);
+    }
+
+    setPaletteSubmenuOpen((open) => !open);
   };
 
   const toggleStateBorders = () => {
@@ -347,55 +410,129 @@ export default function AppMap(props: AppMapProps) {
         onMouseMove={handleCanvasHover}
         onMouseLeave={handleCanvasLeave}
       />
-      <div classList={{ 'palette-picker': true, open: paletteMenuOpen() }}>
+      <div classList={{ 'settings-picker': true, open: settingsMenuOpen() }}>
         <button
           type="button"
-          class="palette-trigger"
-          onClick={() => setPaletteMenuOpen((open) => !open)}
-          aria-expanded={paletteMenuOpen()}
-          aria-label="Select map palette"
+          class="settings-trigger"
+          onClick={toggleSettingsMenu}
+          aria-expanded={settingsMenuOpen()}
+          aria-label="Open map settings"
         >
-          <span class="palette-swatch trigger-swatch" style={{ 'background-image': activePalette().swatch }} />
-          <span class="palette-trigger-copy">
-            <span class="palette-trigger-label">Colors</span>
-            <span class="palette-trigger-name">{activePalette().label}</span>
-          </span>
-          <span classList={{ 'palette-caret': true, open: paletteMenuOpen() }} />
+          <AppIcon icon="cog" />
         </button>
-        <Show when={paletteMenuOpen()}>
-          <div class="palette-menu" role="group" aria-label="Map color palette">
-            <For each={paletteModes}>
-              {(mode) => (
-                <button
-                  type="button"
-                  classList={{ 'palette-option': true, active: paletteMode() === mode.id }}
-                  onClick={() => updatePaletteMode(mode.id)}
-                  title={mode.description}
-                >
-                  <span class="palette-swatch" style={{ 'background-image': mode.swatch }} />
-                  <span class="palette-copy">
-                    <span class="palette-name">{mode.label}</span>
-                    <span class="palette-description">{mode.description}</span>
+        <Show when={settingsMenuOpen()}>
+          <div class="settings-menu" role="group" aria-label="Map settings">
+            <div class="settings-section">
+              <button
+                type="button"
+                classList={{ 'settings-row': true, active: paletteSubmenuOpen() }}
+                onClick={togglePaletteSubmenu}
+                aria-expanded={paletteSubmenuOpen()}
+              >
+                <span class="settings-row-main">
+                  <span class="palette-swatch trigger-swatch" style={{ 'background-image': activePalette().swatch }} />
+                  <span class="settings-copy">
+                    <span class="settings-name">Colors</span>
+                    <span class="settings-description">{activePalette().label}</span>
                   </span>
-                </button>
-              )}
-            </For>
-            <button
-              type="button"
-              classList={{ 'palette-option': true, 'toggle-option': true, active: showStateBorders() }}
-              onClick={toggleStateBorders}
-              aria-pressed={showStateBorders()}
-            >
-              <span classList={{ 'toggle-pill': true, active: showStateBorders() }} aria-hidden="true">
-                <span class="toggle-knob" />
-              </span>
-              <span class="palette-copy">
-                <span class="palette-name">State gaps</span>
-                <span class="palette-description">
-                  Separate states with larger gaps instead of one continuous land mass.
                 </span>
-              </span>
-            </button>
+                <span classList={{ 'palette-caret': true, open: paletteSubmenuOpen() }} />
+              </button>
+              <Show when={paletteSubmenuOpen()}>
+                <div class="palette-submenu" role="group" aria-label="Map color palette">
+                  <For each={paletteModes}>
+                    {(mode) => (
+                      <button
+                        type="button"
+                        classList={{ 'palette-option': true, active: paletteMode() === mode.id }}
+                        onClick={() => updatePaletteMode(mode.id)}
+                        title={mode.description}
+                      >
+                        <span class="palette-swatch" style={{ 'background-image': mode.swatch }} />
+                        <span class="settings-copy">
+                          <span class="settings-name">{mode.label}</span>
+                          <span class="settings-description">{mode.description}</span>
+                        </span>
+                      </button>
+                    )}
+                  </For>
+                </div>
+              </Show>
+            </div>
+            <div class="settings-section">
+              <button
+                type="button"
+                classList={{ 'settings-row': true, 'toggle-option': true, active: showStateBorders() }}
+                onClick={toggleStateBorders}
+                aria-pressed={showStateBorders()}
+              >
+                <span classList={{ 'toggle-pill': true, active: showStateBorders() }} aria-hidden="true">
+                  <span class="toggle-knob" />
+                </span>
+                <span class="settings-copy">
+                  <span class="settings-name">State gaps</span>
+                  <span class="settings-description">
+                    Separate states with larger gaps instead of one continuous land mass.
+                  </span>
+                </span>
+              </button>
+            </div>
+            <div class="settings-section">
+              <div class="range-copy">
+                <span class="range-label">Highlight score</span>
+                <span class="range-value">
+                  {scoreRange().min} to {scoreRange().max}
+                </span>
+              </div>
+              <div class="range-inputs">
+                <label class="range-field">
+                  <span>Min</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={scoreRange().min}
+                    onInput={(event) => updateScoreRange('min', event.currentTarget.value)}
+                  />
+                </label>
+                <label class="range-field">
+                  <span>Max</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={scoreRange().max}
+                    onInput={(event) => updateScoreRange('max', event.currentTarget.value)}
+                  />
+                </label>
+              </div>
+              <div class="range-sliders">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={scoreRange().min}
+                  onInput={(event) => updateScoreRange('min', event.currentTarget.value)}
+                  aria-label="Minimum highlighted score"
+                />
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={scoreRange().max}
+                  onInput={(event) => updateScoreRange('max', event.currentTarget.value)}
+                  aria-label="Maximum highlighted score"
+                />
+              </div>
+              <button
+                type="button"
+                class="range-reset"
+                onClick={resetScoreRange}
+                disabled={!rangeFilterActive()}
+              >
+                Reset
+              </button>
+            </div>
           </div>
         </Show>
       </div>
