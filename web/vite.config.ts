@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, unlink, writeFile } from 'node:fs/promises';
 
 import { defineConfig, type Plugin } from 'vite';
 import solid from 'vite-plugin-solid';
@@ -59,13 +59,40 @@ function minifiedJsonAssetsPlugin(): Plugin {
   };
 }
 
+function inlineCssPlugin(): Plugin {
+  return {
+    name: 'inline-css',
+    apply: 'build',
+    async writeBundle() {
+      const outputRoot = new URL('./www/where-to-live/', import.meta.url);
+      const indexPath = new URL('index.html', outputRoot);
+      let html = await readFile(indexPath, 'utf8');
+      const stylesheetLinks = Array.from(
+        html.matchAll(/<link\s+rel="stylesheet"[^>]*href="([^"]+\.css)"[^>]*>/g)
+      );
+
+      for (const match of stylesheetLinks) {
+        const href = match[1];
+        const assetFileName = href.startsWith(base) ? href.slice(base.length) : href.replace(/^\//, '');
+        const cssPath = new URL(assetFileName, outputRoot);
+        const cssSource = await readFile(cssPath, 'utf8');
+        html = html.replace(match[0], `<style>${cssSource}</style>`);
+        await unlink(cssPath);
+      }
+
+      await writeFile(indexPath, html);
+    }
+  };
+}
+
 export default defineConfig({
   base,
-  plugins: [solid(), minifiedJsonAssetsPlugin()],
+  plugins: [solid(), minifiedJsonAssetsPlugin(), inlineCssPlugin()],
   publicDir: 'public',
   build: {
     emptyOutDir: true,
     outDir: 'www/where-to-live',
+    sourcemap: true,
     target: 'es2022'
   },
   server: {
