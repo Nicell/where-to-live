@@ -30,9 +30,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 12
-          cache: npm
-          cache-dependency-path: web/package-lock.json
+          node-version: 24
 
       - name: Restore NOAA data cache
         uses: actions/cache@v4
