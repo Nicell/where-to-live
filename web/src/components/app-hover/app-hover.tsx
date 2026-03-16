@@ -1,56 +1,84 @@
-import { Component, Element, Prop, h } from '@stencil/core';
+import { For, Show, createMemo, type JSX } from 'solid-js';
 
-import { Hover } from '../app-home/app-home';
+import './app-hover.css';
+
+import { formatLocationLabel } from '../../lib/format';
+import type { HoverState } from '../../lib/types';
 import { getRawWeatherScore, getWeatherScore } from '../../utils/score';
-import { defaultPaletteMode, getChartColors, PaletteModeId } from '../app-map/canvas-util';
+import { defaultPaletteMode, getChartColors, type PaletteModeId } from '../app-map/canvas-util';
 
 const monthDay = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-
 const monthLetter = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
-@Component({
-  tag: 'app-hover',
-  styleUrl: 'app-hover.css',
-  shadow: false
-})
-export class AppHover {
-  @Element() el: HTMLElement;
-  @Prop() state: Hover;
-  @Prop() cell: number;
-  @Prop() mapScale: number;
-  @Prop() paletteMode: PaletteModeId = defaultPaletteMode;
+interface AppHoverProps {
+  state: HoverState;
+  cell: number;
+  mapScale: number;
+  paletteMode?: PaletteModeId;
+}
 
-  renderLocationLabel() {
-    const location = this.state.data;
-    const city = location.c.split(' ').map(s => s.charAt(0) + s.toLowerCase().substring(1)).join(' ');
-    const label = `${city}, ${location.s}`;
-    return location.a ? `Near ${label}` : label;
-  }
+export default function AppHover(props: AppHoverProps) {
+  const palette = createMemo(() => props.paletteMode ?? defaultPaletteMode);
+  const weather = createMemo(() => props.state.data?.w?.m ?? []);
+  const normalizedScore = createMemo(() =>
+    Math.max(0, Math.min(getWeatherScore(props.state.data), 100))
+  );
+  const rawScore = createMemo(() => getRawWeatherScore(props.state.data));
+  const offset = createMemo(() =>
+    Math.min(
+      Math.max(props.state.x, 272 / 2) + 5,
+      document.documentElement.clientWidth - 272 / 2 - 5
+    )
+  );
+  const chartColors = createMemo(() => getChartColors(palette()));
+  const style = createMemo(
+    () =>
+      ({
+        left: `${offset()}px`,
+        top: `${props.state.y}px`,
+        '--before-offset': `calc(50% + ${props.state.x - offset()}px)`,
+        '--cell-size': `${props.cell * props.mapScale + 7}px`
+      }) as JSX.CSSProperties
+  );
 
-  render() {
-    const w = this.state.data && this.state.data.w && this.state.data.w.m ? this.state.data.w.m : [];
-    const normalizedScore = Math.max(0, Math.min(getWeatherScore(this.state.data), 100));
-    const rawScore = getRawWeatherScore(this.state.data);
-    const offset = Math.min(Math.max(this.state.x, 272 / 2) + 5, document.documentElement.clientWidth - 272 / 2 - 5);
-    const chartColors = getChartColors(this.paletteMode);
-    return this.state.visible ? (
-      <div class={`app-hover ${this.state.y - 135 < window.pageYOffset ? 'flip' : ''}`} style={{ left: offset + 'px', top: this.state.y + 'px', '--before-offset': `calc(50% + ${this.state.x - offset}px)`, '--cell-size': `${this.cell * this.mapScale + 7}px` }}>
+  return (
+    <Show when={props.state.visible && props.state.data}>
+      <div
+        classList={{ 'app-hover': true, flip: props.state.y - 135 < window.pageYOffset }}
+        style={style()}
+      >
         <div class="hover-title">
-          <span>{this.renderLocationLabel()}</span>
-          <span title={`Raw score: ${rawScore}`}>{normalizedScore}/100</span>
+          <span>{formatLocationLabel(props.state.data!)}</span>
+          <span title={`Raw score: ${rawScore()}`}>{normalizedScore()}/100</span>
         </div>
         <div class="hover-charts">
-          {w.map((m,i) => i%2 === 0 ? (
-            <div class="hover-chart">
-              <div class="hover-chart-bar" style={{ backgroundColor: chartColors.track }}>
-                <div style={{ height: w[i+1] / monthDay[i/2] * 100 + '%', background: chartColors.negative }}></div>
-                <div style={{ height: m / monthDay[i/2] * 100 + '%', background: chartColors.positive }}></div>
-              </div>
-              <span>{monthLetter[i/2]}</span>
-            </div>
-          ) : null)}
+          <For each={weather().filter((_, index) => index % 2 === 0)}>
+            {(pleasantDays, index) => {
+              const monthIndex = index();
+              const unpleasantDays = weather()[monthIndex * 2 + 1];
+              return (
+                <div class="hover-chart">
+                  <div class="hover-chart-bar" style={{ 'background-color': chartColors().track }}>
+                    <div
+                      style={{
+                        height: `${(unpleasantDays / monthDay[monthIndex]) * 100}%`,
+                        background: chartColors().negative
+                      }}
+                    />
+                    <div
+                      style={{
+                        height: `${(pleasantDays / monthDay[monthIndex]) * 100}%`,
+                        background: chartColors().positive
+                      }}
+                    />
+                  </div>
+                  <span>{monthLetter[monthIndex]}</span>
+                </div>
+              );
+            }}
+          </For>
         </div>
       </div>
-    ) : null;
-  }
+    </Show>
+  );
 }

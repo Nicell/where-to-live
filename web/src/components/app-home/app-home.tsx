@@ -1,90 +1,125 @@
-import { Component, State, h } from '@stencil/core';
-import { defaultPaletteMode, PaletteModeId } from '../app-map/canvas-util';
+import { Show, createMemo, createSignal, onCleanup, onMount } from 'solid-js';
 
-export interface Hover {
-  x: number;
-  y: number;
-  data: any;
+import './app-home.css';
 
-  visible: boolean;
+import type { HoverState, MapData, SearchLocation } from '../../lib/types';
+import AppHover from '../app-hover/app-hover';
+import AppIcon from '../app-icon/app-icon';
+import AppMap from '../app-map/app-map';
+import { defaultPaletteMode, type PaletteModeId } from '../app-map/canvas-util';
+import AppRanks from '../app-ranks/app-ranks';
+import AppSearch from '../app-search/app-search';
+
+const emptyHover: HoverState = {
+  x: 0,
+  y: 0,
+  data: null,
+  visible: false
+};
+
+const mapDataUrl = `${import.meta.env.BASE_URL}assets/map.json`;
+const searchDataUrl = `${import.meta.env.BASE_URL}assets/search.json`;
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to load ${url}: ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
 }
 
-@Component({
-  tag: 'app-home',
-  styleUrl: 'app-home.css',
-  shadow: false
-})
-export class AppHome {
-  @State() hover: Hover;
-  @State() search: string;
-  @State() data: any;
-  @State() searchIndex: any;
-  @State() mapScale: number;
-  @State() paletteMode: PaletteModeId;
+export default function AppHome() {
+  const [hover, setHover] = createSignal<HoverState>(emptyHover);
+  const [search, setSearch] = createSignal('');
+  const [data, setData] = createSignal<MapData | null>(null);
+  const [searchIndex, setSearchIndex] = createSignal<SearchLocation[] | null>(null);
+  const [mapScale, setMapScale] = createSignal(1);
+  const [paletteMode, setPaletteMode] = createSignal<PaletteModeId>(defaultPaletteMode);
+  const [loadError, setLoadError] = createSignal<string | null>(null);
+  const [viewportWidth, setViewportWidth] = createSignal(
+    typeof window === 'undefined' ? 0 : window.innerWidth
+  );
 
-  constructor() {
-    this.hover = {
-      x: 0,
-      y: 0,
-      data: {},
-      visible: false
+  const cell = createMemo(() => {
+    const mapData = data();
+    if (!mapData || mapData.m.length === 0) {
+      return 0;
     }
-    this.search = '';
-    this.mapScale = 1;
-    this.paletteMode = defaultPaletteMode;
-    this.getData();
-    this.getSearchIndex();
-  }
 
-  getData = async () => {
-    this.data = await (await fetch('assets/map.json')).json();
-  }
+    return viewportWidth() / window.devicePixelRatio / mapData.m[0].length;
+  });
 
-  getSearchIndex = async () => {
-    this.searchIndex = await (await fetch('assets/search.json')).json();
-  }
+  onMount(() => {
+    const handleResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    onCleanup(() => window.removeEventListener('resize', handleResize));
 
-  updateHover = (hover: Hover) => {
-    this.hover = hover;
-  }
+    void Promise.all([
+      fetchJson<MapData>(mapDataUrl),
+      fetchJson<SearchLocation[]>(searchDataUrl)
+    ])
+      .then(([mapPayload, searchPayload]) => {
+        setData(mapPayload);
+        setSearchIndex(searchPayload);
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : 'Unable to load weather data.';
+        setLoadError(message);
+      });
+  });
 
-  updateSearch = (query: string) => {
-    this.search = query;
-  }
-
-  updateMapScale = (newScale: number) => {
-    this.mapScale = newScale;
-  }
-
-  updatePaletteMode = (newMode: PaletteModeId) => {
-    this.paletteMode = newMode;
-  }
-
-  render() {
-    const cell = this.data ? window.innerWidth / window.devicePixelRatio / this.data.m[0].length : 0;
-
-    return (
-      <div class="app-home">
-        <header>
-          <h1><app-icon icon="sun" /> Where to Live</h1>
-          <a href="https://github.com/Nicell/where-to-live" target="_blank" rel="noreferrer"><app-icon icon={{ prefix: 'fab', iconName: 'github' }}/></a>
-        </header>
-        {this.data && this.searchIndex ? (
-          <div>
-            <div class="map-holder">
-              <app-map data={this.data.m} handleHover={this.updateHover} handleScale={this.updateMapScale} handlePaletteChange={this.updatePaletteMode} search={this.search} />
-            </div>
-            <app-hover state={this.hover} cell={cell} mapScale={this.mapScale} paletteMode={this.paletteMode} />
-            <app-search searchIndex={this.searchIndex} handleChange={this.updateSearch} />
-            <app-ranks top={this.data.t} bottom={this.data.b} data={this.data.m} />
-          </div>
-        ) : (
+  return (
+    <div class="app-home">
+      <header>
+        <h1>
+          <AppIcon icon="sun" /> Where to Live
+        </h1>
+        <a href="https://github.com/Nicell/where-to-live" target="_blank" rel="noreferrer">
+          <AppIcon icon={{ prefix: 'fab', iconName: 'github' }} />
+        </a>
+      </header>
+      <Show
+        when={data() && searchIndex()}
+        fallback={
           <div class="loading">
-            <app-icon class="loader" icon="sun" />
-            <span>Loading Weather Data</span>
+            <Show
+              when={!loadError()}
+              fallback={
+                <>
+                  <AppIcon icon="exclamation-circle" />
+                  <span>{loadError()}</span>
+                </>
+              }
+            >
+              <>
+                <AppIcon class="loader" icon="sun" />
+                <span>Loading Weather Data</span>
+              </>
+            </Show>
           </div>
-        )}
-      </div>
-    );
-  }
+        }
+      >
+        <div>
+          <div class="map-holder">
+            <AppMap
+              data={data()!.m}
+              search={search()}
+              onHoverChange={setHover}
+              onScaleChange={setMapScale}
+              onPaletteChange={setPaletteMode}
+            />
+          </div>
+          <AppHover
+            state={hover()}
+            cell={cell()}
+            mapScale={mapScale()}
+            paletteMode={paletteMode()}
+          />
+          <AppSearch searchIndex={searchIndex() ?? []} onChange={setSearch} />
+          <AppRanks top={data()!.t} bottom={data()!.b} data={data()!.m} />
+        </div>
+      </Show>
+    </div>
+  );
 }

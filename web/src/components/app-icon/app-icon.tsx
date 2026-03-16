@@ -1,39 +1,46 @@
-import { Component, Prop, h } from '@stencil/core';
-import { library, config, icon, IconLookup, IconName } from '@fortawesome/fontawesome-svg-core';
-import { faCaretUp, faPlus, faMinus, faTimesCircle, faExclamationCircle, faSun } from '@fortawesome/free-solid-svg-icons';
+import { createMemo } from 'solid-js';
+
+import './app-icon.css';
+
+import { config, icon, library, type IconLookup, type IconName } from '@fortawesome/fontawesome-svg-core';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
+import {
+  faCaretUp,
+  faExclamationCircle,
+  faMinus,
+  faPlus,
+  faSun,
+  faTimesCircle
+} from '@fortawesome/free-solid-svg-icons';
 
 library.add(faCaretUp, faPlus, faMinus, faTimesCircle, faGithub, faExclamationCircle, faSun);
 
 config.autoAddCss = false;
 
-@Component({
-  tag: 'app-icon',
-  styleUrl: 'app-icon.css',
-  shadow: false
-})
-export class AppIcon {
-  @Prop() icon: IconLookup | IconName;
-  @Prop() class?: string;
+interface AppIconProps {
+  icon: IconLookup | IconName;
+  class?: string;
+}
 
-  render() {
-    let iconProp: IconLookup = typeof this.icon === 'object' ? this.icon : { prefix: 'fas', iconName: this.icon };
-
+export default function AppIcon(props: AppIconProps) {
+  const markup = createMemo(() => {
+    const iconProp: IconLookup =
+      typeof props.icon === 'object' ? props.icon : { prefix: 'fas', iconName: props.icon };
     const iconObj = icon(iconProp);
 
     if (!iconObj) {
-      console.error(`Icon not found! Icon: ${typeof this.icon === 'object' ? `${this.icon.prefix}.${this.icon.iconName}` : `fas.${this.icon}`}`);
-      return;
+      console.error(
+        `Icon not found! Icon: ${
+          typeof props.icon === 'object'
+            ? `${props.icon.prefix}.${props.icon.iconName}`
+            : `fas.${props.icon}`
+        }`
+      );
+      return '';
     }
 
-    const iconSVG = iconObj.html[0];
+    return iconObj.html[0];
+  });
 
-    return (
-      <span
-        class={`app-icon ${this.class}`}
-        ref={(el: HTMLDivElement) => el.innerHTML = iconSVG}
-      />
-    );
-  }
+  return <span class={`app-icon ${props.class ?? ''}`.trim()} innerHTML={markup()} />;
 }
-
