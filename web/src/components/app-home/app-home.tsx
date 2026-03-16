@@ -96,7 +96,7 @@ export default function AppHome() {
               when={!loadError()}
               fallback={
                 <>
-                  <AppIcon icon="exclamation-circle" />
+                  <AppIcon icon="warning-circle" />
                   <span>{loadError()}</span>
                 </>
               }
@@ -135,7 +135,7 @@ export default function AppHome() {
               target="_blank"
               rel="noreferrer"
             >
-              <AppIcon icon={{ prefix: 'fab', iconName: 'github' }} />
+              <AppIcon icon="github" />
               <span>Source</span>
             </a>
           </div>

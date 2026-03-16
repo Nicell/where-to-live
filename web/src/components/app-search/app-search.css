@@ -35,11 +35,18 @@
   position: absolute;
   top: 50%;
   right: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
   transform: translateY(-50%);
   border: none;
   background: transparent;
   color: var(--foreground-secondary);
   font-size: 16px;
+  line-height: 0;
   cursor: pointer;
   opacity: .72;
 }

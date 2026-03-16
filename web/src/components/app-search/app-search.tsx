@@ -194,7 +194,7 @@ export default function AppSearch(props: AppSearchProps) {
             }
           />
           <button type="button" onClick={() => evalChange('')} aria-label="Clear search">
-            <AppIcon icon="times-circle" />
+            <AppIcon icon="x-circle" />
           </button>
         </div>
         <Show when={results().length > 0}>

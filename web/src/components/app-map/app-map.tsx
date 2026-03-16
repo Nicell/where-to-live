@@ -418,7 +418,7 @@ export default function AppMap(props: AppMapProps) {
           aria-expanded={settingsMenuOpen()}
           aria-label="Open map settings"
         >
-          <AppIcon icon="cog" />
+          <AppIcon icon="gear" />
         </button>
         <Show when={settingsMenuOpen()}>
           <div class="settings-menu" role="group" aria-label="Map settings">

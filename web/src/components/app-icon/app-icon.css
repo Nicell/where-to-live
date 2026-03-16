@@ -1,6 +1,15 @@
 .app-icon {
-  display: contents;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: inherit;
+  line-height: 1;
+  color: inherit;
 }
 
-/* From @fortawesome\fontawesome-svg-core\styles.css */
-.svg-inline--fa,svg:not(:root).svg-inline--fa{overflow:visible}.svg-inline--fa{display:inline-block}.svg-inline--fa{font-size:inherit;height:1em;vertical-align:-.125em}
+.app-icon > svg {
+  display: block;
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+}
