@@ -162,12 +162,12 @@ func TestClassifyDayCapturesNearMissAndUnpleasantReasons(t *testing.T) {
 	}
 }
 
-func TestClassifyDayAvgBelow45CanBeNeutralWhenMaxReaches55(t *testing.T) {
+func TestClassifyDayAvgBelow40CanBeNeutralWhenMaxReaches50(t *testing.T) {
 	day := weatherData{
 		date:    time.Date(2025, time.March, 1, 0, 0, 0, 0, time.UTC),
-		avgTemp: 44,
+		avgTemp: 39,
 		visib:   10,
-		maxTemp: 55,
+		maxTemp: 50,
 		minTemp: 32,
 		precip:  0,
 		flags:   weatherFlags{},
@@ -175,19 +175,19 @@ func TestClassifyDayAvgBelow45CanBeNeutralWhenMaxReaches55(t *testing.T) {
 
 	classification := classifyDay(day)
 	if classification.isUnpleasant {
-		t.Fatal("day classified as unpleasant, want false when avg < 45F but max reaches 55F")
+		t.Fatal("day classified as unpleasant, want false when avg < 40F but max reaches 50F")
 	}
 	if classification.unpleasantChecks[unpleasantCheckTemp] {
-		t.Fatal("temp unpleasant check = true, want false when avg < 45F but max reaches 55F")
+		t.Fatal("temp unpleasant check = true, want false when avg < 40F but max reaches 50F")
 	}
 }
 
-func TestClassifyDayAvgBelow45StillUnpleasantWhenMaxStaysBelow55(t *testing.T) {
+func TestClassifyDayAvgBelow40StillUnpleasantWhenMaxStaysBelow50(t *testing.T) {
 	day := weatherData{
 		date:    time.Date(2025, time.March, 1, 0, 0, 0, 0, time.UTC),
-		avgTemp: 44,
+		avgTemp: 39,
 		visib:   10,
-		maxTemp: 54,
+		maxTemp: 49,
 		minTemp: 32,
 		precip:  0,
 		flags:   weatherFlags{},
@@ -195,10 +195,10 @@ func TestClassifyDayAvgBelow45StillUnpleasantWhenMaxStaysBelow55(t *testing.T) {
 
 	classification := classifyDay(day)
 	if !classification.isUnpleasant {
-		t.Fatal("day classified as non-unpleasant, want true when avg < 45F and max stays below 55F")
+		t.Fatal("day classified as non-unpleasant, want true when avg < 40F and max stays below 50F")
 	}
 	if !classification.unpleasantChecks[unpleasantCheckTemp] {
-		t.Fatal("temp unpleasant check = false, want true when avg < 45F and max stays below 55F")
+		t.Fatal("temp unpleasant check = false, want true when avg < 40F and max stays below 50F")
 	}
 }
 

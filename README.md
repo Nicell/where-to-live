@@ -13,14 +13,14 @@ We calculate the **perceived temperature**, which takes into account relative hu
 A pleasant day is counted when all of the following are met:
  - Average perceived temperature between 62°F and 75°F
  - Maximum perceived temperature below 82°F
- - Minimum perceived temperature above 50°F
+ - Minimum perceived temperature above 45°F
  - [Visibility](https://en.wikipedia.org/wiki/Visibility) of more than 6 statute miles
  - Less than 0.10" of precipitation
 
 Missing visibility or precipitation do not automatically disqualify a pleasant day. However, a day is not counted as pleasant when NOAA explicitly marks a zero-precipitation report as incomplete.
 
 An unpleasant day is counted when any of the following are met:
- - Average perceived temperature below 45°F, unless the maximum perceived temperature still reaches 55°F
+ - Average perceived temperature below 40°F, unless the maximum perceived temperature still reaches 50°F
  - Average perceived temperature above 88°F
  - [Visibility](https://en.wikipedia.org/wiki/Visibility) of less than 5 statute miles
  - Any snow or ice pellets, hail, thunder, or tornadoes/funnel clouds

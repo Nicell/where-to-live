@@ -82,10 +82,10 @@ const (
 	pleasantAvgTempMin      = 62.0
 	pleasantAvgTempMax      = 75.0
 	pleasantMaxTempMax      = 82.0
-	pleasantMinTempMin      = 50.0
+	pleasantMinTempMin      = 45.0
 	pleasantVisibilityMin   = 6.0
 	pleasantPrecipMax       = 0.10
-	unpleasantAvgTempMin    = 45.0
+	unpleasantAvgTempMin    = 40.0
 	unpleasantAvgTempMax    = 88.0
 	unpleasantVisibilityMax = 5.0
 	unpleasantPrecipMin     = 0.20

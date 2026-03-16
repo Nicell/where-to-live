@@ -41,7 +41,7 @@ export default function AppRanks(props: AppRanksProps) {
             <ul>
               <li>Average perceived temperature between 62°F and 75°F</li>
               <li>Maximum perceived temperature below 82°F</li>
-              <li>Minimum perceived temperature above 50°F</li>
+              <li>Minimum perceived temperature above 45°F</li>
               <li>
                 <a href="https://en.wikipedia.org/wiki/Visibility" target="_blank" rel="nofollow">
                   Visibility
@@ -57,7 +57,7 @@ export default function AppRanks(props: AppRanksProps) {
           <div class="criteriaBlock">
             <span>Unpleasant</span>
             <ul>
-              <li>Average perceived temperature below 45°F, unless the maximum still reaches 55°F</li>
+              <li>Average perceived temperature below 40°F, unless the maximum still reaches 50°F</li>
               <li>Average perceived temperature above 88°F</li>
               <li>
                 <a href="https://en.wikipedia.org/wiki/Visibility" target="_blank" rel="nofollow">

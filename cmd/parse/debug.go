@@ -425,7 +425,7 @@ func classifyDay(day weatherData) dayClassification {
 	missingPrecip := !isPresent(day.precip)
 	hasHarshWeather := day.flags.hasHarshOutdoorEvent()
 	hasIncompletePrecipReport := day.precipFlag == "H"
-	isColdUnpleasant := !missingAvgTemp && day.avgTemp < unpleasantAvgTempMin && (missingMaxTemp || day.maxTemp < pleasantMinTempMin+5)
+	isColdUnpleasant := !missingAvgTemp && day.avgTemp < unpleasantAvgTempMin && (missingMaxTemp || day.maxTemp < unpleasantAvgTempMin+10)
 	isHotUnpleasant := !missingAvgTemp && day.avgTemp > unpleasantAvgTempMax
 
 	classification.unpleasantChecks[unpleasantCheckTemp] = isColdUnpleasant || isHotUnpleasant
