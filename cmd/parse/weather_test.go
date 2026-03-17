@@ -422,8 +422,58 @@ func TestAddStationsReturnsWhenNoNeighborsExist(t *testing.T) {
 	var in [mapRows][mapCols][]Station
 
 	got := addStations(in, 10, 10)
-	if len(got) != 0 {
-		t.Fatalf("addStations returned %d stations, want 0", len(got))
+	if len(got.stations) != 0 {
+		t.Fatalf("addStations returned %d stations, want 0", len(got.stations))
+	}
+	if got.coverage != coverageDirect {
+		t.Fatalf("addStations coverage = %v, want %v", got.coverage, coverageDirect)
+	}
+}
+
+func TestAddStationsStopsAtPreferredRadiusWhenDataExists(t *testing.T) {
+	var in [mapRows][mapCols][]Station
+	in[10][12] = []Station{{lat: 10, long: 12, weighted: localStationWeight}}
+	in[12][13] = []Station{{lat: 12, long: 13, weighted: localStationWeight}}
+
+	got := addStations(in, 10, 10)
+	if len(got.stations) != 1 {
+		t.Fatalf("addStations returned %d stations, want 1", len(got.stations))
+	}
+	if got.stations[0].lat != 10 || got.stations[0].long != 12 {
+		t.Fatalf("addStations returned station at (%d,%d), want (10,12)", got.stations[0].lat, got.stations[0].long)
+	}
+	if got.coverage != coverageLight {
+		t.Fatalf("addStations coverage = %v, want %v", got.coverage, coverageLight)
+	}
+}
+
+func TestAddStationsFallsBackBeyondPreferredRadiusWhenNoAlternativeExists(t *testing.T) {
+	var in [mapRows][mapCols][]Station
+	in[13][13] = []Station{{lat: 13, long: 13, weighted: localStationWeight}}
+
+	got := addStations(in, 10, 10)
+	if len(got.stations) != 1 {
+		t.Fatalf("addStations returned %d stations, want 1", len(got.stations))
+	}
+	if got.stations[0].lat != 13 || got.stations[0].long != 13 {
+		t.Fatalf("addStations returned station at (%d,%d), want (13,13)", got.stations[0].lat, got.stations[0].long)
+	}
+	if got.coverage != coverageHeavy {
+		t.Fatalf("addStations coverage = %v, want %v", got.coverage, coverageHeavy)
+	}
+}
+
+func TestAddStationsKeepsLocalWeightAboveBorrowedWeight(t *testing.T) {
+	var in [mapRows][mapCols][]Station
+	in[10][10] = []Station{{lat: 10, long: 10, weighted: localStationWeight}}
+	in[10][11] = []Station{{lat: 10, long: 11, weighted: localStationWeight}}
+
+	got := addStations(in, 10, 10)
+	if len(got.stations) != 2 {
+		t.Fatalf("addStations returned %d stations, want 2", len(got.stations))
+	}
+	if got.stations[0].weighted <= got.stations[1].weighted {
+		t.Fatalf("local weight = %d, borrowed weight = %d, want local > borrowed", got.stations[0].weighted, got.stations[1].weighted)
 	}
 }
 

@@ -24,6 +24,11 @@ const missingFloat = math.MaxFloat64
 const (
 	datasetStartYear = 2010
 	datasetEndYear   = 2024
+
+	minStationsForCell     = 4
+	preferredBorrowRadius  = 2
+	localStationWeight     = 1000
+	borrowedWeightAtRadius = 125
 )
 
 var (
@@ -36,6 +41,7 @@ var (
 type TotalWeather struct {
 	Months    map[string]MonthWeather `json:"m"`
 	totalDays int
+	coverage  coverageLevel
 }
 
 // MonthWeather All the data for the entire month is condensed down to MonthWeather
@@ -53,6 +59,20 @@ type Station struct {
 	long     int
 	Weather  TotalWeather `json:"w"`
 	weighted int
+}
+
+type coverageLevel uint8
+
+const (
+	coverageDirect coverageLevel = iota
+	coverageLight
+	coverageHeavy
+)
+
+type stationSelection struct {
+	stations  []Station
+	coverage  coverageLevel
+	maxRadius int
 }
 
 // Contains one day of weather information
@@ -192,6 +212,9 @@ func averageYears(years [][mapRows][mapCols]Station) [mapRows][mapCols]Station {
 	for _, a := range years {
 		for y, b := range a {
 			for z, c := range b {
+				if c.Weather.coverage > avg[y][z].Weather.coverage {
+					avg[y][z].Weather.coverage = c.Weather.coverage
+				}
 				for k := range c.Weather.Months {
 					t := avg[y][z].Weather.Months[k]
 					t.Good += c.Weather.Months[k].Good
@@ -247,7 +270,7 @@ func parseGSOD(year int, stations map[string]Station) ([mapRows][mapCols][]Stati
 			return weatherMap, err
 		}
 		opReader := bufio.NewReader(gzipF)
-		station := Station{lat: -1, long: -1, Weather: TotalWeather{}, weighted: 200}
+		station := Station{lat: -1, long: -1, Weather: TotalWeather{}, weighted: localStationWeight}
 		station.Weather.Months = make(map[string]MonthWeather)
 		skipStation := false
 		for {
@@ -315,13 +338,16 @@ func averageStations(in [mapRows][mapCols][]Station, zips [mapRows][mapCols][]zi
 	t := TotalWeather{}
 	for x, a := range in {
 		for y, b := range a {
-			if len(b) < 4 {
+			selection := stationSelection{stations: b, coverage: coverageDirect}
+			if len(b) < minStationsForCell {
 				if len(zips[x][y]) > 0 {
-					b = addStations(in, x, y)
+					selection = addStations(in, x, y)
+					b = selection.stations
 				}
 			}
 			t = TotalWeather{}
 			t.Months = make(map[string]MonthWeather)
+			t.coverage = selection.coverage
 			for _, c := range b {
 				weight := c.weighted
 				if weight < 1 {
@@ -351,34 +377,57 @@ func averageStations(in [mapRows][mapCols][]Station, zips [mapRows][mapCols][]zi
 	return out, nil
 }
 
-func addStations(in [mapRows][mapCols][]Station, lat, long int) []Station {
-	s := in[lat][long]
+func addStations(in [mapRows][mapCols][]Station, lat, long int) stationSelection {
+	selection := stationSelection{
+		stations: append([]Station(nil), in[lat][long]...),
+		coverage: coverageDirect,
+	}
 	radius := 1
 	maxRadius := len(in)
 	if len(in[0]) > maxRadius {
 		maxRadius = len(in[0])
 	}
-	for len(s) < 4 && radius <= maxRadius {
-		latGrid := lat - radius
-		longGrid := long - radius
-		for a := latGrid; a <= (latGrid + 2*radius + 1); a++ {
-			for b := longGrid; b <= (longGrid + 2*radius + 1); b++ {
+	for len(selection.stations) < minStationsForCell && radius <= maxRadius {
+		foundAtRadius := false
+		for a := lat - radius; a <= lat+radius; a++ {
+			for b := long - radius; b <= long+radius; b++ {
 				if a >= 0 && b >= 0 && a < mapRows && b < mapCols {
 					if len(in[a][b]) > 0 && (int(math.Abs(float64(a-lat))) == radius || int(math.Abs(float64(b-long))) == radius) {
-						for c := range in[a][b] {
-							in[a][b][c].weighted = int(200 / math.Pow(float64(radius), 2))
-							if in[a][b][c].weighted < 1 {
-								in[a][b][c].weighted = 1
-							}
+						for _, station := range in[a][b] {
+							borrowed := station
+							borrowed.weighted = borrowedStationWeight(radius)
+							selection.stations = append(selection.stations, borrowed)
+							foundAtRadius = true
 						}
-						s = append(s, in[a][b]...)
 					}
 				}
 			}
 		}
+		if foundAtRadius {
+			selection.maxRadius = radius
+		}
+		if radius >= preferredBorrowRadius && len(selection.stations) > 0 {
+			break
+		}
 		radius++
 	}
-	return s
+	switch {
+	case selection.maxRadius > preferredBorrowRadius:
+		selection.coverage = coverageHeavy
+	case selection.maxRadius > 0:
+		selection.coverage = coverageLight
+	default:
+		selection.coverage = coverageDirect
+	}
+	return selection
+}
+
+func borrowedStationWeight(radius int) int {
+	weight := int(float64(borrowedWeightAtRadius) / math.Pow(float64(radius), 3))
+	if weight < 1 {
+		return 1
+	}
+	return weight
 }
 
 // Takes in one day of weather and stores it to the station provided
