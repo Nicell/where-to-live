@@ -5,6 +5,8 @@
 
 A website to show the best places to live based on weather in the US
 
+The site is deployed to GitHub Pages from the CI workflow using the built Pages artifact. In the repository settings, GitHub Pages should be configured to use `GitHub Actions` as the source.
+
 # ✨ How it works
 Using NOAA weather data from 2010 to 2024, we calculate the average number of pleasant and unpleasant days for each month. We then combine those to display a heatmap of the best places to live by weather.
 
