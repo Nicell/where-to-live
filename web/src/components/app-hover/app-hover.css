@@ -1,11 +1,14 @@
 .app-hover {
+  --hover-border-color: rgb(206, 207, 208);
+  --hover-arrow-border: 9px;
+  --hover-arrow-fill: 7.5px;
   position: absolute;
   z-index: 10;
   transform: translate(-50%, calc(-100% - 8px));
   min-width: 252px;
   padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid var(--hud-border-strong);
+  border: 1px solid var(--hover-border-color);
   background: rgb(255, 255, 255);
   box-shadow: var(--shadow-1);
 }
@@ -18,19 +21,40 @@
   content: '';
   position: absolute;
   left: var(--before-offset);
-  bottom: 0;
-  width: 12px;
-  height: 12px;
-  background: rgb(255, 255, 255);
-  transform: translate(-50%, 7px) rotate(45deg);
-  box-shadow: 1px 1px 0 0 var(--hud-border);
+  bottom: calc(-1 * var(--hover-arrow-border));
+  width: 0;
+  height: 0;
+  border-left: var(--hover-arrow-border) solid transparent;
+  border-right: var(--hover-arrow-border) solid transparent;
+  border-top: var(--hover-arrow-border) solid var(--hover-border-color);
+  transform: translateX(-50%);
 }
 
 .app-hover.flip:before {
-  top: 0;
+  top: calc(-1 * var(--hover-arrow-border));
   bottom: auto;
-  transform: translate(-50%, -7px) rotate(225deg);
-  box-shadow: -1px -1px 0 0 var(--hud-border);
+  border-top: 0;
+  border-bottom: var(--hover-arrow-border) solid var(--hover-border-color);
+}
+
+.app-hover:after {
+  content: '';
+  position: absolute;
+  left: var(--before-offset);
+  bottom: calc(-1 * var(--hover-arrow-fill));
+  width: 0;
+  height: 0;
+  border-left: var(--hover-arrow-fill) solid transparent;
+  border-right: var(--hover-arrow-fill) solid transparent;
+  border-top: var(--hover-arrow-fill) solid rgb(255, 255, 255);
+  transform: translateX(-50%);
+}
+
+.app-hover.flip:after {
+  top: calc(-1 * var(--hover-arrow-fill));
+  bottom: auto;
+  border-top: 0;
+  border-bottom: var(--hover-arrow-fill) solid rgb(255, 255, 255);
 }
 
 .hover-title {
