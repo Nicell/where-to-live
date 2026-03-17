@@ -8,7 +8,7 @@ interface JsonAssetDefinition {
   sourcePath: string;
 }
 
-const base = '/where-to-live/';
+const base = './';
 
 const jsonAssets: JsonAssetDefinition[] = [
   {
