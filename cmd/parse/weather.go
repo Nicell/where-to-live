@@ -25,10 +25,10 @@ const (
 	datasetStartYear = 2010
 	datasetEndYear   = 2024
 
-	minStationsForCell     = 4
-	preferredBorrowRadius  = 2
-	localStationWeight     = 1000
-	borrowedWeightAtRadius = 125
+	localStationWeight        = 1000
+	borrowedWeightAtRadius    = 125
+	minWeightedSupportForCell = 2 * localStationWeight
+	preferredBorrowRadius     = 2
 )
 
 var (
@@ -65,8 +65,11 @@ type coverageLevel uint8
 
 const (
 	coverageDirect coverageLevel = iota
-	coverageLight
-	coverageHeavy
+	coverageSupplementedLight
+	coverageBorrowedLight
+	coverageSupplementedHeavy
+	coverageBorrowedHeavy
+	coverageLevelCount
 )
 
 type stationSelection struct {
@@ -339,7 +342,7 @@ func averageStations(in [mapRows][mapCols][]Station, zips [mapRows][mapCols][]zi
 	for x, a := range in {
 		for y, b := range a {
 			selection := stationSelection{stations: b, coverage: coverageDirect}
-			if len(b) < minStationsForCell {
+			if stationSupport(b) < minWeightedSupportForCell {
 				if len(zips[x][y]) > 0 {
 					selection = addStations(in, x, y)
 					b = selection.stations
@@ -371,6 +374,9 @@ func averageStations(in [mapRows][mapCols][]Station, zips [mapRows][mapCols][]zi
 					t.Months[k] = d
 				}
 			}
+			if len(zips[x][y]) > 0 {
+				recordCoverageDebug(t.coverage)
+			}
 			out[x][y] = Station{lat: x, long: y, Weather: t}
 		}
 	}
@@ -382,23 +388,20 @@ func addStations(in [mapRows][mapCols][]Station, lat, long int) stationSelection
 		stations: append([]Station(nil), in[lat][long]...),
 		coverage: coverageDirect,
 	}
+	hasLocalStations := len(selection.stations) > 0
 	radius := 1
 	maxRadius := len(in)
 	if len(in[0]) > maxRadius {
 		maxRadius = len(in[0])
 	}
-	for len(selection.stations) < minStationsForCell && radius <= maxRadius {
+	for stationSupport(selection.stations) < minWeightedSupportForCell && radius <= maxRadius {
 		foundAtRadius := false
 		for a := lat - radius; a <= lat+radius; a++ {
 			for b := long - radius; b <= long+radius; b++ {
 				if a >= 0 && b >= 0 && a < mapRows && b < mapCols {
 					if len(in[a][b]) > 0 && (int(math.Abs(float64(a-lat))) == radius || int(math.Abs(float64(b-long))) == radius) {
-						for _, station := range in[a][b] {
-							borrowed := station
-							borrowed.weighted = borrowedStationWeight(radius)
-							selection.stations = append(selection.stations, borrowed)
-							foundAtRadius = true
-						}
+						selection.stations = append(selection.stations, collapseBorrowedCell(in[a][b], borrowedStationWeight(radius)))
+						foundAtRadius = true
 					}
 				}
 			}
@@ -406,20 +409,56 @@ func addStations(in [mapRows][mapCols][]Station, lat, long int) stationSelection
 		if foundAtRadius {
 			selection.maxRadius = radius
 		}
-		if radius >= preferredBorrowRadius && len(selection.stations) > 0 {
+		if radius >= preferredBorrowRadius && stationSupport(selection.stations) > 0 {
 			break
 		}
 		radius++
 	}
 	switch {
-	case selection.maxRadius > preferredBorrowRadius:
-		selection.coverage = coverageHeavy
-	case selection.maxRadius > 0:
-		selection.coverage = coverageLight
-	default:
+	case selection.maxRadius == 0:
 		selection.coverage = coverageDirect
+	case selection.maxRadius > preferredBorrowRadius && hasLocalStations:
+		selection.coverage = coverageSupplementedHeavy
+	case selection.maxRadius > preferredBorrowRadius:
+		selection.coverage = coverageBorrowedHeavy
+	case hasLocalStations:
+		selection.coverage = coverageSupplementedLight
+	case selection.maxRadius > 0:
+		selection.coverage = coverageBorrowedLight
 	}
 	return selection
+}
+
+func stationSupport(stations []Station) int {
+	support := 0
+	for _, station := range stations {
+		weight := station.weighted
+		if weight < 1 {
+			weight = 1
+		}
+		support += weight
+	}
+	return support
+}
+
+func collapseBorrowedCell(stations []Station, weight int) Station {
+	cell := Station{
+		lat:      stations[0].lat,
+		long:     stations[0].long,
+		Weather:  TotalWeather{Months: make(map[string]MonthWeather)},
+		weighted: weight,
+	}
+	for _, station := range stations {
+		cell.Weather.totalDays += station.Weather.totalDays
+		for month, data := range station.Weather.Months {
+			combined := cell.Weather.Months[month]
+			combined.Good += data.Good
+			combined.Bad += data.Bad
+			combined.total += data.total
+			cell.Weather.Months[month] = combined
+		}
+	}
+	return cell
 }
 
 func borrowedStationWeight(radius int) int {

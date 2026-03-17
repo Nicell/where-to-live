@@ -442,8 +442,8 @@ func TestAddStationsStopsAtPreferredRadiusWhenDataExists(t *testing.T) {
 	if got.stations[0].lat != 10 || got.stations[0].long != 12 {
 		t.Fatalf("addStations returned station at (%d,%d), want (10,12)", got.stations[0].lat, got.stations[0].long)
 	}
-	if got.coverage != coverageLight {
-		t.Fatalf("addStations coverage = %v, want %v", got.coverage, coverageLight)
+	if got.coverage != coverageBorrowedLight {
+		t.Fatalf("addStations coverage = %v, want %v", got.coverage, coverageBorrowedLight)
 	}
 }
 
@@ -458,8 +458,8 @@ func TestAddStationsFallsBackBeyondPreferredRadiusWhenNoAlternativeExists(t *tes
 	if got.stations[0].lat != 13 || got.stations[0].long != 13 {
 		t.Fatalf("addStations returned station at (%d,%d), want (13,13)", got.stations[0].lat, got.stations[0].long)
 	}
-	if got.coverage != coverageHeavy {
-		t.Fatalf("addStations coverage = %v, want %v", got.coverage, coverageHeavy)
+	if got.coverage != coverageBorrowedHeavy {
+		t.Fatalf("addStations coverage = %v, want %v", got.coverage, coverageBorrowedHeavy)
 	}
 }
 
@@ -474,6 +474,59 @@ func TestAddStationsKeepsLocalWeightAboveBorrowedWeight(t *testing.T) {
 	}
 	if got.stations[0].weighted <= got.stations[1].weighted {
 		t.Fatalf("local weight = %d, borrowed weight = %d, want local > borrowed", got.stations[0].weighted, got.stations[1].weighted)
+	}
+	if got.coverage != coverageSupplementedLight {
+		t.Fatalf("addStations coverage = %v, want %v", got.coverage, coverageSupplementedLight)
+	}
+}
+
+func TestAddStationsCollapsesBorrowedCells(t *testing.T) {
+	var in [mapRows][mapCols][]Station
+	in[10][11] = []Station{
+		testStationAt(10, 11, 4),
+		testStationAt(10, 11, 2),
+	}
+
+	got := addStations(in, 10, 10)
+	if len(got.stations) != 1 {
+		t.Fatalf("addStations returned %d stations, want 1 borrowed cell contribution", len(got.stations))
+	}
+	if got.stations[0].Weather.totalDays != 6 {
+		t.Fatalf("collapsed borrowed cell totalDays = %d, want 6", got.stations[0].Weather.totalDays)
+	}
+}
+
+func TestAverageStationsTwoStrongLocalStationsAvoidFallback(t *testing.T) {
+	var in [mapRows][mapCols][]Station
+	var zips [mapRows][mapCols][]zip
+
+	in[10][10] = []Station{
+		testStationAt(10, 10, 5),
+		testStationAt(10, 10, 3),
+	}
+	in[10][11] = []Station{testStationAt(10, 11, 10)}
+	zips[10][10] = []zip{{name: "Testville"}}
+
+	got, err := averageStations(in, zips)
+	if err != nil {
+		t.Fatalf("averageStations returned error: %v", err)
+	}
+	if got[10][10].Weather.coverage != coverageDirect {
+		t.Fatalf("coverage = %v, want %v", got[10][10].Weather.coverage, coverageDirect)
+	}
+}
+
+func testStationAt(lat, long, totalDays int) Station {
+	return Station{
+		lat:      lat,
+		long:     long,
+		weighted: localStationWeight,
+		Weather: TotalWeather{
+			Months: map[string]MonthWeather{
+				"January": {Good: float64(totalDays), total: totalDays},
+			},
+			totalDays: totalDays,
+		},
 	}
 }
 

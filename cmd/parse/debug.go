@@ -5,6 +5,14 @@ import (
 	"sync"
 )
 
+var coverageLevelLabels = [coverageLevelCount]string{
+	"direct local data",
+	"lightly supplemented local data",
+	"light borrowed-only fallback",
+	"heavily supplemented local data",
+	"heavy borrowed-only fallback",
+}
+
 type unpleasantTempBucket int
 
 const (
@@ -183,6 +191,8 @@ type weatherDebugStats struct {
 	pleasantMaxTempNearMissBuckets [pleasantTempBucketCount]int
 	pleasantMinTempBuckets         [pleasantTempBucketCount]int
 	pleasantMinTempNearMissBuckets [pleasantTempBucketCount]int
+
+	coverageCounts [coverageLevelCount]int
 }
 
 var weatherDebug *weatherDebugStats
@@ -279,6 +289,20 @@ func recordWeatherDebug(day weatherData, classification dayClassification) {
 	}
 }
 
+func recordCoverageDebug(level coverageLevel) {
+	if weatherDebug == nil {
+		return
+	}
+
+	weatherDebug.mu.Lock()
+	defer weatherDebug.mu.Unlock()
+
+	if level >= coverageLevelCount {
+		return
+	}
+	weatherDebug.coverageCounts[level]++
+}
+
 func printWeatherDebugSummary() {
 	if weatherDebug == nil {
 		return
@@ -327,6 +351,16 @@ func printWeatherDebugSummary() {
 	fmt.Println("  Pleasant min-temp blocker buckets:")
 	for idx, label := range pleasantMinTempBucketLabels {
 		fmt.Printf("    %s: %d blockers, %d sole near-miss\n", label, weatherDebug.pleasantMinTempBuckets[idx], weatherDebug.pleasantMinTempNearMissBuckets[idx])
+	}
+
+	lightCoverageTotal := weatherDebug.coverageCounts[coverageSupplementedLight] + weatherDebug.coverageCounts[coverageBorrowedLight]
+	heavyCoverageTotal := weatherDebug.coverageCounts[coverageSupplementedHeavy] + weatherDebug.coverageCounts[coverageBorrowedHeavy]
+	fmt.Println("  Map coverage summary:")
+	fmt.Printf("    direct total: %d\n", weatherDebug.coverageCounts[coverageDirect])
+	fmt.Printf("    light total: %d\n", lightCoverageTotal)
+	fmt.Printf("    heavy total: %d\n", heavyCoverageTotal)
+	for idx, label := range coverageLevelLabels {
+		fmt.Printf("    %s: %d cells\n", label, weatherDebug.coverageCounts[idx])
 	}
 }
 
